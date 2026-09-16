@@ -155,6 +155,49 @@ FutureLift は、介護予防・Healthy Ageing・中年期からのフレイル�
 - 厚生労働省: 介護予防に関する資料・身体活動ガイド
 - 中年期の修正可能なリスク要因と後年のフレイルを扱うシステマティックレビュー・コホート研究
 
+ある。しかも今調べたら、かなり「これじゃん」というものがあった。
+
+NICE（英国）の **NG16 “Dementia, disability and frailty in later life – mid-life approaches to delay or prevent onset”** がまさにそれで、対象を **40〜64歳の中年期** と定義して、「将来の認知症・障害・フレイルをどう遅らせるか」をまとめている。厚労省の高齢者向け介護予防マニュアルより、今考えているアプリの思想にずっと近い。([ナイス][1])
+
+ただ、面白いのが、このNICEガイドラインを作るためのレビューでも、**中年期への介入を何十年後の要介護・フレイルまで追った研究はかなり乏しかった**と明記されていること。だから最終的な推奨は、身体活動、禁煙、食事、飲酒、適正体重といった比較的オーソドックスなものに寄っている。つまり、さっき感じていた「50代からの介護予防って意外と研究が薄い？」はかなり当たってる。([ナイス][2])
+
+さらに、今年2026年2月に出た、ものすごく都合のいいシステマティックレビューがある。
+
+**“What are the Modifiable Risk Factors for Later Life Frailty Development Found Within Midlife Community-Dwelling Adults?”**
+
+39〜64歳で測定した要因が、後年のフレイルとどう関連するかを調べたコホート研究をまとめたもので、20研究から **27個の修正可能なリスク要因**を拾って、
+Lifestyle / Psychological / Social / Physical / Environmental / Biochemical
+の6領域に分類している。身体活動、食事、喫煙、飲酒、体組成などが特に多く研究されていた。([Sage Journals][3])
+
+これ、アプリを作るならまず読む論文だと思う。
+
+しかも参考文献に、まさに欲しかった研究がずらっと入ってる。例えば **50歳時点の健康行動と20年後のフレイル**を追ったWhitehall II研究や、中年期の身体活動、中年期の心理社会的健康など。つまりPubMedを完全にゼロから掘るより、この2026レビューを「目次」として引用研究をたどるほうがかなり効率いい。([Sage Journals][3])
+
+認知症については別系統で、2024年Lancet Commissionがかなりまとまっている。中年期では難聴、高LDL、高血圧、肥満、身体活動不足、糖尿病、喫煙、抑うつ、頭部外傷、過量飲酒などを含む14の修正可能な要因をライフコースで整理していて、「対策は人生の早い段階から継続すべき」としている。([PubMed][4])
+
+なので僕なら、研究方法は「PubMedで一件ずつ闇雲に探す」じゃなくて、
+
+1. **NICE NG16**で「40〜64歳から将来の障害・フレイルを防ぐ」という全体設計を見る
+2. **2026 Longworth review**で中年期→後年フレイルの候補を洗い出す
+3. **Lancet 2024 dementia commission**で認知機能側を補う
+4. そこからアプリに入れたい項目だけPubMedで最新レビュー・コホート研究を掘る
+
+がよさそう。
+
+たぶんここから、「筋トレ」「友人」「趣味」以外にも、**睡眠、抑うつ、聴力、体重・体組成、座位時間、食事、心血管リスク、認知的活動**あたりが候補として出てくる。
+
+そしてかなり重要なのは、アプリで各項目に **エビデンス強度をつける**ことだと思う。「強い：身体活動」「中程度：社会参加」「観察研究中心：趣味」みたいに。そうすれば、“健康によさそうなこと全部盛り”にならない。
+
+この2026年のレビューを起点に、**50代からできる介護予防候補を全部抜き出して、アプリ向けに「行動」「根拠」「何を防ぐか」「エビデンス強度」で表にする**ところまでやると、かなり企画の土台になりそう。
+
+[1]: https://www.nice.org.uk/guidance/ng16/chapter/Recommendations "Recommendations | Dementia, disability and frailty in later life – mid-life approaches to delay or prevent onset | Guidance | NICE"
+[2]: https://www.nice.org.uk/guidance/ng16/evidence/evidence-review-3-552743969 "Guidance title: Disability, dementia and frailty in later life - mid-life approaches to prevent or delay the onset of these conditions"
+[3]: https://journals.sagepub.com/doi/10.1177/08982643261423579 "What are the Modifiable Risk Factors for Later Life Frailty Development Found Within Midlife Community-Dwelling Adults? A Systematic Review - Sophie Longworth, Barnabas Panayiotou, 2026"
+[4]: https://pubmed.ncbi.nlm.nih.gov/39096926/?utm_source=chatgpt.com "Dementia prevention, intervention, and care: 2024 report of the Lancet standing Commission - PubMed"
+
+
+
+
 今後、各機能について「何を目的とするか」「どの程度の根拠があるか」を整理していきます。
 
 ## 構想中の機能
