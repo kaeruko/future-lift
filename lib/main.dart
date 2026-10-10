@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'celebration.dart';
 import 'progress.dart';
+import 'home_skin.dart';
+import 'game_home.dart';
 import 'residents.dart';
 import 'town.dart';
 
@@ -19,10 +21,10 @@ void main() {
   );
 }
 
-const ink = Color(0xFF284F50);
+const ink = Color(0xFF63351F);
 const teal = Color(0xFF277A70);
 const orange = Color(0xFFBF4E27);
-const cream = Color(0xFFFFFAF0);
+const cream = Color(0xFFFBEDD3);
 
 class FutureLiftApp extends StatelessWidget {
   const FutureLiftApp({super.key, required this.controller});
@@ -49,8 +51,8 @@ class FutureLiftApp extends StatelessWidget {
         ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
-        backgroundColor: Colors.white,
-        indicatorColor: Color(0xFFDDEFE7),
+        backgroundColor: Color(0xFFFFF4DA),
+        indicatorColor: Color(0xFFFFD898),
       ),
     ),
     home: FutureLiftHome(controller: controller),
@@ -68,6 +70,7 @@ class FutureLiftHome extends StatefulWidget {
 class _FutureLiftHomeState extends State<FutureLiftHome>
     with WidgetsBindingObserver {
   int _page = 0;
+  int _homeVisit = 0;
   bool _celebrating = false;
   Timer? _midnight;
   final _tipIndex = <Resident, int>{};
@@ -212,71 +215,82 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 680),
-              child: ListView(
-                key: ValueKey('page-$_page'),
-                padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(9),
-                        decoration: BoxDecoration(
-                          color: teal,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.spa_rounded,
-                          color: Colors.white,
-                          size: 23,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: FittedBox(
-                          alignment: Alignment.centerLeft,
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'FutureLift',
-                            style: TextStyle(
-                              fontSize: 23,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -.8,
+              child: _page == 0
+                  ? GameHome(
+                      key: ValueKey(_homeVisit),
+                      progress: progress,
+                      busy: controller.busy,
+                      onComplete: _complete,
+                      onTown: () => setState(() => _page = 1),
+                      onResident: _showTip,
+                    )
+                  : ListView(
+                      key: ValueKey('page-$_page'),
+                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(9),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFBD4927),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(
+                                Icons.spa_rounded,
+                                color: Colors.white,
+                                size: 23,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: FittedBox(
+                                alignment: Alignment.centerLeft,
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'FutureLift',
+                                  style: TextStyle(
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -.8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Flexible(
+                              child: Text(
+                                'セルフケアは、\n社会貢献。',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Flexible(
-                        child: Text(
-                          'セルフケアは、\n社会貢献。',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 26),
-                  if (_page == 0) ..._home(progress) else ..._town(progress),
-                ],
-              ),
+                        const SizedBox(height: 26),
+                        ..._town(progress),
+                      ],
+                    ),
             ),
           ),
         ),
         bottomNavigationBar: NavigationBar(
+          height: 104,
           selectedIndex: _page,
-          onDestinationSelected: (index) => setState(() => _page = index),
-          destinations: const [
+          onDestinationSelected: (index) => setState(() {
+            _page = index;
+            if (index == 0) _homeVisit++;
+          }),
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.wb_sunny_outlined),
-              selectedIcon: Icon(Icons.wb_sunny_rounded),
+              icon: uiPart('09_nav_home', width: 54, height: 58),
               label: '今日のミッション',
             ),
             NavigationDestination(
-              icon: Icon(Icons.holiday_village_outlined),
-              selectedIcon: Icon(Icons.holiday_village_rounded),
+              icon: uiPart('11_nav_town', width: 54, height: 58),
               label: 'みんなのまち',
             ),
           ],
@@ -285,201 +299,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     },
   );
 
-  Widget _points(Progress progress) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-    decoration: BoxDecoration(
-      color: const Color(0xFFE6F1E9),
-      borderRadius: BorderRadius.circular(22),
-    ),
-    child: Row(
-      children: [
-        const Icon(Icons.favorite_rounded, color: teal, size: 22),
-        const SizedBox(width: 10),
-        const Expanded(
-          child: Text(
-            'これまでの社会貢献',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        Text(
-          '${progress.points}',
-          key: const ValueKey('total-points'),
-          style: const TextStyle(
-            fontSize: 29,
-            fontWeight: FontWeight.w900,
-            color: teal,
-          ),
-        ),
-        const Text(
-          ' pt',
-          style: TextStyle(color: teal, fontWeight: FontWeight.bold),
-        ),
-      ],
-    ),
-  );
-
-  List<Widget> _home(Progress progress) => [
-    const Text(
-      '今日の小さな行動が、\n誰かの未来につながる。',
-      style: TextStyle(
-        fontSize: 28,
-        height: 1.45,
-        fontWeight: FontWeight.w900,
-        letterSpacing: -.5,
-      ),
-    ),
-    const SizedBox(height: 12),
-    const Text(
-      'あなたのペースで。できたことを、ひとつずつ。',
-      style: TextStyle(fontSize: 13, color: Color(0xFF627875)),
-    ),
-    const SizedBox(height: 20),
-    _points(progress),
-    const SizedBox(height: 26),
-    Row(
-      children: [
-        const Expanded(
-          child: Text(
-            '今日のミッション',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-          ),
-        ),
-        Text(
-          '${int.parse(progress.day.substring(5, 7))}月${int.parse(progress.day.substring(8))}日',
-          style: const TextStyle(color: Color(0xFF627875)),
-        ),
-      ],
-    ),
-    const SizedBox(height: 14),
-    for (final mission in Mission.values) _missionCard(mission, progress),
-    const SizedBox(height: 10),
-    const Text(
-      '量や回数は問いません。今日行動したことを祝います。',
-      textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 12, color: Color(0xFF627875)),
-    ),
-    const SizedBox(height: 24),
-    Material(
-      color: const Color(0xFFF4EBD9),
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: () => setState(() => _page = 1),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Row(
-            children: [
-              const Icon(Icons.holiday_village_rounded, color: teal, size: 38),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'みんなのまちへ',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      townNames[progress.townLevel],
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_rounded, color: teal),
-            ],
-          ),
-        ),
-      ),
-    ),
-  ];
-
-  Widget _missionCard(Mission mission, Progress progress) {
-    final done = progress.completed.contains(mission);
-    final icon = switch (mission) {
-      Mission.strength => Icons.accessibility_new_rounded,
-      Mission.outside => Icons.directions_walk_rounded,
-      Mission.conversation => Icons.forum_rounded,
-    };
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: done ? const Color(0xFFACD7C8) : const Color(0xFFF0E7D9),
-          width: 1.5,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x060D3841),
-            offset: Offset(0, 5),
-            blurRadius: 12,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFEECF),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: const Color(0xFF8B6026), size: 26),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  mission.title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              if (done) const Icon(Icons.check_circle_rounded, color: teal),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            mission.description,
-            style: const TextStyle(color: Color(0xFF627875), fontSize: 13),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              key: ValueKey('complete-${mission.name}'),
-              style: FilledButton.styleFrom(
-                backgroundColor: orange,
-                disabledBackgroundColor: const Color(0xFFE6F1E9),
-                disabledForegroundColor: teal,
-                minimumSize: const Size(0, 58),
-              ),
-              onPressed: done || controller.busy
-                  ? null
-                  : () => _complete(mission),
-              child: Text(
-                done ? 'できた！  達成済み' : 'できた！',
-                style: TextStyle(
-                  fontSize: done ? 18 : 24,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _points(Progress progress) =>
+      ContributionPanel(points: progress.points);
 
   List<Widget> _town(Progress progress) => [
     const Text(

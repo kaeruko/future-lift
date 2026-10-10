@@ -38,12 +38,19 @@ void main() {
       find.byKey(const ValueKey('complete-strength')),
       -250,
     );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('complete-strength')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
     expect(find.text('ありがとう！'), findsOneWidget);
     expect(find.text('社会貢献 +10'), findsOneWidget);
-    expect(find.byType(ResidentAvatar), findsNWidgets(4));
+    expect(
+      find.descendant(
+        of: find.byType(Celebration),
+        matching: find.byType(ResidentAvatar),
+      ),
+      findsNWidgets(4),
+    );
     expect(controller.progress!.points, 10);
     expect(tester.takeException(), isNull);
     await tester.tap(find.byKey(const ValueKey('close-celebration')));
@@ -53,6 +60,12 @@ void main() {
     );
     expect(button.onPressed, isNull);
     expect(find.text('できた！  達成済み'), findsOneWidget);
+    await tester.tap(find.text('今日のミッション').last);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('open-missions')).hitTestable(),
+      findsOneWidget,
+    );
     await tester.tap(find.text('みんなのまち').last);
     await tester.pumpAndSettle();
     expect(tester.widget<TownScene>(find.byType(TownScene)).level, 0);
@@ -78,6 +91,17 @@ void main() {
     'storage failure displays halt and original diagnostics, no celebration',
     (tester) async {
       await launch(tester, MemoryStore()..saveError = StateError('disk full'));
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('open-missions')),
+        150,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('open-missions')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('complete-strength')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('complete-strength')));
       await tester.pumpAndSettle();
       expect(find.text('記録を確認できないため、停止しました'), findsOneWidget);
