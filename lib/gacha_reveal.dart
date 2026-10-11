@@ -115,14 +115,12 @@ class _GachaRevealState extends State<GachaReveal>
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text(
-                                  '桜のまちに、新しいご縁',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: wood,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w900,
-                                  ),
+                                Image.asset(
+                                  'assets/gacya/gacha_title.png',
+                                  width: double.infinity,
+                                  height: 112,
+                                  fit: BoxFit.contain,
+                                  excludeFromSemantics: true,
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
@@ -140,6 +138,22 @@ class _GachaRevealState extends State<GachaReveal>
                                       Positioned.fill(
                                         child: CustomPaint(
                                           painter: _Sparkles(t),
+                                        ),
+                                      ),
+                                      Positioned.fill(
+                                        child: Opacity(
+                                          opacity: ((t - .35) / .35).clamp(
+                                            0.0,
+                                            1.0,
+                                          ),
+                                          child: Transform.scale(
+                                            scale: .86 + .14 * t,
+                                            child: Image.asset(
+                                              'assets/gacya/summon_glow.png',
+                                              fit: BoxFit.contain,
+                                              excludeFromSemantics: true,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                       for (var i = 0; i < 3; i++)
@@ -181,6 +195,56 @@ class _GachaRevealState extends State<GachaReveal>
                                   ),
                                 ),
                                 if (ready) ...[
+                                  Container(
+                                    width: 270,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 18,
+                                      vertical: 9,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF4D6),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: const Color(0xFF8E361F),
+                                        width: 3,
+                                      ),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0xFFE4B04C),
+                                          spreadRadius: 2,
+                                        ),
+                                        BoxShadow(
+                                          color: Color(0x663F2313),
+                                          blurRadius: 8,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          _isNew ? '仲間登場！' : 'また会えた！',
+                                          style: const TextStyle(
+                                            color: Color(0xFFB83D26),
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ),
+                                        Text(
+                                          _resident.label,
+                                          key: const ValueKey('resident-name'),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: wood,
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 9),
                                   Semantics(
                                     liveRegion: true,
                                     child: Text(
@@ -191,7 +255,7 @@ class _GachaRevealState extends State<GachaReveal>
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
                                         color: wood,
-                                        fontSize: 23,
+                                        fontSize: 17,
                                         fontWeight: FontWeight.w900,
                                       ),
                                     ),

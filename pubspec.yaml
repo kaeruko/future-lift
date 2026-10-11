@@ -57,6 +57,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/gacya/parts/
+    - assets/gacya/button_resident.png
+    - assets/gacya/gacha_title.png
+    - assets/gacya/summon_glow.png
     - assets/kotohogu/
     - assets/quests/
     - assets/characters/001_shiba/idle_front_01.png

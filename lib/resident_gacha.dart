@@ -63,13 +63,39 @@ class _ResidentGachaState extends State<ResidentGacha> {
             'あと${collection.untilNextTicket(progress.points)}ポイントで券を1枚もらえます。',
           ),
           const SizedBox(height: 12),
-          FilledButton.icon(
-            key: const ValueKey('draw-resident'),
-            onPressed: _revealing || widget.controller.busy || tickets == 0
-                ? null
-                : _draw,
-            icon: const Icon(Icons.celebration_outlined),
-            label: Text(widget.controller.busy ? '住民を迎えています…' : '住民を迎える（券1枚）'),
+          Center(
+            child: Semantics(
+              button: true,
+              enabled: !_revealing && !widget.controller.busy && tickets > 0,
+              label: '住民を迎える（券1枚）',
+              child: Tooltip(
+                message: '住民を迎える（券1枚）',
+                child: TextButton(
+                  key: const ValueKey('draw-resident'),
+                  onPressed:
+                      _revealing || widget.controller.busy || tickets == 0
+                      ? null
+                      : _draw,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(200, 72),
+                  ),
+                  child: Opacity(
+                    opacity:
+                        _revealing || widget.controller.busy || tickets == 0
+                        ? .45
+                        : 1,
+                    child: Image.asset(
+                      'assets/gacya/button_resident.png',
+                      width: 320,
+                      height: 98,
+                      fit: BoxFit.contain,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 8),
           const Text(

@@ -47,6 +47,20 @@ void main() {
       alignment: .5,
     );
     await tester.pumpAndSettle();
+    final draw = tester.widget<TextButton>(
+      find.byKey(const ValueKey('draw-resident')),
+    );
+    expect(draw.onPressed, isNotNull);
+    final art = tester.widget<Image>(
+      find.descendant(
+        of: find.byKey(const ValueKey('draw-resident')),
+        matching: find.byType(Image),
+      ),
+    );
+    expect(
+      (art.image as AssetImage).assetName,
+      'assets/gacya/button_resident.png',
+    );
     await tester.tap(find.byKey(const ValueKey('draw-resident')));
     await tester.pump();
     await tester.pump();
@@ -65,6 +79,7 @@ void main() {
     expect(find.byKey(const ValueKey('gacha-result')), findsNothing);
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('NEW'), findsOneWidget);
+    expect(find.byKey(const ValueKey('resident-name')), findsOneWidget);
     await tester.ensureVisible(find.byKey(const ValueKey('button_again')));
     await tester.tap(find.byKey(const ValueKey('button_again')));
     await tester.pump();
