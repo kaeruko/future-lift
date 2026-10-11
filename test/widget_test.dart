@@ -317,6 +317,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('mission-tab-monthly')));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('mission-period-progress')),
+      -100,
+    );
+    await tester.pumpAndSettle();
     expect(find.text('0/3 言祝ぎ'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text(Mission.monthlyReview.title),
@@ -340,8 +345,10 @@ void main() {
 
     await tester.tap(find.text('メニュー').last);
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('debug-replay-celebration')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('debug-replay-celebration')),
+      findsOneWidget,
+    );
     expect(find.textContaining('現在の社会貢献：10 pt'), findsOneWidget);
     final saved = store.raw;
     final writes = store.writes;
@@ -350,22 +357,17 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('debug-replay-celebration')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 700));
-      final celebration = tester.widget<Celebration>(
-        find.byType(Celebration),
-      );
+      final celebration = tester.widget<Celebration>(find.byType(Celebration));
       expect(celebration.preview, isTrue);
       expect(celebration.total, 10);
       expect(celebration.missionTitle, Mission.strength.title);
-      expect(find.byKey(const ValueKey('debug-preview-label')),
-          findsOneWidget);
-      expect(find.byKey(const ValueKey('close-celebration')),
-          findsOneWidget);
+      expect(find.byKey(const ValueKey('debug-preview-label')), findsOneWidget);
+      expect(find.byKey(const ValueKey('close-celebration')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('close-celebration')));
       await tester.pumpAndSettle();
       expect(controller.progress!.points, 10);
       expect(controller.progress!.completed, {Mission.strength});
-      expect(controller.progress!.history['2026-10-09'],
-          {Mission.strength});
+      expect(controller.progress!.history['2026-10-09'], {Mission.strength});
       expect(store.writes, writes);
       expect(store.raw, saved);
     }
@@ -377,9 +379,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('debug-replay-celebration')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
-    final different = tester.widget<Celebration>(
-      find.byType(Celebration),
-    );
+    final different = tester.widget<Celebration>(find.byType(Celebration));
     expect(different.missionTitle, Mission.outside.title);
     expect(different.total, 10);
     await tester.tap(find.byKey(const ValueKey('close-celebration')));
