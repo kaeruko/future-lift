@@ -60,192 +60,293 @@ class _CelebrationState extends State<Celebration>
 
   @override
   Widget build(BuildContext context) => Dialog.fullscreen(
-    child: DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF244C62), Color(0xFF353660), Color(0xFF654D79)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _confetti,
-                builder: (context, child) => CustomPaint(
-                  painter: _ConfettiPainter(_reduced! ? .23 : _confetti.value),
-                ),
-              ),
-            ),
+    backgroundColor: const Color(0xFFFFF0CF),
+    child: Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/kotohogu/town_background.png',
+            fit: BoxFit.cover,
+            excludeFromSemantics: true,
           ),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 32,
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
+        ),
+        Positioned.fill(child: ColoredBox(color: const Color(0x38FFF4D5))),
+        SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF6DA),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: const Color(0xFFAC7136),
+                          width: 2,
+                        ),
+                      ),
+                      child: const Text(
                         'まちのみんなから、あなたへ',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Color(0xFFE1DEEF),
-                          fontSize: 16,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 26),
-                      const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: Color(0xFFFFDE86),
-                        size: 52,
-                      ),
-                      const SizedBox(height: 14),
-                      ScaleTransition(
-                        scale: CurvedAnimation(
-                          parent: _entrance,
-                          curve: const Interval(
-                            0,
-                            .7,
-                            curve: Curves.elasticOut,
-                          ),
-                        ),
-                        child: Semantics(
-                          liveRegion: true,
-                          child: const FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'ありがとう！',
-                              style: TextStyle(
-                                fontSize: 50,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFFFFE4A0),
-                                shadows: [
-                                  Shadow(
-                                    color: Color(0x55000000),
-                                    offset: Offset(0, 4),
-                                    blurRadius: 12,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      const Text(
-                        '未来の社会を\nちょっと助けました',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 25,
-                          height: 1.6,
+                          color: Color(0xFF63351F),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 30),
-                      AnimatedBuilder(
-                        animation: _applause,
-                        builder: (context, child) => ClapCharacters(
-                          phase: _applause.value,
-                          reduced: _reduced!,
+                    ),
+                    const SizedBox(height: 6),
+                    ScaleTransition(
+                      scale: CurvedAnimation(
+                        parent: _entrance,
+                        curve: const Interval(0, .7, curve: Curves.elasticOut),
+                      ),
+                      child: Semantics(
+                        label: 'ミッション達成！',
+                        liveRegion: true,
+                        child: const _CroppedArtwork(
+                          'mission_complete_title',
+                          heightFactor: .48,
                         ),
                       ),
-                      const SizedBox(height: 25),
-                      SlideTransition(
-                        position:
-                            Tween(
-                              begin: const Offset(0, .3),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: _entrance,
-                                curve: const Interval(
-                                  .25,
-                                  1,
-                                  curve: Curves.easeOutBack,
-                                ),
-                              ),
-                            ),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(22),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFE19A),
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x33FFCB65),
-                                blurRadius: 32,
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              const Text(
-                                '社会貢献 +10',
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  color: Color(0xFF533E33),
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'これまでの社会貢献  ${widget.total} pt',
-                                style: const TextStyle(
-                                  color: Color(0xFF695344),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                    ),
+                    const _OutlinedThanks(),
+                    Container(
+                      margin: const EdgeInsets.only(top: 8, bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
                       ),
-                      const SizedBox(height: 22),
-                      Text(
-                        '「${widget.missionTitle}」\n今日の行動が、まちに届きました。',
+                      decoration: BoxDecoration(
+                        color: const Color(0xEDFFF8E5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '未来の社会をちょっと助けました',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFFE1DEEF),
-                          height: 1.7,
+                        style: TextStyle(
+                          color: Color(0xFF63351F),
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 26),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          key: const ValueKey('close-celebration'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF393B61),
-                            minimumSize: const Size(0, 60),
+                    ),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            'assets/celebration/golden_clouds.png',
+                            fit: BoxFit.fill,
+                            excludeFromSemantics: true,
                           ),
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text(
-                            'ありがとうを受け取る',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                        ),
+                        AnimatedBuilder(
+                          animation: _applause,
+                          builder: (context, child) => ClapCharacters(
+                            phase: _applause.value,
+                            reduced: _reduced!,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SlideTransition(
+                      position:
+                          Tween(
+                            begin: const Offset(0, .2),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: _entrance,
+                              curve: const Interval(
+                                .25,
+                                1,
+                                curve: Curves.easeOutBack,
+                              ),
                             ),
                           ),
+                      child: _RewardScroll(
+                        title: widget.missionTitle,
+                        total: widget.total,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        key: const ValueKey('close-celebration'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFB94219),
+                          foregroundColor: const Color(0xFFFFF7DD),
+                          side: const BorderSide(
+                            color: Color(0xFFE8B55C),
+                            width: 3,
+                          ),
+                          minimumSize: const Size(0, 60),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          'ありがとうを受け取る',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-        ],
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _confetti,
+              builder: (context, child) => CustomPaint(
+                painter: _ConfettiPainter(_reduced! ? .23 : _confetti.value),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Hide the supplied canvas margins at layout time; keep PNG originals intact.
+class _CroppedArtwork extends StatelessWidget {
+  const _CroppedArtwork(this.name, {required this.heightFactor});
+  final String name;
+  final double heightFactor;
+
+  @override
+  Widget build(BuildContext context) => ClipRect(
+    child: Align(
+      heightFactor: heightFactor,
+      child: Image.asset(
+        'assets/celebration/$name.png',
+        width: double.infinity,
+        excludeFromSemantics: true,
       ),
+    ),
+  );
+}
+
+class _OutlinedThanks extends StatelessWidget {
+  const _OutlinedThanks();
+
+  @override
+  Widget build(BuildContext context) => FittedBox(
+    fit: BoxFit.scaleDown,
+    child: Stack(
+      children: [
+        ExcludeSemantics(
+          child: Text(
+            'ありがとう！',
+            style: TextStyle(
+              fontSize: 38,
+              fontWeight: FontWeight.w900,
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 7
+                ..color = const Color(0xFF63351F),
+            ),
+          ),
+        ),
+        const Text(
+          'ありがとう！',
+          style: TextStyle(
+            fontSize: 38,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFFFFF5D5),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _RewardScroll extends StatelessWidget {
+  const _RewardScroll({required this.title, required this.total});
+  final String title;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => Stack(
+      alignment: Alignment.center,
+      children: [
+        // Stretch only the displayed parchment, without modifying the PNG.
+        Positioned.fill(
+          child: FittedBox(
+            fit: BoxFit.fill,
+            child: SizedBox(
+              width: 1448,
+              child: const _CroppedArtwork('reward_scroll', heightFactor: .74),
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: constraints.maxWidth * .12,
+            vertical: 48,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF63351F),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Image.asset(
+                    'assets/celebration/achievement_stamp.png',
+                    width: 62,
+                    semanticLabel: '達成！',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '社会貢献 +10',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF9C351C),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'これまでの社会貢献  $total pt',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFF63351F),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     ),
   );
 }

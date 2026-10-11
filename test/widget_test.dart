@@ -84,7 +84,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('complete-strength')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('ありがとう！'), findsOneWidget);
+    expect(find.text('ありがとう！').hitTestable(), findsOneWidget);
+    expect(find.bySemanticsLabel('ミッション達成！'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byType(Celebration),
@@ -213,72 +214,75 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('journal shows only celebrations and deletion preserves progress', (
+  testWidgets(
+    'journal shows only celebrations and deletion preserves progress',
+    (tester) async {
+      tester.view.physicalSize = const Size(430, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final saved = Progress(
+        day: '2026-10-09',
+        lastCompletedDay: '2026-10-09',
+        points: 30,
+        completed: {Mission.strength},
+        history: {
+          '2026-09-30': {Mission.outside},
+          '2026-10-09': {Mission.strength},
+        },
+      );
+      final store = MemoryStore()..raw = saved.encode();
+      final controller = await launch(tester, store);
+      await tester.tap(find.text('履歴').last);
+      await tester.pumpAndSettle();
+      expect(find.text('これまで言祝がれた日々'), findsOneWidget);
+      expect(find.text('直近30日は 2日、2個の行動を言祝ぎました。'), findsOneWidget);
+      expect(find.text('今月は1日、1個の行動を言祝ぎました。'), findsOneWidget);
+      expect(find.text('祝'), findsOneWidget);
+      expect(find.text('×'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('previous-history-month')));
+      await tester.pumpAndSettle();
+      expect(find.text('2026年9月'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('history-day-30')));
+      await tester.pumpAndSettle();
+      expect(find.text('外に出た・歩いた'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('next-history-month')));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('clear-history')),
+        160,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const ValueKey('history-scroll')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('clear-history')));
+      await tester.pumpAndSettle();
+      expect(find.text('すべての履歴を削除しますか？'), findsOneWidget);
+      await tester.tap(find.text('やめる'));
+      await tester.pumpAndSettle();
+      expect(controller.progress!.history.length, 2);
+
+      await tester.tap(find.byKey(const ValueKey('clear-history')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('confirm-clear-history')));
+      await tester.pumpAndSettle();
+      expect(controller.progress!.history, isEmpty);
+      expect(controller.progress!.points, 30);
+      expect(controller.progress!.completed, {Mission.strength});
+      expect(Progress.decode(store.raw!).history, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets('three mission periods can be selected and celebrated', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(430, 1000);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    final saved = Progress(
-      day: '2026-10-09',
-      lastCompletedDay: '2026-10-09',
-      points: 30,
-      completed: {Mission.strength},
-      history: {
-        '2026-09-30': {Mission.outside},
-        '2026-10-09': {Mission.strength},
-      },
-    );
-    final store = MemoryStore()..raw = saved.encode();
-    final controller = await launch(tester, store);
-    await tester.tap(find.text('履歴').last);
-    await tester.pumpAndSettle();
-    expect(find.text('これまで言祝がれた日々'), findsOneWidget);
-    expect(find.text('直近30日は 2日、2個の行動を言祝ぎました。'),
-        findsOneWidget);
-    expect(find.text('今月は1日、1個の行動を言祝ぎました。'),
-        findsOneWidget);
-    expect(find.text('祝'), findsOneWidget);
-    expect(find.text('×'), findsNothing);
-
-    await tester.tap(find.byKey(const ValueKey('previous-history-month')));
-    await tester.pumpAndSettle();
-    expect(find.text('2026年9月'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('history-day-30')));
-    await tester.pumpAndSettle();
-    expect(find.text('外に出た・歩いた'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('next-history-month')));
-    await tester.pumpAndSettle();
-
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('clear-history')),
-      160,
-      scrollable: find.descendant(
-        of: find.byKey(const ValueKey('history-scroll')),
-        matching: find.byType(Scrollable),
-      ).first,
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('clear-history')));
-    await tester.pumpAndSettle();
-    expect(find.text('すべての履歴を削除しますか？'), findsOneWidget);
-    await tester.tap(find.text('やめる'));
-    await tester.pumpAndSettle();
-    expect(controller.progress!.history.length, 2);
-
-    await tester.tap(find.byKey(const ValueKey('clear-history')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('confirm-clear-history')));
-    await tester.pumpAndSettle();
-    expect(controller.progress!.history, isEmpty);
-    expect(controller.progress!.points, 30);
-    expect(controller.progress!.completed, {Mission.strength});
-    expect(Progress.decode(store.raw!).history, isEmpty);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox());
-  });
-
-  testWidgets('three mission periods can be selected and celebrated', (tester) async {
     tester.view.physicalSize = const Size(430, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -294,7 +298,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('0/4 言祝ぎ'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('complete-weeklyStrength')), 160,
+      find.byKey(const ValueKey('complete-weeklyStrength')),
+      160,
     );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('complete-weeklyStrength')));
@@ -306,13 +311,17 @@ void main() {
     expect(controller.progress!.weeklyCompleted, {Mission.weeklyStrength});
 
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('mission-tab-monthly')), -180,
+      find.byKey(const ValueKey('mission-tab-monthly')),
+      -180,
     );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('mission-tab-monthly')));
     await tester.pumpAndSettle();
     expect(find.text('0/3 言祝ぎ'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text(Mission.monthlyReview.title), 160);
+    await tester.scrollUntilVisible(
+      find.text(Mission.monthlyReview.title),
+      160,
+    );
     expect(find.text(Mission.monthlyReview.title), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
