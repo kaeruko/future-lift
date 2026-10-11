@@ -74,6 +74,7 @@ class FutureLiftHome extends StatefulWidget {
 
 class _FutureLiftHomeState extends State<FutureLiftHome>
     with WidgetsBindingObserver {
+  final _townSceneKey = GlobalKey();
   int _page = 0;
   MissionPeriod _missionPeriod = MissionPeriod.daily;
   Mission _previewMission = Mission.strength;
@@ -422,6 +423,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     ),
     const SizedBox(height: 14),
     TownScene(
+      key: _townSceneKey,
       level: progress.townLevel,
       residents: progress.residents.owned,
       onResident: _showTip,
@@ -433,7 +435,13 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       style: const TextStyle(fontWeight: FontWeight.w600),
     ),
     const SizedBox(height: 24),
-    ResidentGacha(controller: controller),
+    ResidentGacha(
+      controller: controller,
+      onTown: () {
+        final scene = _townSceneKey.currentContext;
+        if (scene != null) Scrollable.ensureVisible(scene);
+      },
+    ),
     const SizedBox(height: 24),
     const Row(
       mainAxisAlignment: MainAxisAlignment.center,

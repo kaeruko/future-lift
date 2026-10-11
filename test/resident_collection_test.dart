@@ -215,6 +215,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('ペンギンが、まちにやってきました！'), findsOneWidget);
       expect(controller.progress!.residents.tickets(30), 0);
+      await tester.tap(find.byKey(const ValueKey('button_town')));
+      await tester.pumpAndSettle();
       await tester.scrollUntilVisible(find.byType(TownScene), -180);
       await tester.pumpAndSettle();
       expect(

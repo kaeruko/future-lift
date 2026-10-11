@@ -3,27 +3,43 @@ import 'package:flutter/material.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
 import 'home_skin.dart';
+import 'gacha_reveal.dart';
 
 /// Inline panel keeps save failures visible on the main diagnostic screen.
 class ResidentGacha extends StatefulWidget {
-  const ResidentGacha({super.key, required this.controller});
+  const ResidentGacha({super.key, required this.controller, this.onTown});
+  final VoidCallback? onTown;
   final ProgressController controller;
   @override
   State<ResidentGacha> createState() => _ResidentGachaState();
 }
 
 class _ResidentGachaState extends State<ResidentGacha> {
-  TownResident? _result;
-  bool _newResident = false;
+  bool _revealing = false;
 
   Future<void> _draw() async {
+    if (_revealing) return;
+    setState(() => _revealing = true);
     final before = widget.controller.progress!.residents.counts;
     final result = await widget.controller.drawResident();
-    if (!mounted || result == null) return;
-    setState(() {
-      _result = result;
-      _newResident = !before.containsKey(result.id);
-    });
+    if (!mounted) return;
+    if (result == null) {
+      setState(() => _revealing = false);
+      return;
+    }
+    final town = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => GachaReveal(
+          controller: widget.controller,
+          resident: result,
+          isNew: !before.containsKey(result.id),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _revealing = false);
+    if (town == true) widget.onTown?.call();
   }
 
   @override
@@ -49,7 +65,9 @@ class _ResidentGachaState extends State<ResidentGacha> {
           const SizedBox(height: 12),
           FilledButton.icon(
             key: const ValueKey('draw-resident'),
-            onPressed: widget.controller.busy || tickets == 0 ? null : _draw,
+            onPressed: _revealing || widget.controller.busy || tickets == 0
+                ? null
+                : _draw,
             icon: const Icon(Icons.celebration_outlined),
             label: Text(widget.controller.busy ? '住民を迎えています…' : '住民を迎える（券1枚）'),
           ),
@@ -58,28 +76,6 @@ class _ResidentGachaState extends State<ResidentGacha> {
             '全6種類が同じ確率（各1/6）で登場します。\n同じ住民と再会することもあります。',
             style: TextStyle(fontSize: 12),
           ),
-          if (_result case final resident?) ...[
-            const Divider(height: 28),
-            Center(child: TownResidentAvatar(resident: resident, size: 110)),
-            Semantics(
-              liveRegion: true,
-              child: Text(
-                _newResident
-                    ? '${resident.label}が、まちにやってきました！'
-                    : '${resident.label}とまた出会いました！',
-                key: const ValueKey('gacha-result'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Text(
-              '累計${collection.counts[resident.id]}回',
-              textAlign: TextAlign.center,
-            ),
-          ],
           const SizedBox(height: 12),
           Wrap(
             spacing: 12,
