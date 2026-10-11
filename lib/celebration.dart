@@ -9,9 +9,12 @@ class Celebration extends StatefulWidget {
     super.key,
     required this.missionTitle,
     required this.total,
+    this.preview = false,
   });
   final String missionTitle;
   final int total;
+  /// An animation-only replay that does not award points.
+  final bool preview;
 
   @override
   State<Celebration> createState() => _CelebrationState();
@@ -177,6 +180,19 @@ class _CelebrationState extends State<Celebration>
                         total: widget.total,
                       ),
                     ),
+                    if (widget.preview) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        '【デバッグ再生】ポイント・履歴の加算はありません',
+                        key: ValueKey('debug-preview-label'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFF63351F),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,

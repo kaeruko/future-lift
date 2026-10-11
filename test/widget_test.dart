@@ -327,6 +327,69 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('debug menu replays thanks without changing points or history', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final original = Progress.empty(DateTime(2026, 10, 9))
+        .complete(Mission.strength);
+    final store = MemoryStore()..raw = original.encode();
+    final controller = await launch(tester, store);
+
+    await tester.tap(find.text('メニュー').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('debug-replay-celebration')),
+        findsOneWidget);
+    expect(find.textContaining('現在の社会貢献：10 pt'), findsOneWidget);
+    final saved = store.raw;
+    final writes = store.writes;
+
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.byKey(const ValueKey('debug-replay-celebration')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+      final celebration = tester.widget<Celebration>(
+        find.byType(Celebration),
+      );
+      expect(celebration.preview, isTrue);
+      expect(celebration.total, 10);
+      expect(celebration.missionTitle, Mission.strength.title);
+      expect(find.byKey(const ValueKey('debug-preview-label')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('close-celebration')),
+          findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('close-celebration')));
+      await tester.pumpAndSettle();
+      expect(controller.progress!.points, 10);
+      expect(controller.progress!.completed, {Mission.strength});
+      expect(controller.progress!.history['2026-10-09'],
+          {Mission.strength});
+      expect(store.writes, writes);
+      expect(store.raw, saved);
+    }
+
+    await tester.tap(find.byKey(const ValueKey('debug-preview-mission')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(Mission.outside.title).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('debug-replay-celebration')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    final different = tester.widget<Celebration>(
+      find.byType(Celebration),
+    );
+    expect(different.missionTitle, Mission.outside.title);
+    expect(different.total, 10);
+    await tester.tap(find.byKey(const ValueKey('close-celebration')));
+    await tester.pumpAndSettle();
+    expect(store.writes, writes);
+    expect(store.raw, saved);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   test('sixteen non-duplicate fixed tips are available', () {
     expect(Resident.values.expand((r) => r.tips).toSet().length, 16);
   });

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,6 +10,7 @@ import 'home_skin.dart';
 import 'game_home.dart';
 import 'missions_screen.dart';
 import 'history_screen.dart';
+import 'debug_menu_screen.dart';
 import 'residents.dart';
 import 'town.dart';
 
@@ -73,6 +75,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     with WidgetsBindingObserver {
   int _page = 0;
   MissionPeriod _missionPeriod = MissionPeriod.daily;
+  Mission _previewMission = Mission.strength;
   int _homeVisit = 0;
   bool _celebrating = false;
   Timer? _midnight;
@@ -128,6 +131,30 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     _celebrating = false;
     // Also catches a midnight that occurred while saving or celebrating.
     await controller.refreshDay();
+  }
+
+  /// Replays the celebration without touching the progress store.
+  Future<void> _previewCelebration() async {
+    if (!kDebugMode || _celebrating || controller.busy ||
+        controller.failure != null || controller.progress == null) {
+      return;
+    }
+    final total = controller.progress!.points;
+    final missionTitle = _previewMission.title;
+    _celebrating = true;
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Celebration(
+          missionTitle: missionTitle,
+          total: total,
+          preview: true,
+        ),
+      );
+    } finally {
+      _celebrating = false;
+    }
   }
 
   void _showTip(Resident resident) {
@@ -286,12 +313,21 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                         ..._town(progress),
                       ],
                     )
-                  : HistoryScreen(
+                  : _page == 3
+                  ? HistoryScreen(
                       progress: progress,
                       busy: controller.busy,
                       onClear: () async {
                         await controller.clearHistory();
                       },
+                    )
+                  : DebugMenuScreen(
+                      progress: progress,
+                      selectedMission: _previewMission,
+                      onMissionChanged: (mission) =>
+                          setState(() => _previewMission = mission),
+                      onPreview: _previewCelebration,
+                      busy: controller.busy || _celebrating,
                     ),
             ),
           ),
@@ -320,6 +356,11 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
               icon: Icon(Icons.auto_stories_outlined, size: 35),
               label: '履歴',
             ),
+            if (kDebugMode)
+              NavigationDestination(
+                icon: uiPart('21_nav_menu', width: 54, height: 58),
+                label: 'メニュー',
+              ),
           ],
         ),
       );
