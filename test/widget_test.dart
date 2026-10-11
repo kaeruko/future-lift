@@ -256,7 +256,7 @@ void main() {
       scrollable: find.descendant(
         of: find.byKey(const ValueKey('history-scroll')),
         matching: find.byType(Scrollable),
-      ),
+      ).first,
     );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('clear-history')));
