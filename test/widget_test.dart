@@ -72,7 +72,7 @@ void main() {
     final controller = await launch(tester, store);
     await tester.tap(find.text('ミッション').last);
     await tester.pumpAndSettle();
-    for (final mission in Mission.values) {
+    for (final mission in Mission.forPeriod(MissionPeriod.daily)) {
       await tester.scrollUntilVisible(find.text(mission.title), 200);
       expect(find.text(mission.title), findsOneWidget);
     }
@@ -267,6 +267,43 @@ void main() {
     expect(controller.progress!.points, 30);
     expect(controller.progress!.completed, {Mission.strength});
     expect(Progress.decode(store.raw!).history, isEmpty);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('three mission periods can be selected and celebrated', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final store = MemoryStore();
+    final controller = await launch(tester, store);
+    await tester.tap(find.text('ミッション').last);
+    await tester.pumpAndSettle();
+    expect(find.text(Mission.movement.title), findsOneWidget);
+    expect(find.text('いつもより身体を動かした'), findsNothing);
+    expect(find.text('0/7 言祝ぎ'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('mission-tab-weekly')));
+    await tester.pumpAndSettle();
+    expect(find.text('0/4 言祝ぎ'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('complete-weeklyStrength')), 160,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('complete-weeklyStrength')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.byType(Celebration), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('close-celebration')));
+    await tester.pumpAndSettle();
+    expect(controller.progress!.weeklyCompleted, {Mission.weeklyStrength});
+
+    await tester.ensureVisible(find.byKey(const ValueKey('mission-tab-monthly')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mission-tab-monthly')));
+    await tester.pumpAndSettle();
+    expect(find.text('0/3 言祝ぎ'), findsOneWidget);
+    expect(find.text(Mission.monthlyReview.title), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

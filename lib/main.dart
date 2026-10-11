@@ -72,6 +72,7 @@ class FutureLiftHome extends StatefulWidget {
 class _FutureLiftHomeState extends State<FutureLiftHome>
     with WidgetsBindingObserver {
   int _page = 0;
+  MissionPeriod _missionPeriod = MissionPeriod.daily;
   int _homeVisit = 0;
   bool _celebrating = false;
   Timer? _midnight;
@@ -230,6 +231,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                       progress: progress,
                       busy: controller.busy,
                       onComplete: _complete,
+                      period: _missionPeriod,
+                      onPeriodChanged: (period) =>
+                          setState(() => _missionPeriod = period),
                     )
                   : _page == 2
                   ? ListView(

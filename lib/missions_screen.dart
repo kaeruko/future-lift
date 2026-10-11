@@ -10,10 +10,14 @@ class MissionsScreen extends StatelessWidget {
     required this.progress,
     required this.busy,
     required this.onComplete,
+    required this.period,
+    required this.onPeriodChanged,
   });
   final Progress progress;
   final bool busy;
   final ValueChanged<Mission> onComplete;
+  final MissionPeriod period;
+  final ValueChanged<MissionPeriod> onPeriodChanged;
 
   @override
   Widget build(BuildContext context) => Stack(
@@ -78,9 +82,13 @@ class MissionsScreen extends StatelessWidget {
                         border: Border.all(color: wood, width: 2),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        '今日できたことを、教えてね。',
-                        style: TextStyle(
+                      child: Text(
+                        switch (period) {
+                          MissionPeriod.daily => '今日できたことを、教えてね。',
+                          MissionPeriod.weekly => '今週できたことを、教えてね。',
+                          MissionPeriod.monthly => '今月できたことを、教えてね。',
+                        },
+                        style: const TextStyle(
                           color: wood,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -93,45 +101,46 @@ class MissionsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Semantics(
-                label: 'デイリー',
-                selected: true,
-                child: Image.asset(
-                  'assets/quests/02_tab_daily_selected.png',
-                  width: 142,
-                  height: 53,
-                  fit: BoxFit.fill,
-                  excludeFromSemantics: true,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 5),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xEEFFF5DF),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                for (final candidate in MissionPeriod.values)
+                  ChoiceChip(
+                    key: ValueKey('mission-tab-${candidate.name}'),
+                    selected: period == candidate,
+                    selectedColor: const Color(0xFFFFD68A),
+                    label: Text(switch (candidate) {
+                      MissionPeriod.daily => 'デイリー',
+                      MissionPeriod.weekly => 'ウィークリー',
+                      MissionPeriod.monthly => 'マンスリー',
+                    }),
+                    onSelected: (_) => onPeriodChanged(candidate),
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xEEFFF5DF),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Text(
-                    '${int.parse(progress.day.substring(5, 7))}月${int.parse(progress.day.substring(8))}日  •  ${progress.completed.length}/3 達成',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: wood,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xEEFFF5DF),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '${progress.completedFor(period).length}/${Mission.forPeriod(period).length} 言祝ぎ',
+              key: const ValueKey('mission-period-progress'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: wood, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
               gradient: const LinearGradient(
@@ -173,16 +182,20 @@ class MissionsScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(10, 14, 10, 42),
                   child: Column(
                     children: [
-                      for (final mission in Mission.values)
+                      for (final mission in Mission.forPeriod(period))
                         _QuestCard(
                           mission: mission,
-                          done: progress.completed.contains(mission),
+                          done: progress.completedFor(period).contains(mission),
                           onComplete: busy ? null : () => onComplete(mission),
                         ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
-                          '量や回数は問いません。\n今日行動したことを、みんなで祝います。',
+                          switch (period) {
+                            MissionPeriod.daily => '量や回数は問いません。\n今日行動したことを、みんなで祝います。',
+                            MissionPeriod.weekly => '今週できたことだけを言祝ぎます。\nできなかったことは気にしなくて大丈夫。',
+                            MissionPeriod.monthly => '今月できたことを振り返りましょう。\n未達成のミッションに罰はありません。',
+                          },
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Color(0xFFFFE6B2),
@@ -251,6 +264,7 @@ class _QuestCard extends StatelessWidget {
                         Mission.strength => Icons.accessibility_new_rounded,
                         Mission.outside => Icons.directions_walk_rounded,
                         Mission.conversation => Icons.forum_rounded,
+                        _ => Icons.favorite_rounded,
                       },
                       color: wood,
                       size: 30,

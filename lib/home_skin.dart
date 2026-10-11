@@ -147,6 +147,7 @@ class MissionCard extends StatelessWidget {
       Mission.strength => Icons.accessibility_new_rounded,
       Mission.outside => Icons.directions_walk_rounded,
       Mission.conversation => Icons.forum_rounded,
+      _ => Icons.favorite_rounded,
     };
     return Container(
       margin: const EdgeInsets.only(bottom: 18),

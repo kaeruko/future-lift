@@ -282,8 +282,8 @@ void main() {
       '2026-10-09': {Mission.strength, Mission.conversation},
     });
     final serialized = migrated.encode();
-    expect(jsonDecode(serialized)['version'], 2);
-    expect(Progress.decode(serialized, expectedVersion: 2).points, 100);
+    expect(jsonDecode(serialized)['version'], 3);
+    expect(Progress.decode(serialized, expectedVersion: 3).points, 100);
     expect(
       Progress.decode(serialized).history['2026-10-09'],
       {Mission.strength, Mission.conversation},
@@ -366,6 +366,108 @@ void main() {
       () => Progress.decode(jsonEncode({...valid, 'history': null})),
       throwsFormatException,
     );
+  });
+
+  test('periodic missions award once per week or month and reset on boundaries', () async {
+    var now = DateTime(2026, 10, 11, 12); // Sunday
+    final store = MemoryStore();
+    final controller = ProgressController(store, clock: () => now);
+    await controller.initialize();
+
+    expect(Mission.movement.title, '身体を動かした');
+    expect(Mission.movement.title, isNot(contains('いつもより')));
+    expect(await controller.complete(Mission.movement), isTrue);
+    expect(await controller.complete(Mission.weeklyStrength), isTrue);
+    expect(await controller.complete(Mission.weeklyStrength), isFalse);
+    expect(await controller.complete(Mission.monthlyReview), isTrue);
+    expect(await controller.complete(Mission.monthlyReview), isFalse);
+    expect(controller.progress!.points, 30);
+    expect(controller.progress!.weeklyCompleted, {Mission.weeklyStrength});
+    expect(controller.progress!.monthlyCompleted, {Mission.monthlyReview});
+
+    now = DateTime(2026, 10, 12, 9); // next Monday, same month
+    await controller.refreshDay();
+    expect(controller.progress!.completed, isEmpty);
+    expect(controller.progress!.weeklyCompleted, isEmpty);
+    expect(controller.progress!.monthlyCompleted, {Mission.monthlyReview});
+    expect(await controller.complete(Mission.weeklyStrength), isTrue);
+    expect(await controller.complete(Mission.monthlyReview), isFalse);
+
+    now = DateTime(2026, 11, 1);
+    await controller.refreshDay();
+    expect(controller.progress!.monthlyCompleted, isEmpty);
+    expect(await controller.complete(Mission.monthlyReview), isTrue);
+    expect(controller.progress!.points, 50);
+    expect(controller.progress!.history['2026-10-11'],
+        {Mission.movement, Mission.weeklyStrength, Mission.monthlyReview});
+
+    final restarted = ProgressController(store, clock: () => now);
+    await restarted.initialize();
+    expect(restarted.progress!.points, 50);
+    expect(restarted.progress!.history['2026-10-12'],
+        {Mission.weeklyStrength});
+    expect(restarted.progress!.monthlyCompleted, {Mission.monthlyReview});
+    expect(await restarted.complete(Mission.monthlyReview), isFalse);
+  });
+
+  test('v2 saves migrate to v3 without changing existing mission IDs', () {
+    final raw = jsonEncode({
+      'version': 2,
+      'day': '2026-10-09',
+      'lastCompletedDay': '2026-10-09',
+      'points': 30,
+      'completed': ['strength', 'conversation'],
+      'history': {
+        '2026-10-08': ['outside'],
+        '2026-10-09': ['strength', 'conversation'],
+      },
+    });
+    final restored = Progress.decode(raw, expectedVersion: 2);
+    expect(restored.points, 30);
+    expect(restored.completed, {Mission.strength, Mission.conversation});
+    expect(restored.history['2026-10-08'], {Mission.outside});
+    expect(restored.weeklyCompleted, isEmpty);
+    expect(restored.monthlyCompleted, isEmpty);
+    final migrated = Progress.decode(restored.encode(), expectedVersion: 3);
+    expect(migrated.history, restored.history);
+    expect(() => Progress.decode(raw, expectedVersion: 3),
+        throwsFormatException);
+  });
+
+  test('clearing journal does not allow duplicate weekly/monthly awards', () async {
+    final store = MemoryStore();
+    final controller = ProgressController(store, clock: () => today);
+    await controller.initialize();
+    await controller.complete(Mission.weeklyLearn);
+    await controller.complete(Mission.monthlyHabit);
+    expect(await controller.clearHistory(), isTrue);
+    expect(controller.progress!.history, isEmpty);
+    expect(controller.progress!.points, 20);
+    expect(await controller.complete(Mission.weeklyLearn), isFalse);
+    expect(await controller.complete(Mission.monthlyHabit), isFalse);
+    expect(Progress.decode(store.raw!).monthlyCompleted,
+        {Mission.monthlyHabit});
+  });
+
+  test('v3 period data rejects cross-period IDs and malformed history', () {
+    final valid = jsonDecode(
+      Progress.empty(today).complete(Mission.movement).encode(),
+    ) as Map<String, dynamic>;
+    for (final patch in [
+      {'completed': ['weeklyStrength']},
+      {'weeklyCompleted': ['movement']},
+      {'monthlyCompleted': ['weeklyStrength']},
+      {'weeklyCompleted': ['weeklyStrength', 'weeklyStrength']},
+      {'history': {'2026-10-09': ['weeklyLearn']}},
+      {'history': {'2026-10-09': ['monthlyReview']}},
+      {'history': {'2026-10-09': ['movement', 'movement']}},
+    ]) {
+      expect(
+        () => Progress.decode(jsonEncode({...valid, ...patch})),
+        throwsFormatException,
+        reason: patch.toString(),
+      );
+    }
   });
 
   test('four town stages use cumulative points and never decay', () {

@@ -263,7 +263,7 @@ class _GameHomeState extends State<GameHome> {
                               asset: '10_nav_quest',
                               title: '本日のミッション',
                               detail:
-                                  '${widget.progress.completed.length} / 3 達成',
+                                  '${widget.progress.completed.length} / ${Mission.forPeriod(MissionPeriod.daily).length} 達成',
                               onTap: widget.onMissions,
                             ),
                           ),
