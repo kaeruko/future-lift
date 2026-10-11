@@ -131,10 +131,18 @@ void main() {
       TownResident.shiba, TownResident.rabbit, TownResident.penguin,
     ]));
     expect(find.byKey(const ValueKey('resident-2')), findsOneWidget);
-    final newSprite = tester.widget<Image>(
+    // The penguin joins during its natural rest phase, then starts walking.
+    final joiningSprite = tester.widget<Image>(
       find.byKey(const ValueKey('resident-sprite-2')),
     );
-    expect((newSprite.image as AssetImage).assetName, contains('/walk_'));
+    expect((joiningSprite.image as AssetImage).assetName,
+        TownResident.penguin.idleAsset);
+    await tester.pump(const Duration(milliseconds: 900));
+    final walkingSprite = tester.widget<Image>(
+      find.byKey(const ValueKey('resident-sprite-2')),
+    );
+    expect((walkingSprite.image as AssetImage).assetName,
+        contains('/walk_front_'));
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
