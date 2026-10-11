@@ -171,11 +171,11 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     }
   }
 
-  void _showTip(TownResident resident) {
+  Future<void> _showTip(TownResident resident) async {
     final index = _tipIndex[resident] ?? 0;
     final tip = resident.tips[index % resident.tips.length];
     _tipIndex[resident] = index + 1;
-    showDialog<void>(
+    await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),

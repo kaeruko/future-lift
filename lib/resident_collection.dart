@@ -6,6 +6,8 @@ const ownedResidentLimit = 8;
 const townResidentLimit = 8;
 const applauseResidentLimit = 8;
 
+enum WalkDirection { front, back, left, right }
+
 enum TownResident {
   shiba('01_shiba', 'しばいぬ', '001_shiba', Resident.child),
   rabbit('02_rabbit', 'うさぎ', '002_usagi', Resident.student),
@@ -25,6 +27,21 @@ enum TownResident {
     for (final frame in ['01', '02'])
       'assets/characters/$artFolder/clap_front_$frame.png',
   ];
+  /// Walking assets use four real poses per direction.
+  /// Shiba's left-facing frames were never supplied; mirror its right poses.
+  String walkAsset(WalkDirection direction, int frame) {
+    if (frame < 0 || frame >= 4) {
+      throw RangeError.range(frame, 0, 3, 'frame');
+    }
+    final side = direction == WalkDirection.left && this == TownResident.shiba
+        ? WalkDirection.right : direction;
+    final number = (frame + 1).toString().padLeft(2, '0');
+    return 'assets/characters/$artFolder/walk_${side.name}_$number.png';
+  }
+
+  bool mirrorWalk(WalkDirection direction) =>
+      this == TownResident.shiba && direction == WalkDirection.left;
+
   static TownResident fromId(String id) => values.firstWhere(
     (resident) => resident.id == id,
     orElse: () => throw FormatException('Unknown resident ID: $id'),
