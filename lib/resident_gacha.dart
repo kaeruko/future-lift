@@ -4,6 +4,7 @@ import 'progress.dart';
 import 'resident_collection.dart';
 import 'home_skin.dart';
 import 'gacha_reveal.dart';
+import 'ticket_counter_badge.dart';
 
 /// Inline panel keeps save failures visible on the main diagnostic screen.
 class ResidentGacha extends StatefulWidget {
@@ -58,7 +59,24 @@ class _ResidentGachaState extends State<ResidentGacha> {
             style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text('住民ガチャ券 $tickets枚', key: const ValueKey('resident-tickets')),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  '住民ガチャ券',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF63351F),
+                  ),
+                ),
+              ),
+              TicketCounterBadge(
+                key: const ValueKey('resident-tickets'),
+                tickets: tickets,
+              ),
+            ],
+          ),
           Text(
             'あと${collection.untilNextTicket(progress.points)}ポイントで券を1枚もらえます。',
           ),

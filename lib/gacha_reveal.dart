@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'home_skin.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
+import 'ticket_counter_badge.dart';
 
 /// Results are already persisted before this route opens.
 class GachaReveal extends StatefulWidget {
@@ -262,8 +263,13 @@ class _GachaRevealState extends State<GachaReveal>
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
-                                    '累計${progress.residents.counts[_resident.id]}回 ・ ガチャ券 $tickets枚',
+                                    '累計${progress.residents.counts[_resident.id]}回',
                                     style: const TextStyle(color: wood),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  TicketCounterBadge(
+                                    key: const ValueKey('reveal-tickets'),
+                                    tickets: tickets,
                                   ),
                                   const SizedBox(height: 20),
                                   Wrap(

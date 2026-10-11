@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/main.dart';
 import 'package:future_lift/gacha_reveal.dart';
 import 'package:future_lift/progress.dart';
+import 'package:future_lift/ticket_counter_badge.dart';
 
 import 'progress_test.dart' show MemoryStore;
 import 'resident_collection_test.dart' show funded, FixedRandom;
@@ -61,6 +62,13 @@ void main() {
       (art.image as AssetImage).assetName,
       'assets/gacya/button_resident.png',
     );
+    final ticketBadge = tester.widget<TicketCounterBadge>(
+      find.byKey(const ValueKey('resident-tickets')),
+    );
+    expect(
+      ticketBadge.tickets,
+      controller.progress!.residents.tickets(controller.progress!.points),
+    );
     await tester.tap(find.byKey(const ValueKey('draw-resident')));
     await tester.pump();
     await tester.pump();
@@ -80,6 +88,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('NEW'), findsOneWidget);
     expect(find.byKey(const ValueKey('resident-name')), findsOneWidget);
+    expect(
+      tester.widget<TicketCounterBadge>(
+        find.byKey(const ValueKey('reveal-tickets')),
+      ).tickets,
+      1,
+    );
     await tester.ensureVisible(find.byKey(const ValueKey('button_again')));
     await tester.tap(find.byKey(const ValueKey('button_again')));
     await tester.pump();
