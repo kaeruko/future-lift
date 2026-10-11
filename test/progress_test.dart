@@ -238,6 +238,136 @@ void main() {
     },
   );
 
+  test('journal records all dates, survives rollovers, and awards only once', () async {
+    var now = DateTime(2026, 10, 9, 12);
+    final store = MemoryStore();
+    final controller = ProgressController(store, clock: () => now);
+    await controller.initialize();
+    expect(await controller.complete(Mission.strength), isTrue);
+    expect(await controller.complete(Mission.strength), isFalse);
+    expect(await controller.complete(Mission.outside), isTrue);
+
+    now = DateTime(2026, 11, 1);
+    await controller.refreshDay();
+    expect(controller.progress!.history['2026-10-09'],
+        {Mission.strength, Mission.outside});
+    expect(controller.progress!.completed, isEmpty);
+    expect(await controller.complete(Mission.conversation), isTrue);
+    expect(controller.progress!.history['2026-11-01'], {Mission.conversation});
+
+    final restarted = ProgressController(store, clock: () => now);
+    await restarted.initialize();
+    expect(restarted.progress!.points, 30);
+    expect(restarted.progress!.history.length, 2);
+    expect(restarted.progress!.history['2026-10-09'],
+        {Mission.strength, Mission.outside});
+    expect(restarted.progress!.history['2026-11-01'],
+        {Mission.conversation});
+    expect(() => restarted.progress!.history.clear(), throwsUnsupportedError);
+    expect(() => restarted.progress!.history['2026-10-09']!.clear(),
+        throwsUnsupportedError);
+  });
+
+  test('v1 can migrate without inventing older events or dropping points', () {
+    final legacy = jsonEncode({
+      'version': 1,
+      'day': '2026-10-09',
+      'lastCompletedDay': '2026-10-09',
+      'points': 100,
+      'completed': ['strength', 'conversation'],
+    });
+    final migrated = Progress.decode(legacy, expectedVersion: 1);
+    expect(migrated.points, 100);
+    expect(migrated.history, {
+      '2026-10-09': {Mission.strength, Mission.conversation},
+    });
+    final serialized = migrated.encode();
+    expect(jsonDecode(serialized)['version'], 2);
+    expect(Progress.decode(serialized, expectedVersion: 2).points, 100);
+    expect(
+      Progress.decode(serialized).history['2026-10-09'],
+      {Mission.strength, Mission.conversation},
+    );
+    expect(() => Progress.decode(legacy, expectedVersion: 2),
+        throwsFormatException);
+    expect(() => Progress.decode(serialized, expectedVersion: 1),
+        throwsFormatException);
+
+    final earlierOnly = Progress.decode(jsonEncode({
+      'version': 1,
+      'day': '2026-10-09',
+      'lastCompletedDay': '2026-10-05',
+      'points': 30,
+      'completed': <String>[],
+    }));
+    expect(earlierOnly.history, isEmpty);
+    expect(earlierOnly.points, 30);
+  });
+
+  test('clear history leaves earned points and daily completion untouched', () async {
+    final store = MemoryStore();
+    final controller = ProgressController(store, clock: () => today);
+    await controller.initialize();
+    await controller.complete(Mission.strength);
+    expect(await controller.clearHistory(), isTrue);
+    expect(controller.progress!.history, isEmpty);
+    expect(controller.progress!.points, 10);
+    expect(controller.progress!.completed, {Mission.strength});
+    expect(await controller.complete(Mission.strength), isFalse);
+    expect(await controller.complete(Mission.outside), isTrue);
+    expect(controller.progress!.points, 20);
+    expect(controller.progress!.history['2026-10-09'], {Mission.outside});
+    final restored = Progress.decode(store.raw!);
+    expect(restored.completed, {Mission.strength, Mission.outside});
+    expect(restored.history['2026-10-09'], {Mission.outside});
+  });
+
+  test('failed journal deletion stops without publishing altered data', () async {
+    final store = MemoryStore();
+    final controller = ProgressController(store, clock: () => today);
+    await controller.initialize();
+    await controller.complete(Mission.outside);
+    final saved = store.raw;
+    final error = StateError('cannot persist deletion');
+    store.saveError = error;
+    expect(await controller.clearHistory(), isFalse);
+    expect(controller.failure!.error, same(error));
+    expect(controller.failure!.operation, '履歴の削除');
+    expect(controller.progress!.history['2026-10-09'], {Mission.outside});
+    expect(store.raw, saved);
+    expect(await controller.clearHistory(), isFalse);
+    expect(await controller.complete(Mission.strength), isFalse);
+  });
+
+  test('invalid v2 history rejects inconsistent dates and actions', () {
+    final valid = jsonDecode(
+      Progress.empty(today).complete(Mission.strength).encode(),
+    ) as Map<String, dynamic>;
+    for (final history in [
+      {'2026-10-09': ['strength', 'strength']},
+      {'2026-10-09': ['unknown']},
+      {'2026-10-09': <String>[]},
+      {'2026-10-10': ['strength']},
+      {'2026-02-30': ['strength']},
+      {'2026-10-09': ['outside']},
+      {'2026-10-08': ['strength', 'conversation']},
+    ]) {
+      expect(
+        () => Progress.decode(jsonEncode({...valid, 'history': history})),
+        throwsFormatException,
+        reason: history.toString(),
+      );
+    }
+    expect(
+      () => Progress.decode(jsonEncode({...valid, 'history': []})),
+      throwsFormatException,
+    );
+    expect(
+      () => Progress.decode(jsonEncode({...valid, 'history': null})),
+      throwsFormatException,
+    );
+  });
+
   test('four town stages use cumulative points and never decay', () {
     for (final (points, level) in [
       (0, 0),

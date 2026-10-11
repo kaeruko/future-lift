@@ -8,6 +8,7 @@ import 'progress.dart';
 import 'home_skin.dart';
 import 'game_home.dart';
 import 'missions_screen.dart';
+import 'history_screen.dart';
 import 'residents.dart';
 import 'town.dart';
 
@@ -230,7 +231,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                       busy: controller.busy,
                       onComplete: _complete,
                     )
-                  : ListView(
+                  : _page == 2
+                  ? ListView(
                       key: ValueKey('page-$_page'),
                       padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
                       children: [
@@ -279,6 +281,13 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                         const SizedBox(height: 26),
                         ..._town(progress),
                       ],
+                    )
+                  : HistoryScreen(
+                      progress: progress,
+                      busy: controller.busy,
+                      onClear: () async {
+                        await controller.clearHistory();
+                      },
                     ),
             ),
           ),
@@ -302,6 +311,10 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
             NavigationDestination(
               icon: uiPart('11_nav_town', width: 54, height: 58),
               label: 'みんなのまち',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.auto_stories_outlined, size: 35),
+              label: '履歴',
             ),
           ],
         ),
