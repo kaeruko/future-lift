@@ -58,6 +58,24 @@ flutter:
   assets:
     - assets/kotohogu/
     - assets/quests/
+    - assets/characters/001_shiba/idle_front_01.png
+    - assets/characters/001_shiba/clap_front_01.png
+    - assets/characters/001_shiba/clap_front_02.png
+    - assets/characters/002_usagi/idle_front_01.png
+    - assets/characters/002_usagi/clap_front_01.png
+    - assets/characters/002_usagi/clap_front_02.png
+    - assets/characters/003_penguin/idle_front_01.png
+    - assets/characters/003_penguin/clap_front_01.png
+    - assets/characters/003_penguin/clap_front_02.png
+    - assets/characters/004_neko/idle_front_01.png
+    - assets/characters/004_neko/clap_front_01.png
+    - assets/characters/004_neko/clap_front_02.png
+    - assets/characters/005_risu/idle_front_01.png
+    - assets/characters/005_risu/clap_front_01.png
+    - assets/characters/005_risu/clap_front_02.png
+    - assets/characters/006_kuma/idle_front_01.png
+    - assets/characters/006_kuma/clap_front_01.png
+    - assets/characters/006_kuma/clap_front_02.png
     - assets/clap/
     - assets/celebration/
 

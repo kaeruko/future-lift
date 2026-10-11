@@ -11,7 +11,8 @@ import 'game_home.dart';
 import 'missions_screen.dart';
 import 'history_screen.dart';
 import 'debug_menu_screen.dart';
-import 'residents.dart';
+import 'resident_collection.dart';
+import 'resident_gacha.dart';
 import 'town.dart';
 
 void main() {
@@ -79,7 +80,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   int _homeVisit = 0;
   bool _celebrating = false;
   Timer? _midnight;
-  final _tipIndex = <Resident, int>{};
+  final _tipIndex = <TownResident, int>{};
   ProgressController get controller => widget.controller;
 
   @override
@@ -117,6 +118,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
 
   Future<void> _complete(Mission mission) async {
     if (_celebrating) return;
+    final beforeTickets = controller.progress!.residents.earnedTickets(
+      controller.progress!.points,
+    );
     final earned = await controller.complete(mission);
     if (!mounted || !earned) return;
     _celebrating = true;
@@ -126,6 +130,12 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       builder: (context) => Celebration(
         missionTitle: mission.title,
         total: controller.progress!.points,
+        residents: controller.progress!.residents.owned,
+        ticketEarned:
+            controller.progress!.residents.earnedTickets(
+              controller.progress!.points,
+            ) >
+            beforeTickets,
       ),
     );
     _celebrating = false;
@@ -135,8 +145,11 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
 
   /// Replays the celebration without touching the progress store.
   Future<void> _previewCelebration() async {
-    if (!kDebugMode || _celebrating || controller.busy ||
-        controller.failure != null || controller.progress == null) {
+    if (!kDebugMode ||
+        _celebrating ||
+        controller.busy ||
+        controller.failure != null ||
+        controller.progress == null) {
       return;
     }
     final total = controller.progress!.points;
@@ -150,6 +163,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           missionTitle: missionTitle,
           total: total,
           preview: true,
+          residents: controller.progress!.residents.owned,
         ),
       );
     } finally {
@@ -157,7 +171,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     }
   }
 
-  void _showTip(Resident resident) {
+  void _showTip(TownResident resident) {
     final index = _tipIndex[resident] ?? 0;
     final tip = resident.tips[index % resident.tips.length];
     _tipIndex[resident] = index + 1;
@@ -167,7 +181,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         title: Row(
           children: [
-            ResidentAvatar(resident: resident, size: 48),
+            TownResidentAvatar(resident: resident, size: 48),
             const SizedBox(width: 12),
             Expanded(child: Text(resident.label)),
           ],
@@ -407,13 +421,19 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       ],
     ),
     const SizedBox(height: 14),
-    TownScene(level: progress.townLevel, onResident: _showTip),
+    TownScene(
+      level: progress.townLevel,
+      residents: progress.residents.owned,
+      onResident: _showTip,
+    ),
     const SizedBox(height: 14),
     Text(
       townDescriptions[progress.townLevel],
       textAlign: TextAlign.center,
       style: const TextStyle(fontWeight: FontWeight.w600),
     ),
+    const SizedBox(height: 24),
+    ResidentGacha(controller: controller),
     const SizedBox(height: 24),
     const Row(
       mainAxisAlignment: MainAxisAlignment.center,

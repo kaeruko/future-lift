@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'residents.dart';
+import 'resident_collection.dart';
 
 const townNames = ['穏やかなまち', '花のあるまち', '笑顔が集まるまち', 'にぎやかなまち'];
 const townDescriptions = [
@@ -11,9 +11,15 @@ const townDescriptions = [
 ];
 
 class TownScene extends StatelessWidget {
-  const TownScene({super.key, required this.level, this.onResident});
+  const TownScene({
+    super.key,
+    required this.level,
+    required this.residents,
+    this.onResident,
+  });
   final int level;
-  final ValueChanged<Resident>? onResident;
+  final List<TownResident> residents;
+  final ValueChanged<TownResident>? onResident;
 
   @override
   Widget build(BuildContext context) => AspectRatio(
@@ -24,13 +30,19 @@ class TownScene extends StatelessWidget {
         builder: (context, constraints) {
           final width = constraints.maxWidth;
           final height = constraints.maxHeight;
+          const slots = [
+            (.10, .51),
+            (.63, .49),
+            (.33, .65),
+            (.72, .73),
+            (.03, .76),
+            (.48, .47),
+            (.28, .43),
+            (.50, .76),
+          ];
           final people = [
-            (Resident.child, .12, .52),
-            (Resident.student, .65, .49),
-            (Resident.adult, .34, .67),
-            (Resident.elder, .73, .73),
-            if (level >= 2) (Resident.child, .05, .77),
-            if (level >= 2) (Resident.adult, .49, .48),
+            for (var i = 0; i < residents.length && i < townResidentLimit; i++)
+              (residents[i], slots[i].$1, slots[i].$2),
           ];
           return Stack(
             children: [
@@ -50,10 +62,9 @@ class TownScene extends StatelessWidget {
                         onTap: onResident == null
                             ? null
                             : () => onResident!(people[index].$1),
-                        child: ResidentAvatar(
+                        child: TownResidentAvatar(
                           resident: people[index].$1,
                           size: (width * .14).clamp(40.0, 76.0),
-                          celebrating: level >= 2,
                         ),
                       ),
                     ),

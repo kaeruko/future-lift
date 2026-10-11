@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'clap_characters.dart';
+import 'resident_collection.dart';
 
 class Celebration extends StatefulWidget {
   const Celebration({
@@ -10,9 +11,14 @@ class Celebration extends StatefulWidget {
     required this.missionTitle,
     required this.total,
     this.preview = false,
+    required this.residents,
+    this.ticketEarned = false,
   });
   final String missionTitle;
   final int total;
+  final List<TownResident> residents;
+  final bool ticketEarned;
+
   /// An animation-only replay that does not award points.
   final bool preview;
 
@@ -155,6 +161,7 @@ class _CelebrationState extends State<Celebration>
                           animation: _applause,
                           builder: (context, child) => ClapCharacters(
                             phase: _applause.value,
+                            residents: widget.residents,
                             reduced: _reduced!,
                           ),
                         ),
@@ -193,6 +200,11 @@ class _CelebrationState extends State<Celebration>
                         ),
                       ),
                     ],
+                    if (widget.ticketEarned)
+                      const Chip(
+                        avatar: Icon(Icons.confirmation_number_outlined),
+                        label: Text('住民ガチャ券 +1枚'),
+                      ),
                     const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,

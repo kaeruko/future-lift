@@ -27,18 +27,25 @@ void main() {
       var previous = -30.0;
       for (var step = 1; step <= 100; step++) {
         final y = confettiFallY(step / 100, delay, exponent, height);
-        expect(y, greaterThanOrEqualTo(previous), reason: 'Particle $i at $step%');
+        expect(
+          y,
+          greaterThanOrEqualTo(previous),
+          reason: 'Particle $i at $step%',
+        );
         previous = y;
       }
       expect(confettiFallFraction(.99, delay, exponent), lessThan(1));
       expect(confettiFallFraction(1, delay, exponent), 1);
       // The painter culls particles beyond height + 35.
-      expect(confettiFallY(1, delay, exponent, height),
-          greaterThan(height + 35), reason: 'Particle $i stayed visible');
+      expect(
+        confettiFallY(1, delay, exponent, height),
+        greaterThan(height + 35),
+        reason: 'Particle $i stayed visible',
+      );
     }
   });
 
-  testWidgets('eight sprites clap in sequence and respect reduced motion', (
+  testWidgets('six sprites clap in sequence and respect reduced motion', (
     tester,
   ) async {
     Future<void> show(double phase, {bool reduced = false}) async {
@@ -59,12 +66,12 @@ void main() {
         .index!;
 
     await show(0);
-    expect(find.byType(IndexedStack), findsNWidgets(8));
+    expect(find.byType(IndexedStack), findsNWidgets(6));
     expect(frame(), 0);
     await show(.25);
     expect(frame(), 1);
     await show(.5);
-    expect(frame(), 2);
+    expect(frame(), 0);
     await show(.75);
     expect(frame(), 1);
     await show(0, reduced: true);
@@ -448,10 +455,11 @@ void main() {
 
     await tester.tap(reset);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('debug-confirm-reset-missions')));
+    await tester.tap(
+      find.byKey(const ValueKey('debug-confirm-reset-missions')),
+    );
     await tester.pumpAndSettle();
-    expect(find.text('全ミッションの達成状態をリセットしました'),
-        findsOneWidget);
+    expect(find.text('全ミッションの達成状態をリセットしました'), findsOneWidget);
     expect(controller.progress!.completed, isEmpty);
     expect(controller.progress!.weeklyCompleted, isEmpty);
     expect(controller.progress!.monthlyCompleted, isEmpty);
@@ -467,7 +475,8 @@ void main() {
     await tester.tap(find.text('ミッション').last);
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('complete-strength')), 160,
+      find.byKey(const ValueKey('complete-strength')),
+      160,
     );
     await tester.pumpAndSettle();
     final button = tester.widget<FilledButton>(

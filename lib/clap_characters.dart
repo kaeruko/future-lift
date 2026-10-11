@@ -2,42 +2,49 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// Supplied three-frame sprites. Keep every frame mounted to avoid flicker.
-class ClapCharacters extends StatelessWidget {
-  const ClapCharacters({super.key, required this.phase, required this.reduced});
+import 'resident_collection.dart';
 
+/// Supplied two-frame sprites. Keep every frame mounted to avoid flicker.
+class ClapCharacters extends StatelessWidget {
+  const ClapCharacters({
+    super.key,
+    required this.phase,
+    required this.reduced,
+    this.residents = TownResident.values,
+  });
+
+  final List<TownResident> residents;
   final double phase;
   final bool reduced;
-  static const characters = [
-    ('01_shiba', 'しばいぬ'),
-    ('02_rabbit', 'うさぎ'),
-    ('03_penguin', 'ペンギン'),
-    ('04_chef_cat', 'シェフのねこ'),
-    ('05_squirrel', 'りす'),
-    ('06_grandma_sheep', 'ひつじのおばあちゃん'),
-    ('07_business_frog', 'ビジネスマンのかえる'),
-    ('08_mail_bird', 'ゆうびんやさん'),
-  ];
-  static const frames = ['01_hands_apart', '02_clap', '03_hands_apart'];
 
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      for (var row = 0; row < 2; row++)
-        Row(
-          children: [
-            for (var col = 0; col < 4; col++)
-              Expanded(child: _character(row * 4 + col)),
-          ],
-        ),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final visible = residents.take(applauseResidentLimit).toList();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var start = 0; start < visible.length; start += 4)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = start; i < math.min(start + 4, visible.length); i++)
+                Flexible(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 150),
+                    child: _character(visible[i], i),
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
 
-  Widget _character(int index) {
-    final (id, name) = characters[index];
+  Widget _character(TownResident resident, int index) {
+    final id = resident.id;
+    final name = resident.label;
     final time = (phase + index * .07) % 1;
-    final frame = reduced ? 1 : [0, 1, 2, 1][(time * 4).floor()];
+    final frame = reduced ? 1 : [0, 1, 0, 1][(time * 4).floor()];
     return Semantics(
       label: '$nameが拍手しています',
       image: true,
@@ -50,9 +57,9 @@ class ClapCharacters extends StatelessWidget {
             index: frame,
             sizing: StackFit.expand,
             children: [
-              for (final frameName in frames)
+              for (final asset in resident.clapAssets)
                 Image.asset(
-                  'assets/clap/${id}_$frameName.png',
+                  asset,
                   fit: BoxFit.contain,
                   excludeFromSemantics: true,
                 ),

@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
+
+import 'resident_collection.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,8 +31,10 @@ enum Mission {
   final String description;
   final MissionPeriod period;
 
-  static List<Mission> forPeriod(MissionPeriod period) =>
-      [for (final mission in values) if (mission.period == period) mission];
+  static List<Mission> forPeriod(MissionPeriod period) => [
+    for (final mission in values)
+      if (mission.period == period) mission,
+  ];
 }
 
 String localDay(DateTime time) {
@@ -51,12 +56,14 @@ class Progress {
     required this.day,
     required this.lastCompletedDay,
     required this.points,
+    ResidentCollection? residents,
     required Set<Mission> completed,
     Map<String, Set<Mission>> history = const {},
     Set<Mission> weeklyCompleted = const {},
     Set<Mission> monthlyCompleted = const {},
     Map<MissionPeriod, String> debugResets = const {},
-  }) : completed = Set.unmodifiable(completed),
+  }) : residents = residents ?? ResidentCollection.initial(points),
+       completed = Set.unmodifiable(completed),
        history = Map.unmodifiable({
          for (final entry in history.entries)
            entry.key: Set<Mission>.unmodifiable(entry.value),
@@ -75,10 +82,12 @@ class Progress {
   final String day;
   final String? lastCompletedDay;
   final int points;
+  final ResidentCollection residents;
   final Set<Mission> completed;
   final Map<String, Set<Mission>> history;
   final Set<Mission> weeklyCompleted;
   final Set<Mission> monthlyCompleted;
+
   /// Period markers permit intentional debug resets without erasing past history.
   final Map<MissionPeriod, String> debugResets;
 
@@ -106,11 +115,14 @@ class Progress {
       day: today,
       lastCompletedDay: lastCompletedDay,
       points: points,
+      residents: residents,
       completed: {},
       weeklyCompleted: weekStart(today) == weekStart(day)
-          ? weeklyCompleted : {},
+          ? weeklyCompleted
+          : {},
       monthlyCompleted: monthKey(today) == monthKey(day)
-          ? monthlyCompleted : {},
+          ? monthlyCompleted
+          : {},
       history: history,
       debugResets: {
         if (weekStart(today) == weekStart(day) &&
@@ -129,12 +141,16 @@ class Progress {
       day: day,
       lastCompletedDay: day,
       points: points + 10,
+      residents: residents,
       completed: mission.period == MissionPeriod.daily
-          ? {...completed, mission} : completed,
+          ? {...completed, mission}
+          : completed,
       weeklyCompleted: mission.period == MissionPeriod.weekly
-          ? {...weeklyCompleted, mission} : weeklyCompleted,
+          ? {...weeklyCompleted, mission}
+          : weeklyCompleted,
       monthlyCompleted: mission.period == MissionPeriod.monthly
-          ? {...monthlyCompleted, mission} : monthlyCompleted,
+          ? {...monthlyCompleted, mission}
+          : monthlyCompleted,
       history: {
         ...history,
         day: {...?history[day], mission},
@@ -149,6 +165,7 @@ class Progress {
     day: day,
     lastCompletedDay: lastCompletedDay,
     points: points,
+    residents: residents,
     completed: {},
     weeklyCompleted: {},
     monthlyCompleted: {},
@@ -165,14 +182,28 @@ class Progress {
     day: day,
     lastCompletedDay: lastCompletedDay,
     points: points,
+    residents: residents,
     completed: completed,
     weeklyCompleted: weeklyCompleted,
     monthlyCompleted: monthlyCompleted,
     debugResets: debugResets,
   );
 
+  Progress acquireResident(TownResident resident) => Progress(
+    day: day,
+    lastCompletedDay: lastCompletedDay,
+    points: points,
+    residents: residents.acquire(resident, points),
+    completed: completed,
+    weeklyCompleted: weeklyCompleted,
+    monthlyCompleted: monthlyCompleted,
+    history: history,
+    debugResets: debugResets,
+  );
+
   String encode() => jsonEncode({
-    'version': 3,
+    'version': 4,
+    'residents': residents.encode(),
     'day': day,
     'lastCompletedDay': lastCompletedDay,
     'points': points,
@@ -182,8 +213,7 @@ class Progress {
     if (debugResets.isNotEmpty)
       'debugResets': {
         for (final period in MissionPeriod.values)
-          if (debugResets.containsKey(period))
-            period.name: debugResets[period],
+          if (debugResets.containsKey(period)) period.name: debugResets[period],
       },
     'history': {
       for (final date in (history.keys.toList()..sort()))
@@ -196,43 +226,65 @@ class Progress {
       if (missions.contains(mission)) mission.name,
   ];
 
-  /// v1/v2 records are strictly validated before migration into v3.
+  /// Older records are strictly validated before migration into v4.
   static Progress decode(String raw, {int? expectedVersion}) {
     final data = jsonDecode(raw);
     if (data is! Map<String, dynamic>) {
       throw const FormatException('Invalid FutureLift save schema.');
     }
     final version = data['version'];
-    if (version is! int || ![1, 2, 3].contains(version) ||
+    if (version is! int ||
+        ![1, 2, 3, 4].contains(version) ||
         (expectedVersion != null && expectedVersion != version)) {
       throw FormatException('Unsupported FutureLift save version: $version');
     }
     final keys = {
-      'version', 'day', 'lastCompletedDay', 'points', 'completed',
+      if (version == 4) 'residents',
+      'version',
+      'day',
+      'lastCompletedDay',
+      'points',
+      'completed',
       if (version >= 2) 'history',
-      if (version == 3) ...['weeklyCompleted', 'monthlyCompleted'],
-      if (version == 3 && data.containsKey('debugResets')) 'debugResets',
+      if (version >= 3) ...['weeklyCompleted', 'monthlyCompleted'],
+      if (version >= 3 && data.containsKey('debugResets')) 'debugResets',
     };
     if (data.keys.toSet().difference(keys).isNotEmpty ||
-        data.length != keys.length || !_validDay(data['day']) ||
+        data.length != keys.length ||
+        !_validDay(data['day']) ||
         (data['lastCompletedDay'] != null &&
-          !_validDay(data['lastCompletedDay'])) ||
+            !_validDay(data['lastCompletedDay'])) ||
         data['points'] is! int) {
       throw const FormatException('Invalid FutureLift save schema.');
     }
     final day = data['day'] as String;
     final last = data['lastCompletedDay'] as String?;
     final points = data['points'] as int;
-    final completed = _missions(data['completed'], 'completed', MissionPeriod.daily);
-    final weekly = version == 3
-        ? _missions(data['weeklyCompleted'], 'weeklyCompleted', MissionPeriod.weekly)
+    final residents = version == 4
+        ? ResidentCollection.decode(data['residents'], points)
+        : ResidentCollection.initial(points);
+    final completed = _missions(
+      data['completed'],
+      'completed',
+      MissionPeriod.daily,
+    );
+    final weekly = version >= 3
+        ? _missions(
+            data['weeklyCompleted'],
+            'weeklyCompleted',
+            MissionPeriod.weekly,
+          )
         : <Mission>{};
-    final monthly = version == 3
-        ? _missions(data['monthlyCompleted'], 'monthlyCompleted', MissionPeriod.monthly)
+    final monthly = version >= 3
+        ? _missions(
+            data['monthlyCompleted'],
+            'monthlyCompleted',
+            MissionPeriod.monthly,
+          )
         : <Mission>{};
     final history = <String, Set<Mission>>{};
     final debugResets = <MissionPeriod, String>{};
-    if (version == 3 && data.containsKey('debugResets')) {
+    if (version >= 3 && data.containsKey('debugResets')) {
       final raw = data['debugResets'];
       if (raw is! Map<String, dynamic> || raw.isEmpty) {
         throw const FormatException('Invalid debug reset markers.');
@@ -242,7 +294,9 @@ class Progress {
           'daily' => MissionPeriod.daily,
           'weekly' => MissionPeriod.weekly,
           'monthly' => MissionPeriod.monthly,
-          _ => throw FormatException('Unknown debug reset period: ${entry.key}'),
+          _ => throw FormatException(
+            'Unknown debug reset period: ${entry.key}',
+          ),
         };
         final expected = switch (period) {
           MissionPeriod.daily => day,
@@ -266,12 +320,15 @@ class Progress {
       }
       for (final entry in rawHistory.entries) {
         final date = entry.key;
-        if (!_validDay(date) || date.compareTo(day) > 0 ||
-            last == null || date.compareTo(last) > 0) {
+        if (!_validDay(date) ||
+            date.compareTo(day) > 0 ||
+            last == null ||
+            date.compareTo(last) > 0) {
           throw FormatException('Invalid history date: $date');
         }
         final missions = _missions(
-          entry.value, 'history[$date]',
+          entry.value,
+          'history[$date]',
           version == 2 ? MissionPeriod.daily : null,
         );
         if (missions.isEmpty) {
@@ -293,26 +350,30 @@ class Progress {
         .where((mission) => mission.period == MissionPeriod.monthly)
         .toSet();
 
-    if (points < 0 || points % 10 != 0 ||
+    if (points < 0 ||
+        points % 10 != 0 ||
         points < completed.length * 10 ||
         (points == 0) != (last == null) ||
         (last != null && last.compareTo(day) > 0) ||
         (completed.isNotEmpty && last != day) ||
         (version <= 2 && completed.isEmpty && last == day) ||
         (debugResets[MissionPeriod.daily] != day &&
-            todayHistory.where((m) => m.period == MissionPeriod.daily)
+            todayHistory
+                .where((m) => m.period == MissionPeriod.daily)
                 .any((m) => !completed.contains(m))) ||
         (debugResets[MissionPeriod.weekly] != weekStart(day) &&
             !weekly.containsAll(weekHistory)) ||
         (debugResets[MissionPeriod.monthly] != monthKey(day) &&
             !monthly.containsAll(monthHistory)) ||
-        history.values.fold<int>(0, (sum, events) => sum + events.length) * 10 > points) {
+        history.values.fold<int>(0, (sum, events) => sum + events.length) * 10 >
+            points) {
       throw const FormatException('Inconsistent FutureLift progress values.');
     }
     return Progress(
       day: day,
       lastCompletedDay: last,
       points: points,
+      residents: residents,
       completed: completed,
       weeklyCompleted: weekly,
       monthlyCompleted: monthly,
@@ -322,7 +383,9 @@ class Progress {
   }
 
   static Set<Mission> _missions(
-    dynamic raw, String field, MissionPeriod? expected,
+    dynamic raw,
+    String field,
+    MissionPeriod? expected,
   ) {
     if (raw is! List) throw FormatException('Invalid mission list: $field');
     final result = <Mission>{};
@@ -358,36 +421,24 @@ abstract interface class ProgressStore {
 class LocalProgressStore implements ProgressStore {
   LocalProgressStore(this.preferences);
   final SharedPreferencesAsync preferences;
-  static const key = 'future_lift.progress.v3';
+  static const key = 'future_lift.progress.v4';
+  static const v3Key = 'future_lift.progress.v3';
   static const previousKey = 'future_lift.progress.v2';
   static const legacyKey = 'future_lift.progress.v1';
 
   @override
   Future<Progress?> load() async {
     final current = await preferences.getString(key);
-    if (current != null) {
-      final result = Progress.decode(current, expectedVersion: 3);
-      // Only clean older keys after a valid v3 record is confirmed.
-      if (await preferences.getString(previousKey) != null) {
-        await preferences.remove(previousKey);
-      }
-      if (await preferences.getString(legacyKey) != null) {
-        await preferences.remove(legacyKey);
-      }
-      return result;
+    if (current != null) return Progress.decode(current, expectedVersion: 4);
+    // Explicit migrations only. Invalid newer data never falls back to older data.
+    for (final entry in [(v3Key, 3), (previousKey, 2), (legacyKey, 1)]) {
+      final raw = await preferences.getString(entry.$1);
+      if (raw == null) continue;
+      final migrated = Progress.decode(raw, expectedVersion: entry.$2);
+      await save(migrated);
+      return migrated;
     }
-
-    final previous = await preferences.getString(previousKey);
-    final legacy = previous == null
-        ? await preferences.getString(legacyKey) : null;
-    if (previous == null && legacy == null) return null;
-    final migrated = previous != null
-        ? Progress.decode(previous, expectedVersion: 2)
-        : Progress.decode(legacy!, expectedVersion: 1);
-    await save(migrated);
-    if (previous != null) await preferences.remove(previousKey);
-    if (legacy != null) await preferences.remove(legacyKey);
-    return migrated;
+    return null;
   }
 
   @override
@@ -401,12 +452,14 @@ class ProgressFailure {
   final Object error;
   final StackTrace stackTrace;
   String get diagnostics =>
-      '$operation\n${LocalProgressStore.key} / ${LocalProgressStore.previousKey} / ${LocalProgressStore.legacyKey}\n$error\n$stackTrace';
+      '$operation\n${LocalProgressStore.key} / ${LocalProgressStore.v3Key} / ${LocalProgressStore.previousKey} / ${LocalProgressStore.legacyKey}\n$error\n$stackTrace';
 }
 
 class ProgressController extends ChangeNotifier {
-  ProgressController(this.store, {DateTime Function()? clock})
-    : clock = clock ?? DateTime.now;
+  ProgressController(this.store, {DateTime Function()? clock, Random? random})
+    : clock = clock ?? DateTime.now,
+      random = random ?? Random();
+  final Random random;
   final ProgressStore store;
   final DateTime Function() clock;
   Progress? progress;
@@ -482,6 +535,30 @@ class ProgressController extends ChangeNotifier {
     }
   }
 
+  Future<TownResident?> drawResident() async {
+    if (busy ||
+        failure != null ||
+        progress == null ||
+        progress!.residents.tickets(progress!.points) <= 0) {
+      return null;
+    }
+    busy = true;
+    notifyListeners();
+    try {
+      final resident =
+          TownResident.values[random.nextInt(TownResident.values.length)];
+      final next = progress!.onDay(clock()).acquireResident(resident);
+      await store.save(next);
+      progress = next;
+      return resident;
+    } catch (error, stack) {
+      failure = ProgressFailure('住民ガチャの抽選・保存', error, stack);
+      return null;
+    } finally {
+      _finishOperation();
+    }
+  }
+
   /// Debug-only persistence of reset mission buttons. Never delete history.
   Future<bool> resetAllMissionsForDebug() async {
     if (!kDebugMode) {
@@ -505,7 +582,9 @@ class ProgressController extends ChangeNotifier {
   }
 
   Future<bool> clearHistory() async {
-    if (busy || failure != null || progress == null ||
+    if (busy ||
+        failure != null ||
+        progress == null ||
         progress!.history.isEmpty) {
       return false;
     }

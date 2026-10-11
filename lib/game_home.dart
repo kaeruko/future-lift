@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'home_skin.dart';
 import 'progress.dart';
-import 'residents.dart';
+import 'resident_collection.dart';
 
 /// The town lobby links to the daily mission board.
 class GameHome extends StatefulWidget {
@@ -19,7 +19,7 @@ class GameHome extends StatefulWidget {
   final VoidCallback onMissions;
 
   final VoidCallback onTown;
-  final ValueChanged<Resident> onResident;
+  final ValueChanged<TownResident> onResident;
 
   @override
   State<GameHome> createState() => _GameHomeState();
@@ -219,7 +219,10 @@ class _GameHomeState extends State<GameHome> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            for (final resident in Resident.values)
+                            for (final resident
+                                in widget.progress.residents.owned.take(
+                                  townResidentLimit,
+                                ))
                               Flexible(
                                 child: Semantics(
                                   button: true,
@@ -229,7 +232,7 @@ class _GameHomeState extends State<GameHome> {
                                     onTap: () => widget.onResident(resident),
                                     child: Padding(
                                       padding: const EdgeInsets.all(3),
-                                      child: ResidentAvatar(
+                                      child: TownResidentAvatar(
                                         resident: resident,
                                         size: (constraints.maxWidth * .15)
                                             .clamp(44, 80),
