@@ -4,14 +4,32 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum Mission {
-  strength('筋力を使った', '自分のペースで、体を動かせたら。'),
-  outside('外に出た・歩いた', '少しの外出も、今日の一歩。'),
-  conversation('人と話した', 'ひと言のやりとりも、大切なつながり。');
+enum MissionPeriod { daily, weekly, monthly }
 
-  const Mission(this.title, this.description);
+enum Mission {
+  // Keep existing identifiers stable for older saved progress.
+  strength('筋力を使った', '自分のペースで、体を動かせたら。', MissionPeriod.daily),
+  outside('外に出た・歩いた', '少しの外出も、今日の一歩。', MissionPeriod.daily),
+  conversation('人と話した', 'ひと言のやりとりも、大切なつながり。', MissionPeriod.daily),
+  movement('身体を動かした', '自分のペースで、今日身体を動かせたら。', MissionPeriod.daily),
+  sittingBreak('座りっぱなしを途中でやめた', '長く座ったら、途中で立ち上がるだけでも。', MissionPeriod.daily),
+  food('食事をひとつ整えた', '食事に野菜を足すなど、できる工夫を。', MissionPeriod.daily),
+  hobby('趣味や学びを楽しんだ', '好きなことや好奇心を大切に。', MissionPeriod.daily),
+  weeklyStrength('筋トレをした', '今週、無理のない筋力づくりに取り組んだ。', MissionPeriod.weekly),
+  weeklyActive('息が弾む運動を楽しんだ', '体調に合わせて取り組めたら。', MissionPeriod.weekly),
+  weeklyTogether('誰かと一緒に活動した', '外出や趣味など、どんな活動でも。', MissionPeriod.weekly),
+  weeklyLearn('新しいことを学んだ・試した', '小さな挑戦も大切な一歩。', MissionPeriod.weekly),
+  monthlyCommunity('地域の活動に参加した', '参加できたときだけ、言祝ぎましょう。', MissionPeriod.monthly),
+  monthlyHabit('健康習慣をひとつ工夫した', '今の暮らしに合う工夫を見つけた。', MissionPeriod.monthly),
+  monthlyReview('今月の言祝ぎを振り返った', 'できたことを、あたたかく振り返る。', MissionPeriod.monthly);
+
+  const Mission(this.title, this.description, this.period);
   final String title;
   final String description;
+  final MissionPeriod period;
+
+  static List<Mission> forPeriod(MissionPeriod period) =>
+      [for (final mission in values) if (mission.period == period) mission];
 }
 
 String localDay(DateTime time) {
@@ -21,13 +39,29 @@ String localDay(DateTime time) {
       '${date.day.toString().padLeft(2, '0')}';
 }
 
+String weekStart(String day) {
+  final date = DateTime.parse(day);
+  return localDay(date.subtract(Duration(days: date.weekday - 1)));
+}
+
+String monthKey(String day) => day.substring(0, 7);
+
 class Progress {
   Progress({
     required this.day,
     required this.lastCompletedDay,
     required this.points,
     required Set<Mission> completed,
-  }) : completed = Set.unmodifiable(completed);
+    Map<String, Set<Mission>> history = const {},
+    Set<Mission> weeklyCompleted = const {},
+    Set<Mission> monthlyCompleted = const {},
+  }) : completed = Set.unmodifiable(completed),
+       history = Map.unmodifiable({
+         for (final entry in history.entries)
+           entry.key: Set<Mission>.unmodifiable(entry.value),
+       }),
+       weeklyCompleted = Set.unmodifiable(weeklyCompleted),
+       monthlyCompleted = Set.unmodifiable(monthlyCompleted);
 
   factory Progress.empty(DateTime now) => Progress(
     day: localDay(now),
@@ -40,6 +74,9 @@ class Progress {
   final String? lastCompletedDay;
   final int points;
   final Set<Mission> completed;
+  final Map<String, Set<Mission>> history;
+  final Set<Mission> weeklyCompleted;
+  final Set<Mission> monthlyCompleted;
 
   int get townLevel => points >= 180
       ? 3
@@ -48,6 +85,12 @@ class Progress {
       : points >= 30
       ? 1
       : 0;
+
+  Set<Mission> completedFor(MissionPeriod period) => switch (period) {
+    MissionPeriod.daily => completed,
+    MissionPeriod.weekly => weeklyCompleted,
+    MissionPeriod.monthly => monthlyCompleted,
+  };
 
   Progress onDay(DateTime now) {
     final today = localDay(now);
@@ -60,61 +103,145 @@ class Progress {
       lastCompletedDay: lastCompletedDay,
       points: points,
       completed: {},
+      weeklyCompleted: weekStart(today) == weekStart(day)
+          ? weeklyCompleted : {},
+      monthlyCompleted: monthKey(today) == monthKey(day)
+          ? monthlyCompleted : {},
+      history: history,
     );
   }
 
   Progress complete(Mission mission) {
-    if (completed.contains(mission)) return this;
+    if (completedFor(mission.period).contains(mission)) return this;
     return Progress(
       day: day,
       lastCompletedDay: day,
       points: points + 10,
-      completed: {...completed, mission},
+      completed: mission.period == MissionPeriod.daily
+          ? {...completed, mission} : completed,
+      weeklyCompleted: mission.period == MissionPeriod.weekly
+          ? {...weeklyCompleted, mission} : weeklyCompleted,
+      monthlyCompleted: mission.period == MissionPeriod.monthly
+          ? {...monthlyCompleted, mission} : monthlyCompleted,
+      history: {
+        ...history,
+        day: {...?history[day], mission},
+      },
     );
   }
 
+  /// Remove the journal only; keep points and current-period completion flags.
+  Progress clearHistory() => Progress(
+    day: day,
+    lastCompletedDay: lastCompletedDay,
+    points: points,
+    completed: completed,
+    weeklyCompleted: weeklyCompleted,
+    monthlyCompleted: monthlyCompleted,
+  );
+
   String encode() => jsonEncode({
-    'version': 1,
+    'version': 3,
     'day': day,
     'lastCompletedDay': lastCompletedDay,
     'points': points,
-    'completed': completed.map((m) => m.name).toList(),
+    'completed': _encodeMissions(completed),
+    'weeklyCompleted': _encodeMissions(weeklyCompleted),
+    'monthlyCompleted': _encodeMissions(monthlyCompleted),
+    'history': {
+      for (final date in (history.keys.toList()..sort()))
+        date: _encodeMissions(history[date]!),
+    },
   });
 
-  static Progress decode(String raw) {
+  static List<String> _encodeMissions(Set<Mission> missions) => [
+    for (final mission in Mission.values)
+      if (missions.contains(mission)) mission.name,
+  ];
+
+  /// v1/v2 records are strictly validated before migration into v3.
+  static Progress decode(String raw, {int? expectedVersion}) {
     final data = jsonDecode(raw);
-    if (data is! Map<String, dynamic> ||
-        data.length != 5 ||
-        data['version'] is! int ||
-        data['version'] != 1 ||
-        !_validDay(data['day']) ||
-        !data.containsKey('lastCompletedDay') ||
+    if (data is! Map<String, dynamic>) {
+      throw const FormatException('Invalid FutureLift save schema.');
+    }
+    final version = data['version'];
+    if (version is! int || ![1, 2, 3].contains(version) ||
+        (expectedVersion != null && expectedVersion != version)) {
+      throw FormatException('Unsupported FutureLift save version: $version');
+    }
+    final keys = {
+      'version', 'day', 'lastCompletedDay', 'points', 'completed',
+      if (version >= 2) 'history',
+      if (version == 3) ...['weeklyCompleted', 'monthlyCompleted'],
+    };
+    if (data.keys.toSet().difference(keys).isNotEmpty ||
+        data.length != keys.length || !_validDay(data['day']) ||
         (data['lastCompletedDay'] != null &&
-            !_validDay(data['lastCompletedDay'])) ||
-        data['points'] is! int ||
-        data['completed'] is! List) {
-      throw const FormatException('Invalid FutureLift v1 save schema.');
+          !_validDay(data['lastCompletedDay'])) ||
+        data['points'] is! int) {
+      throw const FormatException('Invalid FutureLift save schema.');
     }
     final day = data['day'] as String;
     final last = data['lastCompletedDay'] as String?;
     final points = data['points'] as int;
-    final names = data['completed'] as List;
-    final completed = <Mission>{};
-    for (final name in names) {
-      if (name is! String || !Mission.values.any((m) => m.name == name)) {
-        throw FormatException('Unknown mission ID: $name');
+    final completed = _missions(data['completed'], 'completed', MissionPeriod.daily);
+    final weekly = version == 3
+        ? _missions(data['weeklyCompleted'], 'weeklyCompleted', MissionPeriod.weekly)
+        : <Mission>{};
+    final monthly = version == 3
+        ? _missions(data['monthlyCompleted'], 'monthlyCompleted', MissionPeriod.monthly)
+        : <Mission>{};
+    final history = <String, Set<Mission>>{};
+
+    if (version == 1) {
+      // Only today's IDs exist in v1; older days cannot be reconstructed.
+      if (completed.isNotEmpty) history[day] = completed;
+    } else {
+      final rawHistory = data['history'];
+      if (rawHistory is! Map<String, dynamic>) {
+        throw const FormatException('Invalid FutureLift history map.');
       }
-      if (!completed.add(Mission.values.singleWhere((m) => m.name == name))) {
-        throw FormatException('Duplicate mission ID: $name');
+      for (final entry in rawHistory.entries) {
+        final date = entry.key;
+        if (!_validDay(date) || date.compareTo(day) > 0 ||
+            last == null || date.compareTo(last) > 0) {
+          throw FormatException('Invalid history date: $date');
+        }
+        final missions = _missions(
+          entry.value, 'history[$date]',
+          version == 2 ? MissionPeriod.daily : null,
+        );
+        if (missions.isEmpty) {
+          throw FormatException('Empty history entry: $date');
+        }
+        history[date] = missions;
       }
     }
-    if (points < 0 ||
-        points % 10 != 0 ||
+
+    final todayHistory = history[day] ?? <Mission>{};
+    final weekHistory = history.entries
+        .where((entry) => weekStart(entry.key) == weekStart(day))
+        .expand((entry) => entry.value)
+        .where((mission) => mission.period == MissionPeriod.weekly)
+        .toSet();
+    final monthHistory = history.entries
+        .where((entry) => monthKey(entry.key) == monthKey(day))
+        .expand((entry) => entry.value)
+        .where((mission) => mission.period == MissionPeriod.monthly)
+        .toSet();
+
+    if (points < 0 || points % 10 != 0 ||
         points < completed.length * 10 ||
         (points == 0) != (last == null) ||
         (last != null && last.compareTo(day) > 0) ||
         (completed.isNotEmpty && last != day) ||
-        (completed.isEmpty && last == day)) {
+        (version <= 2 && completed.isEmpty && last == day) ||
+        todayHistory.where((m) => m.period == MissionPeriod.daily)
+            .any((m) => !completed.contains(m)) ||
+        !weekly.containsAll(weekHistory) ||
+        !monthly.containsAll(monthHistory) ||
+        history.values.fold<int>(0, (sum, events) => sum + events.length) * 10 > points) {
       throw const FormatException('Inconsistent FutureLift progress values.');
     }
     return Progress(
@@ -122,7 +249,30 @@ class Progress {
       lastCompletedDay: last,
       points: points,
       completed: completed,
+      weeklyCompleted: weekly,
+      monthlyCompleted: monthly,
+      history: history,
     );
+  }
+
+  static Set<Mission> _missions(
+    dynamic raw, String field, MissionPeriod? expected,
+  ) {
+    if (raw is! List) throw FormatException('Invalid mission list: $field');
+    final result = <Mission>{};
+    for (final name in raw) {
+      if (name is! String || !Mission.values.any((m) => m.name == name)) {
+        throw FormatException('Unknown mission ID in $field: $name');
+      }
+      final mission = Mission.values.singleWhere((m) => m.name == name);
+      if (expected != null && mission.period != expected) {
+        throw FormatException('Unexpected period for $name in $field');
+      }
+      if (!result.add(mission)) {
+        throw FormatException('Duplicate mission ID in $field: $name');
+      }
+    }
+    return result;
   }
 
   static bool _validDay(dynamic value) {
@@ -142,13 +292,36 @@ abstract interface class ProgressStore {
 class LocalProgressStore implements ProgressStore {
   LocalProgressStore(this.preferences);
   final SharedPreferencesAsync preferences;
-  static const key = 'future_lift.progress.v1';
+  static const key = 'future_lift.progress.v3';
+  static const previousKey = 'future_lift.progress.v2';
+  static const legacyKey = 'future_lift.progress.v1';
 
   @override
   Future<Progress?> load() async {
-    final raw = await preferences.getString(key);
-    // Only a missing key represents a new installation. Corrupt data is fatal.
-    return raw == null ? null : Progress.decode(raw);
+    final current = await preferences.getString(key);
+    if (current != null) {
+      final result = Progress.decode(current, expectedVersion: 3);
+      // Only clean older keys after a valid v3 record is confirmed.
+      if (await preferences.getString(previousKey) != null) {
+        await preferences.remove(previousKey);
+      }
+      if (await preferences.getString(legacyKey) != null) {
+        await preferences.remove(legacyKey);
+      }
+      return result;
+    }
+
+    final previous = await preferences.getString(previousKey);
+    final legacy = previous == null
+        ? await preferences.getString(legacyKey) : null;
+    if (previous == null && legacy == null) return null;
+    final migrated = previous != null
+        ? Progress.decode(previous, expectedVersion: 2)
+        : Progress.decode(legacy!, expectedVersion: 1);
+    await save(migrated);
+    if (previous != null) await preferences.remove(previousKey);
+    if (legacy != null) await preferences.remove(legacyKey);
+    return migrated;
   }
 
   @override
@@ -162,7 +335,7 @@ class ProgressFailure {
   final Object error;
   final StackTrace stackTrace;
   String get diagnostics =>
-      '$operation\n${LocalProgressStore.key}\n$error\n$stackTrace';
+      '$operation\n${LocalProgressStore.key} / ${LocalProgressStore.previousKey} / ${LocalProgressStore.legacyKey}\n$error\n$stackTrace';
 }
 
 class ProgressController extends ChangeNotifier {
@@ -237,6 +410,26 @@ class ProgressController extends ChangeNotifier {
       return !identical(next, today);
     } catch (error, stack) {
       failure = ProgressFailure('ミッション ${mission.name} の達成保存', error, stack);
+      return false;
+    } finally {
+      _finishOperation();
+    }
+  }
+
+  Future<bool> clearHistory() async {
+    if (busy || failure != null || progress == null ||
+        progress!.history.isEmpty) {
+      return false;
+    }
+    busy = true;
+    notifyListeners();
+    try {
+      final next = progress!.clearHistory();
+      await store.save(next);
+      progress = next;
+      return true;
+    } catch (error, stack) {
+      failure = ProgressFailure('履歴の削除', error, stack);
       return false;
     } finally {
       _finishOperation();
