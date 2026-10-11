@@ -41,7 +41,7 @@ class _TownSceneState extends State<TownScene> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final enabled = !MediaQuery.disableAnimationsOf(context) &&
-        TickerMode.of(context);
+        TickerMode.valuesOf(context).enabled;
     if (enabled && _ticker == null) {
       _ticker = Timer.periodic(_frameDuration, (_) {
         if (mounted) setState(() => _ticks++);
@@ -146,7 +146,7 @@ class _TownSceneState extends State<TownScene> {
     final walking = direction != null &&
         !_pauseStarted.containsKey(resident) && !reduced;
     final asset = walking
-        ? resident.walkAsset(direction!, pose.frame)
+        ? resident.walkAsset(direction, pose.frame)
         : resident.idleAsset;
     final sprite = Image.asset(
       asset,
@@ -169,7 +169,7 @@ class _TownSceneState extends State<TownScene> {
             key: ValueKey('resident-$index'),
             borderRadius: BorderRadius.circular(20),
             onTap: widget.onResident == null ? null : () => _talk(resident),
-            child: walking && resident.mirrorWalk(direction!)
+            child: walking && resident.mirrorWalk(direction)
                 ? Transform.flip(flipX: true, child: sprite)
                 : sprite,
           ),
