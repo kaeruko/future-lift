@@ -7,6 +7,7 @@ import 'celebration.dart';
 import 'progress.dart';
 import 'home_skin.dart';
 import 'game_home.dart';
+import 'missions_screen.dart';
 import 'residents.dart';
 import 'town.dart';
 
@@ -219,10 +220,15 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                   ? GameHome(
                       key: ValueKey(_homeVisit),
                       progress: progress,
+                      onMissions: () => setState(() => _page = 1),
+                      onTown: () => setState(() => _page = 2),
+                      onResident: _showTip,
+                    )
+                  : _page == 1
+                  ? MissionsScreen(
+                      progress: progress,
                       busy: controller.busy,
                       onComplete: _complete,
-                      onTown: () => setState(() => _page = 1),
-                      onResident: _showTip,
                     )
                   : ListView(
                       key: ValueKey('page-$_page'),
@@ -287,7 +293,11 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           destinations: [
             NavigationDestination(
               icon: uiPart('09_nav_home', width: 54, height: 58),
-              label: '今日のミッション',
+              label: 'ホーム',
+            ),
+            NavigationDestination(
+              icon: uiPart('10_nav_quest', width: 54, height: 58),
+              label: 'ミッション',
             ),
             NavigationDestination(
               icon: uiPart('11_nav_town', width: 54, height: 58),

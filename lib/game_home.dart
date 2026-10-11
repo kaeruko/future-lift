@@ -6,19 +6,18 @@ import 'home_skin.dart';
 import 'progress.dart';
 import 'residents.dart';
 
-/// The lobby and daily mission board share one scrollable home screen.
+/// The town lobby links to the daily mission board.
 class GameHome extends StatefulWidget {
   const GameHome({
     super.key,
     required this.progress,
-    required this.busy,
-    required this.onComplete,
+    required this.onMissions,
     required this.onTown,
     required this.onResident,
   });
   final Progress progress;
-  final bool busy;
-  final ValueChanged<Mission> onComplete;
+  final VoidCallback onMissions;
+
   final VoidCallback onTown;
   final ValueChanged<Resident> onResident;
 
@@ -33,16 +32,6 @@ class _GameHomeState extends State<GameHome> {
   void dispose() {
     _scroll.dispose();
     super.dispose();
-  }
-
-  void _openMissions(double sceneHeight) {
-    _scroll.animateTo(
-      sceneHeight,
-      duration: MediaQuery.disableAnimationsOf(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 450),
-      curve: Curves.easeInOutCubic,
-    );
   }
 
   @override
@@ -275,7 +264,7 @@ class _GameHomeState extends State<GameHome> {
                               title: '本日のミッション',
                               detail:
                                   '${widget.progress.completed.length} / 3 達成',
-                              onTap: () => _openMissions(sceneHeight),
+                              onTap: widget.onMissions,
                             ),
                           ),
                           const Spacer(),
@@ -315,46 +304,6 @@ class _GameHomeState extends State<GameHome> {
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 24, 18, 26),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        '今日のミッション',
-                        style: TextStyle(
-                          color: wood,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '${int.parse(widget.progress.day.substring(5, 7))}月${int.parse(widget.progress.day.substring(8))}日',
-                      style: const TextStyle(color: wood),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                for (final mission in Mission.values)
-                  MissionCard(
-                    mission: mission,
-                    done: widget.progress.completed.contains(mission),
-                    onComplete: widget.busy
-                        ? null
-                        : () => widget.onComplete(mission),
-                  ),
-                const Text(
-                  '量や回数は問いません。今日行動したことを祝います。',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: wood, fontSize: 12),
                 ),
               ],
             ),

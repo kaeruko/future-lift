@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/celebration.dart';
+import 'package:future_lift/clap_characters.dart';
 import 'package:future_lift/main.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/residents.dart';
@@ -9,6 +10,45 @@ import 'package:future_lift/town.dart';
 import 'progress_test.dart' show MemoryStore;
 
 void main() {
+  testWidgets('eight sprites clap in sequence and respect reduced motion', (
+    tester,
+  ) async {
+    Future<void> show(double phase, {bool reduced = false}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 320,
+              child: ClapCharacters(phase: phase, reduced: reduced),
+            ),
+          ),
+        ),
+      );
+    }
+
+    int frame() => tester
+        .widget<IndexedStack>(find.byKey(const ValueKey('clap-01_shiba')))
+        .index!;
+
+    await show(0);
+    expect(find.byType(IndexedStack), findsNWidgets(8));
+    expect(frame(), 0);
+    await show(.25);
+    expect(frame(), 1);
+    await show(.5);
+    expect(frame(), 2);
+    await show(.75);
+    expect(frame(), 1);
+    await show(0, reduced: true);
+    expect(
+      tester
+          .widgetList<IndexedStack>(find.byType(IndexedStack))
+          .every((sprite) => sprite.index == 1),
+      isTrue,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   Future<ProgressController> launch(
     WidgetTester tester,
     MemoryStore store,
@@ -30,6 +70,8 @@ void main() {
     addTearDown(() => tester.view.reset());
     final store = MemoryStore();
     final controller = await launch(tester, store);
+    await tester.tap(find.text('ミッション').last);
+    await tester.pumpAndSettle();
     for (final mission in Mission.values) {
       await tester.scrollUntilVisible(find.text(mission.title), 200);
       expect(find.text(mission.title), findsOneWidget);
@@ -43,13 +85,19 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
     expect(find.text('ありがとう！'), findsOneWidget);
-    expect(find.text('社会貢献 +10'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byType(Celebration),
-        matching: find.byType(ResidentAvatar),
+        matching: find.text('社会貢献 +10'),
       ),
-      findsNWidgets(4),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(Celebration),
+        matching: find.byType(ClapCharacters),
+      ),
+      findsOneWidget,
     );
     expect(controller.progress!.points, 10);
     expect(tester.takeException(), isNull);
@@ -60,7 +108,7 @@ void main() {
     );
     expect(button.onPressed, isNull);
     expect(find.text('できた！  達成済み'), findsOneWidget);
-    await tester.tap(find.text('今日のミッション').last);
+    await tester.tap(find.text('ホーム').last);
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('open-missions')).hitTestable(),
@@ -135,6 +183,8 @@ void main() {
         home: FutureLiftHome(controller: controller),
       ),
     );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ミッション').last);
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('complete-strength')),

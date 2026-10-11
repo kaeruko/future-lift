@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'residents.dart';
+import 'clap_characters.dart';
 
 class Celebration extends StatefulWidget {
   const Celebration({
@@ -29,7 +29,7 @@ class _CelebrationState extends State<Celebration>
   );
   late final _applause = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 650),
+    duration: const Duration(milliseconds: 600),
   );
   bool? _reduced;
 
@@ -46,7 +46,7 @@ class _CelebrationState extends State<Celebration>
     } else {
       _entrance.forward();
       _confetti.forward(from: 0);
-      _applause.repeat(reverse: true);
+      _applause.repeat();
     }
   }
 
@@ -153,49 +153,9 @@ class _CelebrationState extends State<Celebration>
                       const SizedBox(height: 30),
                       AnimatedBuilder(
                         animation: _applause,
-                        builder: (context, child) => Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            for (var i = 0; i < Resident.values.length; i++)
-                              Flexible(
-                                child: Transform.translate(
-                                  offset: Offset(
-                                    0,
-                                    _reduced!
-                                        ? 0
-                                        : -12 *
-                                              math
-                                                  .sin(
-                                                    (_applause.value +
-                                                            i * .17) *
-                                                        math.pi,
-                                                  )
-                                                  .abs(),
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        ['わーい！', 'ありがとう', 'うれしいね', 'ぱちぱち'][i],
-                                        style: const TextStyle(
-                                          color: Color(0xFFFFE4A0),
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                      ResidentAvatar(
-                                        resident: Resident.values[i],
-                                        size:
-                                            (MediaQuery.sizeOf(context).width /
-                                                    5.5)
-                                                .clamp(44.0, 95.0),
-                                        celebrating: true,
-                                        clap: _reduced! ? 0 : _applause.value,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
+                        builder: (context, child) => ClapCharacters(
+                          phase: _applause.value,
+                          reduced: _reduced!,
                         ),
                       ),
                       const SizedBox(height: 25),
