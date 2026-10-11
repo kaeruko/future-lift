@@ -29,6 +29,8 @@ class MissionsScreen extends StatelessWidget {
           excludeFromSemantics: true,
         ),
       ),
+      const Positioned.fill(child: _CornerClouds(top: true)),
+      const Positioned.fill(child: _CornerClouds(top: false)),
       ListView(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
         children: [
@@ -191,6 +193,43 @@ class MissionsScreen extends StatelessWidget {
         ],
       ),
     ],
+  );
+}
+
+/// Fixed decorations never intercept taps or appear in screen-reader output.
+class _CornerClouds extends StatelessWidget {
+  const _CornerClouds({required this.top});
+  final bool top;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: ExcludeSemantics(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final size = (constraints.maxWidth * (top ? .34 : .48)).clamp(
+            0.0,
+            top ? 185.0 : 245.0,
+          );
+          return Stack(
+            children: [
+              for (final left in [true, false])
+                Positioned(
+                  left: left ? -8 : null,
+                  right: left ? null : -8,
+                  top: top ? 80 : null,
+                  bottom: top ? null : -8,
+                  child: Image.asset(
+                    'assets/quests/cloud_${top ? 'top' : 'bottom'}_${left ? 'left' : 'right'}.png',
+                    width: size,
+                    height: size,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    ),
   );
 }
 
