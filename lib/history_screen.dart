@@ -164,7 +164,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   const SizedBox(height: 18),
                   Text(
                     '直近30日は ${recent.length}日、'
-                    '${recentActions}個の行動を言祝ぎました。',
+                    '$recentActions個の行動を言祝ぎました。',
                     key: const ValueKey('history-last-30'),
                     style: const TextStyle(
                       color: brown, fontWeight: FontWeight.bold,
@@ -271,7 +271,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       final celebrated = progress.history[date]?.isNotEmpty ?? false;
                       final active = _selectedDay == date && celebrated;
                       return Semantics(
-                        label: celebrated ? '${day}日、祝' : '${day}日',
+                        label: celebrated ? '$day日、祝' : '$day日',
                         button: celebrated,
                         child: InkWell(
                           key: ValueKey('history-day-$day'),
@@ -319,7 +319,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '今月は${monthDays}日、${monthActions}個の行動を言祝ぎました。',
+                    '今月は$monthDays日、$monthActions個の行動を言祝ぎました。',
                     key: const ValueKey('history-month-summary'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(

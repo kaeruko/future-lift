@@ -418,7 +418,9 @@ class ProgressController extends ChangeNotifier {
 
   Future<bool> clearHistory() async {
     if (busy || failure != null || progress == null ||
-        progress!.history.isEmpty) return false;
+        progress!.history.isEmpty) {
+      return false;
+    }
     busy = true;
     notifyListeners();
     try {
