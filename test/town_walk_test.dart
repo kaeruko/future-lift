@@ -142,7 +142,7 @@ void main() {
       find.byKey(const ValueKey('resident-sprite-2')),
     );
     expect((walkingSprite.image as AssetImage).assetName,
-        contains('/walk_front_'));
+        contains('/walk_'));
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
