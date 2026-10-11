@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 
 import 'clap_characters.dart';
@@ -228,7 +229,7 @@ class _CelebrationState extends State<Celebration>
             child: AnimatedBuilder(
               animation: _confetti,
               builder: (context, child) => CustomPaint(
-                painter: _ConfettiPainter(_reduced! ? .23 : _confetti.value),
+                painter: _ConfettiPainter(_reduced! ? 1.0 : _confetti.value),
               ),
             ),
           ),
@@ -367,6 +368,27 @@ class _RewardScroll extends StatelessWidget {
   );
 }
 
+/// Each particle starts at its own delay, but all finish by timeline 1.0.
+/// A varied exponent keeps the fall speeds visually different without freezing
+/// slow confetti in mid-air when the animation controller completes.
+@visibleForTesting
+double confettiFallFraction(double timeline, double delay, double exponent) {
+  assert(delay >= 0 && delay < 1);
+  assert(exponent > 0);
+  if (timeline <= delay) return 0;
+  final elapsed = ((timeline - delay) / (1 - delay)).clamp(0.0, 1.0);
+  return math.pow(elapsed, exponent).toDouble();
+}
+
+/// Screen-space fall position shared by the painter and regression tests.
+@visibleForTesting
+double confettiFallY(
+  double timeline,
+  double delay,
+  double exponent,
+  double height,
+) => -30 + confettiFallFraction(timeline, delay, exponent) * (height + 100);
+
 class _ConfettiPainter extends CustomPainter {
   _ConfettiPainter(this.time);
   final double time;
@@ -385,12 +407,14 @@ class _ConfettiPainter extends CustomPainter {
     for (var i = 0; i < 110; i++) {
       final startX = random.nextDouble();
       final delay = random.nextDouble() * .38;
-      final speed = .7 + random.nextDouble() * .65;
+      final fallExponent = .7 + random.nextDouble() * .65;
       final drift = random.nextDouble() * 2 - 1;
       final t = time - delay;
       if (t < 0) continue;
       final x = startX * size.width + math.sin(t * 8 + i) * 30 + drift * t * 50;
-      final y = -30 + t * speed * (size.height + 180);
+      // Even the latest, slowest particle has cleared the screen at time 1.
+      final y = confettiFallY(time, delay, fallExponent, size.height);
+      if (y > size.height + 35) continue;
       canvas.save();
       canvas.translate(x, y);
       canvas.rotate(i + t * drift * 12);

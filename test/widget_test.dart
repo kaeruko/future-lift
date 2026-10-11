@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/celebration.dart';
@@ -10,6 +12,32 @@ import 'package:future_lift/town.dart';
 import 'progress_test.dart' show MemoryStore;
 
 void main() {
+  test('all confetti particles fall completely past the screen by the end', () {
+    // Use the same deterministic random stream and particle timing as the painter.
+    final random = math.Random(31);
+    const height = 900.0;
+    for (var i = 0; i < 110; i++) {
+      random.nextDouble(); // start X
+      final delay = random.nextDouble() * .38;
+      final exponent = .7 + random.nextDouble() * .65;
+      random.nextDouble(); // horizontal drift
+
+      expect(confettiFallFraction(0, delay, exponent), 0);
+      expect(confettiFallY(0, delay, exponent, height), -30);
+      var previous = -30.0;
+      for (var step = 1; step <= 100; step++) {
+        final y = confettiFallY(step / 100, delay, exponent, height);
+        expect(y, greaterThanOrEqualTo(previous), reason: 'Particle $i at $step%');
+        previous = y;
+      }
+      expect(confettiFallFraction(.99, delay, exponent), lessThan(1));
+      expect(confettiFallFraction(1, delay, exponent), 1);
+      // The painter culls particles beyond height + 35.
+      expect(confettiFallY(1, delay, exponent, height),
+          greaterThan(height + 35), reason: 'Particle $i stayed visible');
+    }
+  });
+
   testWidgets('eight sprites clap in sequence and respect reduced motion', (
     tester,
   ) async {
