@@ -390,6 +390,73 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('debug menu reset confirms and clears mission flags only', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final original = Progress.empty(DateTime(2026, 10, 9))
+        .complete(Mission.strength)
+        .complete(Mission.weeklyStrength)
+        .complete(Mission.monthlyReview);
+    final store = MemoryStore()..raw = original.encode();
+    final controller = await launch(tester, store);
+    await tester.tap(find.text('メニュー').last);
+    await tester.pumpAndSettle();
+    final reset = find.byKey(const ValueKey('debug-reset-all-missions'));
+    await tester.ensureVisible(reset);
+    await tester.pumpAndSettle();
+    await tester.tap(reset);
+    await tester.pumpAndSettle();
+    expect(find.text('全ミッションをリセットしますか？'), findsOneWidget);
+    expect(find.textContaining('ポイントが再び加算'), findsOneWidget);
+    await tester.tap(find.text('キャンセル'));
+    await tester.pumpAndSettle();
+    expect(controller.progress!.completed, {Mission.strength});
+    expect(controller.progress!.weeklyCompleted, {Mission.weeklyStrength});
+    expect(controller.progress!.monthlyCompleted, {Mission.monthlyReview});
+    expect(store.writes, 0);
+
+    await tester.tap(reset);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('debug-confirm-reset-missions')));
+    await tester.pumpAndSettle();
+    expect(find.text('全ミッションの達成状態をリセットしました'),
+        findsOneWidget);
+    expect(controller.progress!.completed, isEmpty);
+    expect(controller.progress!.weeklyCompleted, isEmpty);
+    expect(controller.progress!.monthlyCompleted, isEmpty);
+    expect(controller.progress!.points, 30);
+    expect(controller.progress!.history, original.history);
+    expect(store.writes, 1);
+    final restored = Progress.decode(store.raw!);
+    expect(restored.completed, isEmpty);
+    expect(restored.weeklyCompleted, isEmpty);
+    expect(restored.monthlyCompleted, isEmpty);
+    expect(restored.history, original.history);
+
+    await tester.tap(find.text('ミッション').last);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('complete-strength')), 160,
+    );
+    await tester.pumpAndSettle();
+    final button = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('complete-strength')),
+    );
+    expect(button.onPressed, isNotNull);
+    await tester.tap(find.byKey(const ValueKey('complete-strength')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.byType(Celebration), findsOneWidget);
+    expect(controller.progress!.points, 40);
+    await tester.tap(find.byKey(const ValueKey('close-celebration')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   test('sixteen non-duplicate fixed tips are available', () {
     expect(Resident.values.expand((r) => r.tips).toSet().length, 16);
   });
