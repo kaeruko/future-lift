@@ -153,6 +153,18 @@ void main() {
     await tester.tap(find.text('みんなのまち').last);
     await tester.pumpAndSettle();
     expect(tester.widget<TownScene>(find.byType(TownScene)).level, 0);
+    final background = tester.widget<Image>(
+      find.descendant(
+        of: find.byType(TownScene),
+        matching: find.byKey(const ValueKey('town-background')),
+      ),
+    );
+    expect(background.image, isA<AssetImage>());
+    expect(
+      (background.image as AssetImage).assetName,
+      'assets/kotohogu/town_background_001.jpg',
+    );
+    expect(background.fit, BoxFit.cover);
     await tester.tap(find.byKey(const ValueKey('resident-0')));
     await tester.pumpAndSettle();
     expect(find.text(Resident.child.tips.first), findsOneWidget);
