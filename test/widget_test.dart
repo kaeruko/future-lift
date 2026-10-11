@@ -250,7 +250,9 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('next-history-month')));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.byKey(const ValueKey('clear-history')));
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('clear-history')), 160,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('clear-history')));
     await tester.pumpAndSettle();
@@ -298,11 +300,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.progress!.weeklyCompleted, {Mission.weeklyStrength});
 
-    await tester.ensureVisible(find.byKey(const ValueKey('mission-tab-monthly')));
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('mission-tab-monthly')), -180,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('mission-tab-monthly')));
     await tester.pumpAndSettle();
     expect(find.text('0/3 言祝ぎ'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text(Mission.monthlyReview.title), 160);
     expect(find.text(Mission.monthlyReview.title), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
