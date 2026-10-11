@@ -470,6 +470,96 @@ void main() {
     }
   });
 
+  test('debug reset clears all three periods but keeps points and journal', () async {
+    var now = DateTime(2026, 10, 9, 12);
+    final store = MemoryStore();
+    final controller = ProgressController(store, clock: () => now);
+    await controller.initialize();
+    for (final mission in [
+      Mission.strength,
+      Mission.weeklyStrength,
+      Mission.monthlyReview,
+    ]) {
+      expect(await controller.complete(mission), isTrue);
+    }
+    final originalHistory = controller.progress!.history;
+    final points = controller.progress!.points;
+    expect(points, 30);
+
+    expect(await controller.resetAllMissionsForDebug(), isTrue);
+    expect(controller.progress!.completed, isEmpty);
+    expect(controller.progress!.weeklyCompleted, isEmpty);
+    expect(controller.progress!.monthlyCompleted, isEmpty);
+    expect(controller.progress!.points, points);
+    expect(controller.progress!.history, originalHistory);
+    expect(controller.progress!.debugResets.length, 3);
+
+    final restarted = ProgressController(store, clock: () => now);
+    await restarted.initialize();
+    expect(restarted.failure, isNull);
+    expect(restarted.progress!.history, originalHistory);
+    expect(restarted.progress!.completed, isEmpty);
+    expect(restarted.progress!.weeklyCompleted, isEmpty);
+    expect(restarted.progress!.monthlyCompleted, isEmpty);
+    expect(await restarted.complete(Mission.strength), isTrue);
+    expect(await restarted.complete(Mission.weeklyStrength), isTrue);
+    expect(await restarted.complete(Mission.monthlyReview), isTrue);
+    expect(await restarted.complete(Mission.strength), isFalse);
+    expect(restarted.progress!.points, points + 30);
+    expect(restarted.progress!.history, originalHistory);
+
+    now = DateTime(2026, 10, 10, 10);
+    await restarted.refreshDay();
+    expect(restarted.failure, isNull);
+    expect(restarted.progress!.debugResets.containsKey(MissionPeriod.daily),
+        isFalse);
+    expect(restarted.progress!.debugResets[MissionPeriod.weekly],
+        weekStart('2026-10-10'));
+    expect(restarted.progress!.debugResets[MissionPeriod.monthly], '2026-10');
+    final afterRollover = Progress.decode(store.raw!, expectedVersion: 3);
+    expect(afterRollover.day, '2026-10-10');
+    expect(afterRollover.history, originalHistory);
+  });
+
+  test('debug reset save failure does not change saved or published progress', () async {
+    final store = MemoryStore();
+    final controller = ProgressController(store, clock: () => today);
+    await controller.initialize();
+    await controller.complete(Mission.strength);
+    final before = store.raw;
+    final exception = StateError('debug reset save rejected');
+    store.saveError = exception;
+    expect(await controller.resetAllMissionsForDebug(), isFalse);
+    expect(controller.failure?.error, same(exception));
+    expect(controller.failure?.operation, 'デバッグ用ミッション全リセット');
+    expect(controller.progress!.completed, {Mission.strength});
+    expect(store.raw, before);
+  });
+
+  test('debug reset markers reject unknown periods, incorrect dates and types', () {
+    final valid = Progress.empty(today).complete(Mission.strength);
+    final data = jsonDecode(valid.encode()) as Map<String, dynamic>;
+    for (final reset in [
+      <String, dynamic>{},
+      {'daily': '2026-10-08'},
+      {'weekly': '2026-10-06'},
+      {'monthly': '2026-09'},
+      {'unknown': '2026-10-09'},
+      {'daily': 9},
+      <String, dynamic>{'daily': null},
+      <dynamic>[],
+    ]) {
+      expect(
+        () => Progress.decode(
+          jsonEncode({...data, 'debugResets': reset}),
+          expectedVersion: 3,
+        ),
+        throwsFormatException,
+        reason: reset.toString(),
+      );
+    }
+  });
+
   test('four town stages use cumulative points and never decay', () {
     for (final (points, level) in [
       (0, 0),

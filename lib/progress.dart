@@ -55,13 +55,15 @@ class Progress {
     Map<String, Set<Mission>> history = const {},
     Set<Mission> weeklyCompleted = const {},
     Set<Mission> monthlyCompleted = const {},
+    Map<MissionPeriod, String> debugResets = const {},
   }) : completed = Set.unmodifiable(completed),
        history = Map.unmodifiable({
          for (final entry in history.entries)
            entry.key: Set<Mission>.unmodifiable(entry.value),
        }),
        weeklyCompleted = Set.unmodifiable(weeklyCompleted),
-       monthlyCompleted = Set.unmodifiable(monthlyCompleted);
+       monthlyCompleted = Set.unmodifiable(monthlyCompleted),
+       debugResets = Map.unmodifiable(debugResets);
 
   factory Progress.empty(DateTime now) => Progress(
     day: localDay(now),
@@ -77,6 +79,8 @@ class Progress {
   final Map<String, Set<Mission>> history;
   final Set<Mission> weeklyCompleted;
   final Set<Mission> monthlyCompleted;
+  /// Period markers permit intentional debug resets without erasing past history.
+  final Map<MissionPeriod, String> debugResets;
 
   int get townLevel => points >= 180
       ? 3
@@ -108,6 +112,14 @@ class Progress {
       monthlyCompleted: monthKey(today) == monthKey(day)
           ? monthlyCompleted : {},
       history: history,
+      debugResets: {
+        if (weekStart(today) == weekStart(day) &&
+            debugResets.containsKey(MissionPeriod.weekly))
+          MissionPeriod.weekly: debugResets[MissionPeriod.weekly]!,
+        if (monthKey(today) == monthKey(day) &&
+            debugResets.containsKey(MissionPeriod.monthly))
+          MissionPeriod.monthly: debugResets[MissionPeriod.monthly]!,
+      },
     );
   }
 
@@ -127,8 +139,26 @@ class Progress {
         ...history,
         day: {...?history[day], mission},
       },
+      debugResets: debugResets,
     );
   }
+
+  /// Restore all mission buttons without deleting points or the journal.
+  /// Re-completing a mission in this debug state earns another 10 points.
+  Progress resetMissionsForDebug() => Progress(
+    day: day,
+    lastCompletedDay: lastCompletedDay,
+    points: points,
+    completed: {},
+    weeklyCompleted: {},
+    monthlyCompleted: {},
+    history: history,
+    debugResets: {
+      MissionPeriod.daily: day,
+      MissionPeriod.weekly: weekStart(day),
+      MissionPeriod.monthly: monthKey(day),
+    },
+  );
 
   /// Remove the journal only; keep points and current-period completion flags.
   Progress clearHistory() => Progress(
@@ -138,6 +168,7 @@ class Progress {
     completed: completed,
     weeklyCompleted: weeklyCompleted,
     monthlyCompleted: monthlyCompleted,
+    debugResets: debugResets,
   );
 
   String encode() => jsonEncode({
@@ -148,6 +179,12 @@ class Progress {
     'completed': _encodeMissions(completed),
     'weeklyCompleted': _encodeMissions(weeklyCompleted),
     'monthlyCompleted': _encodeMissions(monthlyCompleted),
+    if (debugResets.isNotEmpty)
+      'debugResets': {
+        for (final period in MissionPeriod.values)
+          if (debugResets.containsKey(period))
+            period.name: debugResets[period],
+      },
     'history': {
       for (final date in (history.keys.toList()..sort()))
         date: _encodeMissions(history[date]!),
@@ -174,6 +211,7 @@ class Progress {
       'version', 'day', 'lastCompletedDay', 'points', 'completed',
       if (version >= 2) 'history',
       if (version == 3) ...['weeklyCompleted', 'monthlyCompleted'],
+      if (version == 3 && data.containsKey('debugResets')) 'debugResets',
     };
     if (data.keys.toSet().difference(keys).isNotEmpty ||
         data.length != keys.length || !_validDay(data['day']) ||
@@ -193,6 +231,30 @@ class Progress {
         ? _missions(data['monthlyCompleted'], 'monthlyCompleted', MissionPeriod.monthly)
         : <Mission>{};
     final history = <String, Set<Mission>>{};
+    final debugResets = <MissionPeriod, String>{};
+    if (version == 3 && data.containsKey('debugResets')) {
+      final raw = data['debugResets'];
+      if (raw is! Map<String, dynamic> || raw.isEmpty) {
+        throw const FormatException('Invalid debug reset markers.');
+      }
+      for (final entry in raw.entries) {
+        final period = switch (entry.key) {
+          'daily' => MissionPeriod.daily,
+          'weekly' => MissionPeriod.weekly,
+          'monthly' => MissionPeriod.monthly,
+          _ => throw FormatException('Unknown debug reset period: ${entry.key}'),
+        };
+        final expected = switch (period) {
+          MissionPeriod.daily => day,
+          MissionPeriod.weekly => weekStart(day),
+          MissionPeriod.monthly => monthKey(day),
+        };
+        if (entry.value != expected) {
+          throw FormatException('Invalid debug reset marker: ${entry.key}');
+        }
+        debugResets[period] = expected;
+      }
+    }
 
     if (version == 1) {
       // Only today's IDs exist in v1; older days cannot be reconstructed.
@@ -237,10 +299,13 @@ class Progress {
         (last != null && last.compareTo(day) > 0) ||
         (completed.isNotEmpty && last != day) ||
         (version <= 2 && completed.isEmpty && last == day) ||
-        todayHistory.where((m) => m.period == MissionPeriod.daily)
-            .any((m) => !completed.contains(m)) ||
-        !weekly.containsAll(weekHistory) ||
-        !monthly.containsAll(monthHistory) ||
+        (debugResets[MissionPeriod.daily] != day &&
+            todayHistory.where((m) => m.period == MissionPeriod.daily)
+                .any((m) => !completed.contains(m))) ||
+        (debugResets[MissionPeriod.weekly] != weekStart(day) &&
+            !weekly.containsAll(weekHistory)) ||
+        (debugResets[MissionPeriod.monthly] != monthKey(day) &&
+            !monthly.containsAll(monthHistory)) ||
         history.values.fold<int>(0, (sum, events) => sum + events.length) * 10 > points) {
       throw const FormatException('Inconsistent FutureLift progress values.');
     }
@@ -252,6 +317,7 @@ class Progress {
       weeklyCompleted: weekly,
       monthlyCompleted: monthly,
       history: history,
+      debugResets: debugResets,
     );
   }
 
@@ -410,6 +476,28 @@ class ProgressController extends ChangeNotifier {
       return !identical(next, today);
     } catch (error, stack) {
       failure = ProgressFailure('ミッション ${mission.name} の達成保存', error, stack);
+      return false;
+    } finally {
+      _finishOperation();
+    }
+  }
+
+  /// Debug-only persistence of reset mission buttons. Never delete history.
+  Future<bool> resetAllMissionsForDebug() async {
+    if (!kDebugMode) {
+      throw StateError('Mission reset is available only in debug builds.');
+    }
+    if (busy || failure != null || progress == null) return false;
+    busy = true;
+    notifyListeners();
+    try {
+      final today = progress!.onDay(clock());
+      final next = today.resetMissionsForDebug();
+      await store.save(next);
+      progress = next;
+      return true;
+    } catch (error, stack) {
+      failure = ProgressFailure('デバッグ用ミッション全リセット', error, stack);
       return false;
     } finally {
       _finishOperation();

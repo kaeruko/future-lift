@@ -327,6 +327,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                       onMissionChanged: (mission) =>
                           setState(() => _previewMission = mission),
                       onPreview: _previewCelebration,
+                      onResetAll: controller.resetAllMissionsForDebug,
                       busy: controller.busy || _celebrating,
                     ),
             ),

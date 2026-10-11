@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'home_skin.dart';
 import 'progress.dart';
 
-/// Debug-only controls. Never calls ProgressController.complete or save.
+/// Debug-only controls for previewing and resetting missions.
 class DebugMenuScreen extends StatelessWidget {
   const DebugMenuScreen({
     super.key,
@@ -11,6 +11,7 @@ class DebugMenuScreen extends StatelessWidget {
     required this.selectedMission,
     required this.onMissionChanged,
     required this.onPreview,
+    required this.onResetAll,
     required this.busy,
   });
 
@@ -18,7 +19,42 @@ class DebugMenuScreen extends StatelessWidget {
   final Mission selectedMission;
   final ValueChanged<Mission> onMissionChanged;
   final VoidCallback onPreview;
+  final Future<bool> Function() onResetAll;
   final bool busy;
+
+  Future<void> _confirmReset(BuildContext context) async {
+    if (busy) return;
+    final shouldReset = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('全ミッションをリセットしますか？'),
+        content: const Text(
+          'デイリー・ウィークリー・マンスリーの達成状態を'
+          'すべて未達成に戻します。\n\n'
+          'ポイントと達成履歴は残ります。'
+          'もう一度「できた！」を押すと、ポイントが再び加算されます。'
+          '\n\n※ 開発・動作確認用の機能です。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            key: const ValueKey('debug-confirm-reset-missions'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('全ミッションをリセット'),
+          ),
+        ],
+      ),
+    );
+    if (!context.mounted || shouldReset != true) return;
+    final succeeded = await onResetAll();
+    if (!context.mounted || !succeeded) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('全ミッションの達成状態をリセットしました')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => Stack(
@@ -126,6 +162,38 @@ class DebugMenuScreen extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFB94219),
                       foregroundColor: const Color(0xFFFFF7DD),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 8),
+                const Text(
+                  'ミッション達成状態のリセット',
+                  style: TextStyle(
+                    color: wood,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '今日・今週・今月の達成を未達成に戻します。'
+                  '\nポイントやこれまでの履歴は残ります。',
+                  style: TextStyle(color: wood, height: 1.6),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('debug-reset-all-missions'),
+                    onPressed: busy ? null : () => _confirmReset(context),
+                    icon: const Icon(Icons.restart_alt_rounded),
+                    label: const Text('全ミッションをリセット'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF9C351C),
+                      side: const BorderSide(color: Color(0xFF9C351C)),
+                      minimumSize: const Size(0, 52),
                     ),
                   ),
                 ),
