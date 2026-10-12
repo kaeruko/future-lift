@@ -65,7 +65,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: const Text('すべての履歴を削除しますか？'),
         content: const Text(
           '言祝ぎの履歴は元に戻せません。\n'
-          '累積ポイントと今日の達成状態は、そのまま残ります。',
+          '累計ことほぎと今日の達成状態は、そのまま残ります。',
         ),
         actions: [
           TextButton(
@@ -388,7 +388,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             const Text(
               '記録はこの端末内に保存されます。\n'
-              '履歴を消しても、累積ポイントと今日の達成は消えません。',
+              '履歴を消しても、累計ことほぎと今日の達成は消えません。',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: brown, fontSize: 12, height: 1.7,

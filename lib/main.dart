@@ -231,7 +231,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                       const SizedBox(height: 16),
                       const Text(
                         '読み込み・保存・日付の確認で問題が起きました。\n'
-                        'ポイントの加算と操作を停止しています。\n'
+                        'ことほぎの加算と操作を停止しています。\n'
                         '以下の診断情報を確認し、原因を解消してからアプリを再起動してください。',
                       ),
                       const SizedBox(height: 24),
@@ -510,7 +510,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     ),
     const SizedBox(height: 18),
     const Text(
-      'ポイントは社会貢献を表すゲーム内の表現です。\n実際の介護費削減額や個人の健康効果を示すものではありません。',
+      'ことほぎは社会貢献をイメージしたゲーム内の値です。\n実際の介護費削減額や個人の健康効果を示すものではありません。',
       textAlign: TextAlign.center,
       style: TextStyle(fontSize: 11, color: Color(0xFF627875), height: 1.6),
     ),

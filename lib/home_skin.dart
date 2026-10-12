@@ -82,50 +82,90 @@ class HomeGreeting extends StatelessWidget {
   );
 }
 
+/// Shrine-style HUD showing the live earned kotohogi amount.
+class KotohogiBar extends StatelessWidget {
+  const KotohogiBar({super.key, required this.points});
+
+  /// The underlying persistent points field is intentionally unchanged.
+  final int points;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      if (!width.isFinite || width <= 0) {
+        throw StateError('KotohogiBar requires a bounded positive width.');
+      }
+      final height = width * 211 / 982;
+      return Semantics(
+        label: 'ことほぎ $points',
+        liveRegion: true,
+        child: ExcludeSemantics(
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/kotohogi_hud/kotohogi_bar.png',
+                    key: const ValueKey('kotohogi-bar-art'),
+                    fit: BoxFit.fill,
+                    excludeFromSemantics: true,
+                  ),
+                ),
+                // Mask the source artwork's + button: there is no purchase action.
+                Positioned(
+                  right: width * .038,
+                  top: height * .286,
+                  width: width * .089,
+                  height: height * .428,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF75190D),
+                      border: Border.all(
+                        color: const Color(0xFFF6C65E),
+                        width: width * .006,
+                      ),
+                    ),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(3),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '$points',
+                            key: const ValueKey('total-points'),
+                            style: const TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFFFFF2CE),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
 class ContributionPanel extends StatelessWidget {
   const ContributionPanel({super.key, required this.points});
   final int points;
 
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: parchment(),
-    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-    child: Row(
-      children: [
-        uiPart('32_heart_red_1', width: 34, height: 34),
-        const SizedBox(width: 10),
-        const Expanded(
-          child: Text(
-            'これまでの社会貢献',
-            style: TextStyle(
-              color: wood,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                '$points',
-                key: const ValueKey('total-points'),
-                style: const TextStyle(
-                  color: Color(0xFFA64226),
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const Text(
-          ' pt',
-          style: TextStyle(color: wood, fontWeight: FontWeight.bold),
-        ),
-      ],
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 360),
+      child: KotohogiBar(points: points),
     ),
   );
 }

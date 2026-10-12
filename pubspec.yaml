@@ -57,6 +57,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/gacya/parts/
+    - assets/kotohogi_hud/kotohogi_bar.png
     - assets/gacya/button_resident.png
     - assets/gacya/ticket_counter_bg.png
     - assets/gacya/gacha_title.png

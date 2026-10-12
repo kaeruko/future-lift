@@ -190,7 +190,7 @@ class _CelebrationState extends State<Celebration>
                     if (widget.preview) ...[
                       const SizedBox(height: 8),
                       const Text(
-                        '【デバッグ再生】ポイント・履歴の加算はありません',
+                        '【デバッグ再生】ことほぎ・履歴の加算はありません',
                         key: ValueKey('debug-preview-label'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -354,7 +354,7 @@ class _RewardScroll extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                '社会貢献 +10',
+                'ことほぎ +10',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,
@@ -364,7 +364,7 @@ class _RewardScroll extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'これまでの社会貢献  $total pt',
+                'これまでのことほぎ  $total',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Color(0xFF63351F),

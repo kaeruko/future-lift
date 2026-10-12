@@ -78,7 +78,7 @@ class _ResidentGachaState extends State<ResidentGacha> {
             ],
           ),
           Text(
-            'あと${collection.untilNextTicket(progress.points)}ポイントで券を1枚もらえます。',
+            'あと${collection.untilNextTicket(progress.points)}ことほぎで券を1枚もらえます。',
           ),
           const SizedBox(height: 12),
           Center(

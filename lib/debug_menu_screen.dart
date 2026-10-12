@@ -42,8 +42,8 @@ class DebugMenuScreen extends StatelessWidget {
         content: const Text(
           'デイリー・ウィークリー・マンスリーの達成状態を'
           'すべて未達成に戻します。\n\n'
-          'ポイントと達成履歴は残ります。'
-          'もう一度「できた！」を押すと、ポイントが再び加算されます。'
+          'ことほぎと達成履歴は残ります。'
+          'もう一度「できた！」を押すと、ことほぎが再び加算されます。'
           '\n\n※ 開発・動作確認用の機能です。',
         ),
         actions: [
@@ -115,7 +115,7 @@ class DebugMenuScreen extends StatelessWidget {
                 const SizedBox(height: 9),
                 const Text(
                   '拍手と「ありがとうを受け取る」を何度でも試せます。'
-                  '\nポイント・達成状況・履歴は変わりません。',
+                  '\nことほぎ・達成状況・履歴は変わりません。',
                   style: TextStyle(color: wood, height: 1.65),
                 ),
                 const SizedBox(height: 18),
@@ -195,7 +195,7 @@ class DebugMenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  '演出の動作確認用です。社会貢献ポイントや達成履歴は変わりません。',
+                  '演出の動作確認用です。ことほぎや達成履歴は変わりません。',
                   style: TextStyle(color: wood, fontSize: 12, height: 1.6),
                 ),
                 const SizedBox(height: 12),
@@ -231,7 +231,7 @@ class DebugMenuScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 const Text(
                   '今日・今週・今月の達成を未達成に戻します。'
-                  '\nポイントやこれまでの履歴は残ります。',
+                  '\nことほぎやこれまでの履歴は残ります。',
                   style: TextStyle(color: wood, height: 1.6),
                 ),
                 const SizedBox(height: 14),
@@ -251,7 +251,7 @@ class DebugMenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '現在の社会貢献：${progress.points} pt（再生しても加算されません）',
+                  '現在のことほぎ：${progress.points}（再生しても加算されません）',
                   key: const ValueKey('debug-current-points'),
                   style: const TextStyle(color: wood, fontSize: 12),
                   textAlign: TextAlign.center,

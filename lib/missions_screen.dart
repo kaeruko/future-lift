@@ -460,7 +460,7 @@ class _QuestCard extends StatelessWidget {
                         const SizedBox(width: 5),
                         const Flexible(
                           child: Text(
-                            '社会貢献 +10',
+                            'ことほぎ +10',
                             style: TextStyle(
                               color: wood,
                               fontSize: 13,

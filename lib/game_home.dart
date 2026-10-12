@@ -58,55 +58,11 @@ class _GameHomeState extends State<GameHome> {
                   top: 14,
                   left: 14,
                   right: 14,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF70391E), Color(0xFF9B482B)],
-                      ),
-                      border: Border.all(
-                        color: const Color(0xFFFFD383),
-                        width: 3,
-                      ),
-                      borderRadius: BorderRadius.circular(27),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x80522113),
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        uiPart('32_heart_red_1', width: 34, height: 34),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Text(
-                            '社会貢献ポイント',
-                            style: TextStyle(
-                              color: Color(0xFFFFE8B5),
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${widget.progress.points}',
-                          key: const ValueKey('total-points'),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 26,
-                          ),
-                        ),
-                        const Text(
-                          ' pt',
-                          style: TextStyle(color: Color(0xFFFFE8B5)),
-                        ),
-                      ],
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 360),
+                      child: KotohogiBar(points: widget.progress.points),
                     ),
                   ),
                 ),

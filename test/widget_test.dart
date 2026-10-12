@@ -125,7 +125,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(Celebration),
-        matching: find.text('社会貢献 +10'),
+        matching: find.text('ことほぎ +10'),
       ),
       findsOneWidget,
     );
@@ -397,7 +397,7 @@ void main() {
       find.byKey(const ValueKey('debug-replay-celebration')),
       findsOneWidget,
     );
-    expect(find.textContaining('現在の社会貢献：10 pt'), findsOneWidget);
+    expect(find.textContaining('現在のことほぎ：10'), findsOneWidget);
     final saved = store.raw;
     final writes = store.writes;
 
@@ -527,7 +527,7 @@ void main() {
     await tester.tap(reset);
     await tester.pumpAndSettle();
     expect(find.text('全ミッションをリセットしますか？'), findsOneWidget);
-    expect(find.textContaining('ポイントが再び加算'), findsOneWidget);
+    expect(find.textContaining('ことほぎが再び加算'), findsOneWidget);
     await tester.tap(find.text('キャンセル'));
     await tester.pumpAndSettle();
     expect(controller.progress!.completed, {Mission.strength});
