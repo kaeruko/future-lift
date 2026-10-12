@@ -110,20 +110,21 @@ class _GachaRevealState extends State<GachaReveal>
                       ),
                       child: Center(
                         child: Padding(
-                          padding: const EdgeInsets.all(20),
+                          padding: EdgeInsets.all(constraints.maxWidth < 420 ? 12 : 20),
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 480),
+                            constraints: const BoxConstraints(maxWidth: 560),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Image.asset(
                                   'assets/gacya/gacha_title.png',
+                                  key: const ValueKey('gacha-reveal-title'),
                                   width: double.infinity,
-                                  height: 112,
+                                  height: 140,
                                   fit: BoxFit.contain,
                                   excludeFromSemantics: true,
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 6),
                                 Text(
                                   ready ? 'ようこそ、コトホグへ！' : 'だれに会えるかな…',
                                   style: const TextStyle(
@@ -132,7 +133,8 @@ class _GachaRevealState extends State<GachaReveal>
                                   ),
                                 ),
                                 SizedBox(
-                                  height: 330,
+                                  key: const ValueKey('gacha-reveal-stage'),
+                                  height: 400,
                                   child: Stack(
                                     alignment: Alignment.center,
                                     children: [
@@ -143,14 +145,15 @@ class _GachaRevealState extends State<GachaReveal>
                                       ),
                                       Positioned.fill(
                                         child: Opacity(
-                                          opacity: ((t - .35) / .35).clamp(
+                                          opacity: ((t - .30) / .30).clamp(
                                             0.0,
                                             1.0,
                                           ),
                                           child: Transform.scale(
-                                            scale: .86 + .14 * t,
+                                            scale: 1.00 + .24 * t,
                                             child: Image.asset(
                                               'assets/gacya/summon_glow.png',
+                                              key: const ValueKey('gacha-reveal-glow'),
                                               fit: BoxFit.contain,
                                               excludeFromSemantics: true,
                                             ),
@@ -162,7 +165,7 @@ class _GachaRevealState extends State<GachaReveal>
                                           opacity: _scrollOpacity(i, t),
                                           child: Image.asset(
                                             'assets/gacya/parts/${['scroll_closed', 'scroll_half', 'scroll_open'][i]}.png',
-                                            height: 260,
+                                            height: 320,
                                             width: double.infinity,
                                             fit: BoxFit.contain,
                                             excludeFromSemantics: true,
@@ -175,7 +178,7 @@ class _GachaRevealState extends State<GachaReveal>
                                             scale: reveal,
                                             child: TownResidentAvatar(
                                               resident: _resident,
-                                              size: 230,
+                                              size: 250,
                                             ),
                                           ),
                                         ),
@@ -375,7 +378,7 @@ class _Sparkles extends CustomPainter {
     canvas.drawOval(Offset.zero & size, paint);
     for (var i = 0; i < 18; i++) {
       final angle = i * math.pi * 2 / 18;
-      final radius = 95 + 55 * strength + 10 * math.sin(t * math.pi * 4 + i);
+      final radius = 120 + 75 * strength + 10 * math.sin(t * math.pi * 4 + i);
       final p =
           center + Offset(math.cos(angle) * radius, math.sin(angle) * radius);
       final r = (i.isEven ? 10.0 : 6.0) * strength;

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/main.dart';
 import 'package:future_lift/gacha_reveal.dart';
 import 'package:future_lift/progress.dart';
+import 'package:future_lift/resident_collection.dart';
 import 'package:future_lift/ticket_counter_badge.dart';
 
 import 'progress_test.dart' show MemoryStore;
@@ -86,6 +87,38 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1000));
     expect(find.byKey(const ValueKey('gacha-result')), findsNothing);
     await tester.pumpAndSettle();
+    final title = tester.widget<Image>(
+      find.byKey(const ValueKey('gacha-reveal-title')),
+    );
+    expect(title.height, 140);
+    final stage = tester.widget<SizedBox>(
+      find.byKey(const ValueKey('gacha-reveal-stage')),
+    );
+    expect(stage.height, 400);
+    final scrollFrames = tester.widgetList<Image>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Image &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName.startsWith(
+              'assets/gacya/parts/scroll_',
+            ),
+      ),
+    );
+    expect(scrollFrames.length, 3);
+    expect(scrollFrames.every((frame) => frame.height == 320), isTrue);
+    expect(
+      tester
+          .widget<TownResidentAvatar>(find.byType(TownResidentAvatar))
+          .size,
+      250,
+    );
+    final glow = find.byKey(const ValueKey('gacha-reveal-glow'));
+    expect(glow, findsOneWidget);
+    final transform = tester.widget<Transform>(
+      find.ancestor(of: glow, matching: find.byType(Transform)).first,
+    );
+    expect(transform.transform.getMaxScaleOnAxis(), closeTo(1.24, 0.001));
     expect(find.bySemanticsLabel('NEW'), findsOneWidget);
     final nameplate = find.byKey(const ValueKey('resident-nameplate'));
     expect(nameplate, findsOneWidget);
