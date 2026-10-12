@@ -52,3 +52,4 @@ class TicketCounterBadge extends StatelessWidget {
       ),
     ),
   );
+}
