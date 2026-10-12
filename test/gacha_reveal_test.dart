@@ -101,7 +101,8 @@ void main() {
     final scale = tester.widget<Transform>(
       find.byKey(const ValueKey('gacha-scroll-stand-scale')),
     );
-    expect(scale.transform.getMaxScaleOnAxis(), closeTo(.85, .00001));
+    expect(scale.transform.entry(0, 0), closeTo(.85, .00001));
+    expect(scale.transform.entry(1, 1), closeTo(.85, .00001));
     final art = tester.widget<Image>(
       find.byKey(const ValueKey('gacha-scroll-stand')),
     );
