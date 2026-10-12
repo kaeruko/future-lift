@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -26,10 +27,33 @@ class GameHome extends StatefulWidget {
 }
 
 class _GameHomeState extends State<GameHome> {
+  static const _stepInterval = Duration(milliseconds: 170);
+
   final _scroll = ScrollController();
+  final _stepFrame = ValueNotifier<int>(0);
+  Timer? _stepTimer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final shouldAnimate = !MediaQuery.disableAnimationsOf(context) &&
+        TickerMode.of(context);
+    if (shouldAnimate && _stepTimer == null) {
+      // A timer avoids continuously scheduling animation frames while allowing
+      // the existing widget tests to pumpAndSettle normally.
+      _stepTimer = Timer.periodic(_stepInterval, (_) {
+        if (mounted) _stepFrame.value = (_stepFrame.value + 1) % 4;
+      });
+    } else if (!shouldAnimate) {
+      _stepTimer?.cancel();
+      _stepTimer = null;
+    }
+  }
 
   @override
   void dispose() {
+    _stepTimer?.cancel();
+    _stepFrame.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -175,10 +199,10 @@ class _GameHomeState extends State<GameHome> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            for (final resident
-                                in widget.progress.residents.owned.take(
-                                  townResidentLimit,
-                                ))
+                            for (final (index, resident)
+                                in widget.progress.residents.owned
+                                    .take(townResidentLimit)
+                                    .indexed)
                               Flexible(
                                 child: Semantics(
                                   button: true,
@@ -188,10 +212,33 @@ class _GameHomeState extends State<GameHome> {
                                     onTap: () => widget.onResident(resident),
                                     child: Padding(
                                       padding: const EdgeInsets.all(3),
-                                      child: TownResidentAvatar(
-                                        resident: resident,
-                                        size: (constraints.maxWidth * .15)
-                                            .clamp(44, 80),
+                                      child: ValueListenableBuilder<int>(
+                                        valueListenable: _stepFrame,
+                                        builder: (context, frame, _) {
+                                          final still = MediaQuery.disableAnimationsOf(
+                                                context,
+                                              ) ||
+                                              !TickerMode.of(context);
+                                          final asset = still
+                                              ? resident.idleAsset
+                                              : resident.walkAsset(
+                                                  WalkDirection.front,
+                                                  (frame + (index.isOdd ? 2 : 0)) % 4,
+                                                );
+                                          return Image.asset(
+                                            asset,
+                                            key: ValueKey(
+                                              'home-resident-sprite-${resident.id}',
+                                            ),
+                                            width: (constraints.maxWidth * .15)
+                                                .clamp(44, 80),
+                                            height: (constraints.maxWidth * .15)
+                                                .clamp(44, 80),
+                                            fit: BoxFit.contain,
+                                            gaplessPlayback: true,
+                                            excludeFromSemantics: true,
+                                          );
+                                        },
                                       ),
                                     ),
                                   ),
