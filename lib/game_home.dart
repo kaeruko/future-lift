@@ -37,7 +37,7 @@ class _GameHomeState extends State<GameHome> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final shouldAnimate = !MediaQuery.disableAnimationsOf(context) &&
-        TickerMode.of(context);
+        TickerMode.valuesOf(context).enabled;
     if (shouldAnimate && _stepTimer == null) {
       // A timer avoids continuously scheduling animation frames while allowing
       // the existing widget tests to pumpAndSettle normally.
@@ -218,7 +218,7 @@ class _GameHomeState extends State<GameHome> {
                                           final still = MediaQuery.disableAnimationsOf(
                                                 context,
                                               ) ||
-                                              !TickerMode.of(context);
+                                              !TickerMode.valuesOf(context).enabled;
                                           final asset = still
                                               ? resident.idleAsset
                                               : resident.walkAsset(
