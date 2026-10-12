@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'clap_characters.dart';
 import 'resident_collection.dart';
+import 'social_security_estimate.dart';
 
 class Celebration extends StatefulWidget {
   const Celebration({
@@ -13,16 +14,11 @@ class Celebration extends StatefulWidget {
     this.preview = false,
     required this.residents,
     this.ticketEarned = false,
-    this.estimatedSavingsYen,
   });
   final String missionTitle;
   final int total;
   final List<TownResident> residents;
   final bool ticketEarned;
-
-  /// Evidence-based expected savings, only when a validated model exists.
-  /// No number is shown until a caller supplies it explicitly.
-  final int? estimatedSavingsYen;
 
   /// An animation-only replay that does not award points.
   final bool preview;
@@ -138,10 +134,8 @@ class _CelebrationState extends State<Celebration>
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
-                        widget.estimatedSavingsYen == null
-                            ? '医療・介護費の負担軽減に、また一歩！'
-                            : '推計 ${_formatEstimatedYen(widget.estimatedSavingsYen!)}円分、'
-                                  '医療・介護費の負担軽減に貢献しました',
+                        '参考推計 年間約${SocialSecurityStudyIllustration.illustratedYenLabel}円'
+                        'の医療・介護費の差！',
                         key: const ValueKey('social-contribution-message'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
@@ -155,9 +149,7 @@ class _CelebrationState extends State<Celebration>
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
-                        widget.estimatedSavingsYen == null
-                            ? '※疫学研究で報告される健康行動と要介護リスク・医療介護給付費の関連を題材とした祝福演出です。単発の達成による削減効果や個人の将来費用は計測していません。推計モデルの検証が完了するまで金額表示は行いません。'
-                            : '※将来の費用軽減額についてのモデル期待値です。対象集団・追跡期間・運動量・医療介護制度の給付水準等の仮定に依存し、実際の支出削減や個人の効果を示しません。',
+                        SocialSecurityStudyIllustration.methodologyNote,
                         key: const ValueKey('social-contribution-methodology'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
@@ -249,18 +241,6 @@ class _CelebrationState extends State<Celebration>
       ],
     ),
   );
-}
-
-String _formatEstimatedYen(int yen) {
-  if (yen < 0) {
-    throw ArgumentError.value(yen, 'yen', 'Expected savings cannot be negative');
-  }
-  final digits = yen.toString();
-  final parts = <String>[];
-  for (var end = digits.length; end > 0; end -= 3) {
-    parts.insert(0, digits.substring(math.max(0, end - 3), end));
-  }
-  return parts.join(',');
 }
 
 /// Hide the supplied canvas margins at layout time; keep PNG originals intact.
