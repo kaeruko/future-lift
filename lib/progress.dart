@@ -211,6 +211,8 @@ class Progress {
     completed: completed,
     weeklyCompleted: weeklyCompleted,
     monthlyCompleted: monthlyCompleted,
+    missionCounts: missionCounts,
+    seenDialogues: seenDialogues,
     debugResets: debugResets,
   );
 

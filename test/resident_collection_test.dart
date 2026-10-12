@@ -163,6 +163,8 @@ void main() {
           jsonDecode(funded(points: 100).encode()) as Map<String, dynamic>;
       raw['version'] = 3;
       raw.remove('residents');
+      raw.remove('missionCounts');
+      raw.remove('seenDialogues');
       final migrated = Progress.decode(jsonEncode(raw), expectedVersion: 3);
       expect(migrated.points, 100);
       expect(migrated.residents.baselinePoints, 100);

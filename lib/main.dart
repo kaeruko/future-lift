@@ -84,6 +84,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   bool _celebrating = false;
   Timer? _midnight;
   final _tipIndex = <TownResident, int>{};
+  static Future<DialogueCatalog>? _cachedDialogueCatalog;
   late final Future<DialogueCatalog> _dialoguesFuture;
   ProgressController get controller => widget.controller;
 
@@ -91,7 +92,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _dialoguesFuture = DialogueCatalog.load();
+    _dialoguesFuture = _cachedDialogueCatalog ??= DialogueCatalog.load();
     controller.initialize();
     _scheduleMidnight();
   }
