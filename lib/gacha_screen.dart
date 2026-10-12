@@ -133,11 +133,16 @@ class _GachaScreenState extends State<GachaScreen> {
                                           bottom: 0,
                                           left: c.maxWidth * .18,
                                           right: c.maxWidth * .18,
-                                          child: Image.asset(
-                                            'assets/gacya/scroll_display_stand.png',
-                                            key: const ValueKey('gacha-scroll-stand'),
-                                            fit: BoxFit.contain,
-                                            excludeFromSemantics: true,
+                                          child: Transform.scale(
+                                            key: const ValueKey('gacha-scroll-stand-scale'),
+                                            scale: .85,
+                                            alignment: Alignment.center,
+                                            child: Image.asset(
+                                              'assets/gacya/scroll_display_stand.png',
+                                              key: const ValueKey('gacha-scroll-stand'),
+                                              fit: BoxFit.contain,
+                                              excludeFromSemantics: true,
+                                            ),
                                           ),
                                         ),
                                         Positioned(

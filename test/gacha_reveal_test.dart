@@ -81,6 +81,49 @@ void main() {
     return controller;
   }
 
+  testWidgets('shrine stand shrinks to 85% without shrinking draw buttons', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final store = MemoryStore()..raw = funded(points: 330).encode();
+    final controller = ProgressController(
+      store,
+      clock: () => DateTime(2026, 10, 11),
+    );
+    await controller.initialize();
+    await tester.pumpWidget(
+      MaterialApp(home: GachaScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+
+    final scale = tester.widget<Transform>(
+      find.byKey(const ValueKey('gacha-scroll-stand-scale')),
+    );
+    expect(scale.transform.getMaxScaleOnAxis(), closeTo(.85, .00001));
+    final art = tester.widget<Image>(
+      find.byKey(const ValueKey('gacha-scroll-stand')),
+    );
+    expect(
+      (art.image as AssetImage).assetName,
+      'assets/gacya/scroll_display_stand.png',
+    );
+    for (final key in ['gacha-draw-one', 'gacha-draw-ten']) {
+      final button = tester.widget<TextButton>(find.byKey(ValueKey(key)));
+      expect(button.onPressed, isNotNull);
+      final picture = tester.widget<Image>(
+        find.descendant(
+          of: find.byKey(ValueKey(key)),
+          matching: find.byType(Image),
+        ),
+      );
+      expect(picture.height, 82);
+    }
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('closed scroll, reveal, duplicate repeat and empty tickets', (
     tester,
   ) async {
