@@ -46,6 +46,35 @@ void main() {
     }
   });
 
+  testWidgets('estimated yen is only shown when explicitly supplied', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() => tester.view.reset());
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Celebration(
+          missionTitle: '筋力を使った',
+          total: 10,
+          residents: [],
+          estimatedSavingsYen: 12345,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+
+    expect(find.text('🎊 日本の社会保障に貢献！ 🎊'), findsOneWidget);
+    expect(
+      find.text('推計 12,345円分、医療・介護費の負担軽減に貢献しました'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('モデル期待値'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('six sprites clap in sequence and respect reduced motion', (
     tester,
   ) async {
@@ -120,7 +149,11 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('complete-strength')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('ありがとう！').hitTestable(), findsOneWidget);
+    expect(
+      find.text('🎊 日本の社会保障に貢献！ 🎊').hitTestable(),
+      findsOneWidget,
+    );
+    expect(find.text('医療・介護費の負担軽減に、また一歩！'), findsOneWidget);
     expect(find.bySemanticsLabel('ミッション達成！'), findsOneWidget);
     expect(
       find.descendant(
