@@ -173,7 +173,7 @@ class PinnedGachaHud extends StatelessWidget {
           badgeWidth * 64 / 176;
       final reservedHeight =
           top + math.max(leftHeight, rightHeight) + bottomGap;
-      final remainingHeight = math.max(0, constraints.maxHeight - reservedHeight);
+      final remainingHeight = math.max(0.0, constraints.maxHeight - reservedHeight);
       return Stack(
         children: [
           Positioned.fill(
