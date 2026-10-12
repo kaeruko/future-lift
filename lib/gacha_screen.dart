@@ -63,7 +63,14 @@ class _GachaScreenState extends State<GachaScreen> {
         if (mounted && town == true) Navigator.of(context).pop(true);
       }
     } finally {
-      if (mounted) setState(() => _drawing = false);
+      if (mounted) {
+        if (widget.controller.failure != null) {
+          // The outer home owns the full diagnostic screen.
+          Navigator.of(context).pop(false);
+        } else {
+          setState(() => _drawing = false);
+        }
+      }
     }
   }
 
@@ -214,8 +221,14 @@ class _GachaScreenState extends State<GachaScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('所持ガチャ券',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('所持ガチャ券',
+                maxLines: 1,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
+            ),
+          ),
           TicketCounterBadge(
             key: const ValueKey('gacha-screen-tickets'),
             tickets: tickets,

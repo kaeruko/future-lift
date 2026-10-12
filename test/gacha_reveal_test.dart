@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/main.dart';
 import 'package:future_lift/gacha_reveal.dart';
+import 'package:future_lift/gacha_screen.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/resident_collection.dart';
 import 'package:future_lift/ticket_counter_badge.dart';
@@ -71,6 +72,10 @@ void main() {
       controller.progress!.residents.tickets(controller.progress!.points),
     );
     await tester.tap(find.byKey(const ValueKey('draw-resident')));
+    await tester.pumpAndSettle();
+    expect(find.byType(GachaScreen), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const ValueKey('gacha-draw-one')));
+    await tester.tap(find.byKey(const ValueKey('gacha-draw-one')));
     await tester.pump();
     await tester.pump();
     return controller;
