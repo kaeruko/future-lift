@@ -157,7 +157,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('医療・介護費の負担軽減に、また一歩！'), findsOneWidget);
-    expect(find.bySemanticsLabel('ミッション達成！'), findsOneWidget);
+    expect(find.bySemanticsLabel('ミッション達成！ 日本の社会保障に貢献！'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byType(Celebration),
