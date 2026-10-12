@@ -13,11 +13,16 @@ class Celebration extends StatefulWidget {
     this.preview = false,
     required this.residents,
     this.ticketEarned = false,
+    this.estimatedSavingsYen,
   });
   final String missionTitle;
   final int total;
   final List<TownResident> residents;
   final bool ticketEarned;
+
+  /// Evidence-based expected savings, only when a validated model exists.
+  /// No number is shown until a caller supplies it explicitly.
+  final int? estimatedSavingsYen;
 
   /// An animation-only replay that does not award points.
   final bool preview;
@@ -89,29 +94,6 @@ class _CelebrationState extends State<Celebration>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 22,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF6DA),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: const Color(0xFFAC7136),
-                          width: 2,
-                        ),
-                      ),
-                      child: const Text(
-                        'まちのみんなから、あなたへ',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFF63351F),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _entrance,
@@ -120,33 +102,10 @@ class _CelebrationState extends State<Celebration>
                       child: Semantics(
                         label: 'ミッション達成！',
                         liveRegion: true,
-                        child: const _CroppedArtwork(
-                          'mission_complete_title',
-                          heightFactor: .48,
-                        ),
+                        child: const _OutlinedHeadline(),
                       ),
                     ),
-                    const _OutlinedThanks(),
-                    Container(
-                      margin: const EdgeInsets.only(top: 8, bottom: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xEDFFF8E5),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        '未来の社会をちょっと助けました',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFF63351F),
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: 10),
                     Stack(
                       alignment: Alignment.center,
                       children: [
@@ -167,6 +126,47 @@ class _CelebrationState extends State<Celebration>
                         ),
                       ],
                     ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 9,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xEDFFF8E5),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        widget.estimatedSavingsYen == null
+                            ? '医療・介護費の負担軽減に、また一歩！'
+                            : '推計 ${_formatEstimatedYen(widget.estimatedSavingsYen!)}円分、'
+                                  '医療・介護費の負担軽減に貢献しました',
+                        key: const ValueKey('social-contribution-message'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF63351F),
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        widget.estimatedSavingsYen == null
+                            ? '※疫学研究で報告される健康行動と要介護リスク・医療介護給付費の関連を題材とした祝福演出です。単発の達成による削減効果や個人の将来費用は計測していません。推計モデルの検証が完了するまで金額表示は行いません。'
+                            : '※将来の費用軽減額についてのモデル期待値です。対象集団・追跡期間・運動量・医療介護制度の給付水準等の仮定に依存し、実際の支出削減や個人の効果を示しません。',
+                        key: const ValueKey('social-contribution-methodology'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFF63351F),
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     SlideTransition(
                       position:
                           Tween(
@@ -250,6 +250,18 @@ class _CelebrationState extends State<Celebration>
   );
 }
 
+String _formatEstimatedYen(int yen) {
+  if (yen < 0) {
+    throw ArgumentError.value(yen, 'yen', 'Expected savings cannot be negative');
+  }
+  final digits = yen.toString();
+  final parts = <String>[];
+  for (var end = digits.length; end > 0; end -= 3) {
+    parts.insert(0, digits.substring(math.max(0, end - 3), end));
+  }
+  return parts.join(',');
+}
+
 /// Hide the supplied canvas margins at layout time; keep PNG originals intact.
 class _CroppedArtwork extends StatelessWidget {
   const _CroppedArtwork(this.name, {required this.heightFactor});
@@ -269,8 +281,8 @@ class _CroppedArtwork extends StatelessWidget {
   );
 }
 
-class _OutlinedThanks extends StatelessWidget {
-  const _OutlinedThanks();
+class _OutlinedHeadline extends StatelessWidget {
+  const _OutlinedHeadline();
 
   @override
   Widget build(BuildContext context) => FittedBox(
@@ -279,9 +291,9 @@ class _OutlinedThanks extends StatelessWidget {
       children: [
         ExcludeSemantics(
           child: Text(
-            'ありがとう！',
+            '🎊 日本の社会保障に貢献！ 🎊',
             style: TextStyle(
-              fontSize: 38,
+              fontSize: 33,
               fontWeight: FontWeight.w900,
               foreground: Paint()
                 ..style = PaintingStyle.stroke
@@ -291,9 +303,9 @@ class _OutlinedThanks extends StatelessWidget {
           ),
         ),
         const Text(
-          'ありがとう！',
+          '🎊 日本の社会保障に貢献！ 🎊',
           style: TextStyle(
-            fontSize: 38,
+            fontSize: 33,
             fontWeight: FontWeight.w900,
             color: Color(0xFFFFF5D5),
           ),
