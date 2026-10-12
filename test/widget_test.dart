@@ -8,6 +8,7 @@ import 'package:future_lift/main.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/residents.dart';
 import 'package:future_lift/town.dart';
+import 'package:future_lift/ticket_counter_badge.dart';
 
 import 'progress_test.dart' show MemoryStore;
 
@@ -433,6 +434,37 @@ void main() {
     await tester.pumpAndSettle();
     expect(store.writes, writes);
     expect(store.raw, saved);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('town header shows current gacha tickets on narrow phones', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final store = MemoryStore();
+    final controller = await launch(tester, store);
+    await tester.tap(find.text('みんなのまち').last);
+    await tester.pumpAndSettle();
+
+    final counter = find.byKey(const ValueKey('town-header-ticket-counter'));
+    expect(tester.widget<TicketCounterBadge>(counter).tickets, 0);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('メニュー').last);
+    await tester.pumpAndSettle();
+    final addTickets = find.byKey(const ValueKey('debug-add-ticket-10'));
+    await tester.ensureVisible(addTickets);
+    await tester.pumpAndSettle();
+    await tester.tap(addTickets);
+    await tester.pumpAndSettle();
+    expect(controller.progress!.residents.tickets(0), 10);
+
+    await tester.tap(find.text('みんなのまち').last);
+    await tester.pumpAndSettle();
+    expect(tester.widget<TicketCounterBadge>(counter).tickets, 10);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

@@ -13,6 +13,7 @@ import 'history_screen.dart';
 import 'debug_menu_screen.dart';
 import 'resident_collection.dart';
 import 'resident_gacha.dart';
+import 'ticket_counter_badge.dart';
 import 'town.dart';
 
 void main() {
@@ -388,12 +389,61 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       ContributionPanel(points: progress.points);
 
   List<Widget> _town(Progress progress) => [
-    const Text(
-      'みんなのまち',
-      style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900),
+    LayoutBuilder(
+      builder: (context, constraints) {
+        final heading = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'みんなのまち',
+              style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'あなたの行動が、まちの彩りに。',
+              style: TextStyle(color: Color(0xFF627875)),
+            ),
+          ],
+        );
+        final ticketCounter = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const Text(
+              '所持ガチャ券',
+              style: TextStyle(
+                color: wood,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TicketCounterBadge(
+              key: const ValueKey('town-header-ticket-counter'),
+              tickets: progress.residents.tickets(progress.points),
+            ),
+          ],
+        );
+        if (constraints.maxWidth < 440) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              heading,
+              const SizedBox(height: 8),
+              Align(alignment: Alignment.centerRight, child: ticketCounter),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(child: heading),
+            const SizedBox(width: 12),
+            ticketCounter,
+          ],
+        );
+      },
     ),
-    const SizedBox(height: 8),
-    const Text('あなたの行動が、まちの彩りに。', style: TextStyle(color: Color(0xFF627875))),
     const SizedBox(height: 20),
     _points(progress),
     const SizedBox(height: 20),
