@@ -21,9 +21,69 @@ class GachaHud extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Expanded(
+      const Expanded(
         flex: 7,
-        child: AspectRatio(
+        child: PlayerNameplate(),
+      ),
+      const SizedBox(width: 6),
+      Expanded(
+        flex: 4,
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final badgeWidth = (c.maxWidth * .90).clamp(0.0, 156.0);
+            return Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  KotohogiBar(points: points),
+                  const SizedBox(height: 4),
+                  const Padding(
+                    padding: EdgeInsets.only(right: 5, bottom: 2),
+                    child: Text(
+                      '所持ガチャ券',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF63351F),
+                        shadows: [
+                          Shadow(color: Color(0xFFFFF4DA), blurRadius: 3),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Tooltip(
+                    message: 'ガチャ券 $tickets枚',
+                    child: SizedBox(
+                      width: badgeWidth,
+                      height: badgeWidth * 64 / 176,
+                      child: FittedBox(
+                        alignment: Alignment.centerRight,
+                        fit: BoxFit.contain,
+                        child: TicketCounterBadge(
+                          key: ticketBadgeKey,
+                          tickets: tickets,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    ],
+  );
+}
+
+/// The same decorative player nameplate is used in home and gacha.
+class PlayerNameplate extends StatelessWidget {
+  const PlayerNameplate({super.key});
+
+  @override
+  Widget build(BuildContext context) => AspectRatio(
           aspectRatio: 788 / 209,
           child: LayoutBuilder(
             builder: (context, c) => Stack(
@@ -88,57 +148,5 @@ class GachaHud extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-      const SizedBox(width: 6),
-      Expanded(
-        flex: 4,
-        child: LayoutBuilder(
-          builder: (context, c) {
-            final badgeWidth = (c.maxWidth * .90).clamp(0.0, 156.0);
-            return Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  KotohogiBar(points: points),
-                  const SizedBox(height: 4),
-                  const Padding(
-                    padding: EdgeInsets.only(right: 5, bottom: 2),
-                    child: Text(
-                      '所持ガチャ券',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF63351F),
-                        shadows: [
-                          Shadow(color: Color(0xFFFFF4DA), blurRadius: 3),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Tooltip(
-                    message: 'ガチャ券 $tickets枚',
-                    child: SizedBox(
-                      width: badgeWidth,
-                      height: badgeWidth * 64 / 176,
-                      child: FittedBox(
-                        alignment: Alignment.centerRight,
-                        fit: BoxFit.contain,
-                        child: TicketCounterBadge(
-                          key: ticketBadgeKey,
-                          tickets: tickets,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    ],
-  );
+        );
 }

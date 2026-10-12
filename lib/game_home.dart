@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'home_skin.dart';
+import 'gacha_hud.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
 
@@ -82,16 +83,30 @@ class _GameHomeState extends State<GameHome> {
                   top: 14,
                   left: 14,
                   right: 14,
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 360),
-                      child: KotohogiBar(points: widget.progress.points),
-                    ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Expanded(
+                        flex: 7,
+                        child: PlayerNameplate(),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        flex: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: KotohogiBar(points: widget.progress.points),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Positioned(
-                  top: sceneHeight * .16,
+                  // Keep the lobby title below the shared profile/nameplate.
+                  top: math.max(
+                    sceneHeight * .16,
+                    14 + (constraints.maxWidth - 34) * 7 / 11 * 209 / 788 + 18,
+                  ),
                   left: 24,
                   right: 24,
                   child: Column(
