@@ -75,7 +75,7 @@ void main() {
     expect(granted.residents.earnedTickets(0), 0);
     expect(granted.residents.debugTicketsGranted, 11);
     expect(granted.residents.tickets(0), 11);
-    final restored = Progress.decode(granted.encode(), expectedVersion: 4);
+    final restored = Progress.decode(granted.encode(), expectedVersion: 5);
     expect(restored.residents.tickets(0), 11);
     final after = restored.acquireResident(TownResident.cat);
     expect(after.residents.tickets(0), 10);
@@ -172,7 +172,7 @@ void main() {
           .complete(Mission.outside)
           .complete(Mission.conversation);
       expect(next.residents.tickets(130), 1);
-      expect(Progress.decode(next.encode(), expectedVersion: 4).points, 130);
+      expect(Progress.decode(next.encode(), expectedVersion: 5).points, 130);
     },
   );
 

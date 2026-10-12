@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "dialogues": [
+    {
+      "id": "shiba_default_1",
+      "residentId": "01_shiba",
+      "text": "少し体を動かすことも、毎日のセルフケアになるんだって。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "shiba_default_2",
+      "residentId": "01_shiba",
+      "text": "家事や庭の手入れにも、体を動かす機会があるんだね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "shiba_default_3",
+      "residentId": "01_shiba",
+      "text": "好きな遊びや趣味を、長く楽しめるといいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "shiba_default_4",
+      "residentId": "01_shiba",
+      "text": "身近な人とのつながりも、大切にしたいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "rabbit_default_1",
+      "residentId": "02_rabbit",
+      "text": "新しいことを知る楽しさも、ずっと大切にしたいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "rabbit_default_2",
+      "residentId": "02_rabbit",
+      "text": "外に出るきっかけは、好きな場所を見つけることでもよさそう。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "rabbit_default_3",
+      "residentId": "02_rabbit",
+      "text": "体を動かす方法は、ひとつじゃないんだって。自分に合うものを。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "rabbit_default_4",
+      "residentId": "02_rabbit",
+      "text": "誰かと一緒だと、楽しめる活動もあるかもしれないね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "penguin_default_1",
+      "residentId": "03_penguin",
+      "text": "暮らしの中で体を動かすことも、大切な活動なんだって。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "penguin_default_2",
+      "residentId": "03_penguin",
+      "text": "無理のない範囲で、楽しめる動き方を探してみたいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "penguin_default_3",
+      "residentId": "03_penguin",
+      "text": "人と話す時間も、日々のつながりを育てるひとときだね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "penguin_default_4",
+      "residentId": "03_penguin",
+      "text": "自分が大切にしたいことを続けられる環境も、大事なんだって。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "cat_default_1",
+      "residentId": "04_cat",
+      "text": "暮らしの中で体を動かすことも、大切な活動なんだって。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "cat_default_2",
+      "residentId": "04_cat",
+      "text": "無理のない範囲で、楽しめる動き方を探してみたいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "cat_default_3",
+      "residentId": "04_cat",
+      "text": "人と話す時間も、日々のつながりを育てるひとときだね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "cat_default_4",
+      "residentId": "04_cat",
+      "text": "自分が大切にしたいことを続けられる環境も、大事なんだって。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "squirrel_default_1",
+      "residentId": "05_squirrel",
+      "text": "少し体を動かすことも、毎日のセルフケアになるんだって。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "squirrel_default_2",
+      "residentId": "05_squirrel",
+      "text": "家事や庭の手入れにも、体を動かす機会があるんだね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "squirrel_default_3",
+      "residentId": "05_squirrel",
+      "text": "好きな遊びや趣味を、長く楽しめるといいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "squirrel_default_4",
+      "residentId": "05_squirrel",
+      "text": "身近な人とのつながりも、大切にしたいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "bear_default_1",
+      "residentId": "06_bear",
+      "text": "年齢が同じでも、できることや必要な支えは人それぞれだね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "bear_default_2",
+      "residentId": "06_bear",
+      "text": "支えを借りながらでも、自分の好きなことを楽しめるといいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "bear_default_3",
+      "residentId": "06_bear",
+      "text": "学んだり、人とつながったりすることも、生活する力のひとつだね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "bear_default_4",
+      "residentId": "06_bear",
+      "text": "体調や暮らしに合う、自分なりのセルフケアを大切にしたいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "shiba_sakura_outside_5",
+      "residentId": "01_shiba",
+      "text": "桜の季節だね！最近のお散歩はどうだった？",
+      "priority": 20,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "date",
+          "mode": "annual_range",
+          "start": "03-20",
+          "end": "04-10"
+        },
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 5
+        }
+      ]
+    },
+    {
+      "id": "rabbit_new_year",
+      "residentId": "02_rabbit",
+      "text": "あけましておめでとう！今年も一緒に小さな一歩を楽しもうね。",
+      "priority": 30,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "date",
+          "mode": "annual",
+          "date": "01-01"
+        }
+      ]
+    },
+    {
+      "id": "shiba_five_actions",
+      "residentId": "01_shiba",
+      "text": "もう5回もミッションを達成したんだね！えらいワン！",
+      "priority": 10,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "all",
+          "minCount": 5
+        }
+      ]
+    }
+  ]
+}

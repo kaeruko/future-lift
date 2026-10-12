@@ -282,8 +282,8 @@ void main() {
       '2026-10-09': {Mission.strength, Mission.conversation},
     });
     final serialized = migrated.encode();
-    expect(jsonDecode(serialized)['version'], 4);
-    expect(Progress.decode(serialized, expectedVersion: 4).points, 100);
+    expect(jsonDecode(serialized)['version'], 5);
+    expect(Progress.decode(serialized, expectedVersion: 5).points, 100);
     expect(
       Progress.decode(serialized).history['2026-10-09'],
       {Mission.strength, Mission.conversation},
@@ -410,7 +410,7 @@ void main() {
     expect(await restarted.complete(Mission.monthlyReview), isFalse);
   });
 
-  test('v2 saves migrate to v4 without changing existing mission IDs', () {
+  test('v2 saves migrate to v5 without changing existing mission IDs', () {
     final raw = jsonEncode({
       'version': 2,
       'day': '2026-10-09',
@@ -428,9 +428,9 @@ void main() {
     expect(restored.history['2026-10-08'], {Mission.outside});
     expect(restored.weeklyCompleted, isEmpty);
     expect(restored.monthlyCompleted, isEmpty);
-    final migrated = Progress.decode(restored.encode(), expectedVersion: 4);
+    final migrated = Progress.decode(restored.encode(), expectedVersion: 5);
     expect(migrated.history, restored.history);
-    expect(() => Progress.decode(raw, expectedVersion: 4),
+    expect(() => Progress.decode(raw, expectedVersion: 5),
         throwsFormatException);
   });
 
@@ -516,7 +516,7 @@ void main() {
     expect(restarted.progress!.debugResets[MissionPeriod.weekly],
         weekStart('2026-10-10'));
     expect(restarted.progress!.debugResets[MissionPeriod.monthly], '2026-10');
-    final afterRollover = Progress.decode(store.raw!, expectedVersion: 4);
+    final afterRollover = Progress.decode(store.raw!, expectedVersion: 5);
     expect(afterRollover.day, '2026-10-10');
     expect(afterRollover.history, originalHistory);
   });
@@ -552,7 +552,7 @@ void main() {
       expect(
         () => Progress.decode(
           jsonEncode({...data, 'debugResets': reset}),
-          expectedVersion: 4,
+          expectedVersion: 5,
         ),
         throwsFormatException,
         reason: reset.toString(),

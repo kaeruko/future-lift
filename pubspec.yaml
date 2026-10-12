@@ -57,6 +57,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/gacya/parts/
+    - assets/dialogues/dialogues.json
     - assets/gacya/bg.png
     - assets/gacya/scroll_display_stand.png
     - assets/gacya/button.png

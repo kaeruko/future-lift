@@ -62,6 +62,8 @@ class Progress {
     Set<Mission> weeklyCompleted = const {},
     Set<Mission> monthlyCompleted = const {},
     Map<MissionPeriod, String> debugResets = const {},
+    Map<Mission, int>? missionCounts,
+    Set<String> seenDialogues = const {},
   }) : residents = residents ?? ResidentCollection.initial(points),
        completed = Set.unmodifiable(completed),
        history = Map.unmodifiable({
@@ -70,7 +72,13 @@ class Progress {
        }),
        weeklyCompleted = Set.unmodifiable(weeklyCompleted),
        monthlyCompleted = Set.unmodifiable(monthlyCompleted),
-       debugResets = Map.unmodifiable(debugResets);
+       debugResets = Map.unmodifiable(debugResets),
+       missionCounts = Map.unmodifiable(missionCounts ?? {
+         for (final mission in Mission.values)
+           if (history.values.any((events) => events.contains(mission)))
+             mission: history.values.where((events) => events.contains(mission)).length,
+       }),
+       seenDialogues = Set.unmodifiable(seenDialogues);
 
   factory Progress.empty(DateTime now) => Progress(
     day: localDay(now),
@@ -90,6 +98,17 @@ class Progress {
 
   /// Period markers permit intentional debug resets without erasing past history.
   final Map<MissionPeriod, String> debugResets;
+  /// Durable counters survive journal deletion. Legacy migration is a known lower bound.
+  final Map<Mission, int> missionCounts;
+  final Set<String> seenDialogues;
+  int countFor(String missionId) {
+    if (missionId == 'all') return points ~/ 10;
+    final mission = Mission.values.singleWhere(
+      (m) => m.name == missionId,
+      orElse: () => throw ArgumentError.value(missionId, 'missionId'),
+    );
+    return missionCounts[mission] ?? 0;
+  }
 
   int get townLevel => points >= 180
       ? 3
@@ -124,6 +143,8 @@ class Progress {
           ? monthlyCompleted
           : {},
       history: history,
+      missionCounts: missionCounts,
+      seenDialogues: seenDialogues,
       debugResets: {
         if (weekStart(today) == weekStart(day) &&
             debugResets.containsKey(MissionPeriod.weekly))
@@ -155,6 +176,8 @@ class Progress {
         ...history,
         day: {...?history[day], mission},
       },
+      missionCounts: {...missionCounts, mission: (missionCounts[mission] ?? 0) + 1},
+      seenDialogues: seenDialogues,
       debugResets: debugResets,
     );
   }
@@ -170,6 +193,8 @@ class Progress {
     weeklyCompleted: {},
     monthlyCompleted: {},
     history: history,
+    missionCounts: missionCounts,
+    seenDialogues: seenDialogues,
     debugResets: {
       MissionPeriod.daily: day,
       MissionPeriod.weekly: weekStart(day),
@@ -199,6 +224,8 @@ class Progress {
     weeklyCompleted: weeklyCompleted,
     monthlyCompleted: monthlyCompleted,
     history: history,
+    missionCounts: missionCounts,
+    seenDialogues: seenDialogues,
     debugResets: debugResets,
   );
 
@@ -211,6 +238,8 @@ class Progress {
     weeklyCompleted: weeklyCompleted,
     monthlyCompleted: monthlyCompleted,
     history: history,
+    missionCounts: missionCounts,
+    seenDialogues: seenDialogues,
     debugResets: debugResets,
   );
 
@@ -224,12 +253,38 @@ class Progress {
     weeklyCompleted: weeklyCompleted,
     monthlyCompleted: monthlyCompleted,
     history: history,
+    missionCounts: missionCounts,
+    seenDialogues: seenDialogues,
     debugResets: debugResets,
   );
 
+  Progress markDialogueSeen(String id) {
+    if (id.isEmpty) throw ArgumentError.value(id, 'id');
+    if (seenDialogues.contains(id)) return this;
+    return Progress(
+      day: day,
+      lastCompletedDay: lastCompletedDay,
+      points: points,
+      residents: residents,
+      completed: completed,
+      weeklyCompleted: weeklyCompleted,
+      monthlyCompleted: monthlyCompleted,
+      history: history,
+      missionCounts: missionCounts,
+      seenDialogues: {...seenDialogues, id},
+      debugResets: debugResets,
+    );
+  }
+
   String encode() => jsonEncode({
-    'version': 4,
+    'version': 5,
     'residents': residents.encode(),
+    'missionCounts': {
+      for (final mission in Mission.values)
+        if ((missionCounts[mission] ?? 0) > 0)
+          mission.name: missionCounts[mission],
+    },
+    'seenDialogues': (seenDialogues.toList()..sort()),
     'day': day,
     'lastCompletedDay': lastCompletedDay,
     'points': points,
@@ -252,7 +307,7 @@ class Progress {
       if (missions.contains(mission)) mission.name,
   ];
 
-  /// Older records are strictly validated before migration into v4.
+  /// Older records are strictly validated before migration into v5.
   static Progress decode(String raw, {int? expectedVersion}) {
     final data = jsonDecode(raw);
     if (data is! Map<String, dynamic>) {
@@ -260,12 +315,13 @@ class Progress {
     }
     final version = data['version'];
     if (version is! int ||
-        ![1, 2, 3, 4].contains(version) ||
+        ![1, 2, 3, 4, 5].contains(version) ||
         (expectedVersion != null && expectedVersion != version)) {
       throw FormatException('Unsupported FutureLift save version: $version');
     }
     final keys = {
-      if (version == 4) 'residents',
+      if (version >= 4) 'residents',
+      if (version >= 5) ...['missionCounts', 'seenDialogues'],
       'version',
       'day',
       'lastCompletedDay',
@@ -286,7 +342,7 @@ class Progress {
     final day = data['day'] as String;
     final last = data['lastCompletedDay'] as String?;
     final points = data['points'] as int;
-    final residents = version == 4
+    final residents = version >= 4
         ? ResidentCollection.decode(data['residents'], points)
         : ResidentCollection.initial(points);
     final completed = _missions(
@@ -395,6 +451,38 @@ class Progress {
             points) {
       throw const FormatException('Inconsistent FutureLift progress values.');
     }
+    final knownCounts = <Mission, int>{};
+    if (version >= 5) {
+      final rawCounts = data['missionCounts'];
+      final rawSeen = data['seenDialogues'];
+      if (rawCounts is! Map<String, dynamic> || rawSeen is! List ||
+          rawSeen.any((id) => id is! String || id.isEmpty) ||
+          rawSeen.toSet().length != rawSeen.length) {
+        throw const FormatException('Invalid dialogue/mission counters schema.');
+      }
+      for (final entry in rawCounts.entries) {
+        final matches = Mission.values.where((m) => m.name == entry.key);
+        if (matches.length != 1 || entry.value is! int || entry.value <= 0) {
+          throw FormatException('Invalid mission counter: ${entry.key}');
+        }
+        knownCounts[matches.single] = entry.value as int;
+      }
+      if (knownCounts.values.fold<int>(0, (a, b) => a + b) > points ~/ 10) {
+        throw const FormatException('Mission counts exceed earned points.');
+      }
+      for (final mission in Mission.values) {
+        final observed = history.values.where((e) => e.contains(mission)).length;
+        if ((knownCounts[mission] ?? 0) < observed) {
+          throw FormatException('Mission counter is below journal: ${mission.name}');
+        }
+      }
+    } else {
+      // Historical unique entries are an observed minimum, never invented events.
+      for (final mission in Mission.values) {
+        final observed = history.values.where((e) => e.contains(mission)).length;
+        if (observed > 0) knownCounts[mission] = observed;
+      }
+    }
     return Progress(
       day: day,
       lastCompletedDay: last,
@@ -404,6 +492,8 @@ class Progress {
       weeklyCompleted: weekly,
       monthlyCompleted: monthly,
       history: history,
+      missionCounts: knownCounts,
+      seenDialogues: version >= 5 ? Set<String>.from(data['seenDialogues'] as List) : {},
       debugResets: debugResets,
     );
   }
@@ -447,7 +537,8 @@ abstract interface class ProgressStore {
 class LocalProgressStore implements ProgressStore {
   LocalProgressStore(this.preferences);
   final SharedPreferencesAsync preferences;
-  static const key = 'future_lift.progress.v4';
+  static const key = 'future_lift.progress.v5';
+  static const v4Key = 'future_lift.progress.v4';
   static const v3Key = 'future_lift.progress.v3';
   static const previousKey = 'future_lift.progress.v2';
   static const legacyKey = 'future_lift.progress.v1';
@@ -455,9 +546,9 @@ class LocalProgressStore implements ProgressStore {
   @override
   Future<Progress?> load() async {
     final current = await preferences.getString(key);
-    if (current != null) return Progress.decode(current, expectedVersion: 4);
+    if (current != null) return Progress.decode(current, expectedVersion: 5);
     // Explicit migrations only. Invalid newer data never falls back to older data.
-    for (final entry in [(v3Key, 3), (previousKey, 2), (legacyKey, 1)]) {
+    for (final entry in [(v4Key, 4), (v3Key, 3), (previousKey, 2), (legacyKey, 1)]) {
       final raw = await preferences.getString(entry.$1);
       if (raw == null) continue;
       final migrated = Progress.decode(raw, expectedVersion: entry.$2);
@@ -478,7 +569,7 @@ class ProgressFailure {
   final Object error;
   final StackTrace stackTrace;
   String get diagnostics =>
-      '$operation\n${LocalProgressStore.key} / ${LocalProgressStore.v3Key} / ${LocalProgressStore.previousKey} / ${LocalProgressStore.legacyKey}\n$error\n$stackTrace';
+      '$operation\n${LocalProgressStore.key} / ${LocalProgressStore.v4Key} / ${LocalProgressStore.v3Key} / ${LocalProgressStore.previousKey} / ${LocalProgressStore.legacyKey}\n$error\n$stackTrace';
 }
 
 class ProgressController extends ChangeNotifier {
@@ -653,6 +744,26 @@ class ProgressController extends ChangeNotifier {
       return true;
     } catch (error, stack) {
       failure = ProgressFailure('デバッグ用ミッション全リセット', error, stack);
+      return false;
+    } finally {
+      _finishOperation();
+    }
+  }
+
+  Future<bool> recordDialogueSeen(String id) async {
+    if (busy || failure != null || progress == null) return false;
+    busy = true;
+    notifyListeners();
+    try {
+      final today = progress!.onDay(clock());
+      final next = today.markDialogueSeen(id);
+      if (!identical(next, progress)) {
+        await store.save(next);
+        progress = next;
+      }
+      return true;
+    } catch (error, stack) {
+      failure = ProgressFailure('会話 ${id} の閲覧記録保存', error, stack);
       return false;
     } finally {
       _finishOperation();

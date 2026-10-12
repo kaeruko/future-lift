@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コトホグ｜セリフCMS</title>
+<style>
+:root{font-family:system-ui,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#492b27;background:#faf6ee}
+*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}
+header{background:linear-gradient(115deg,#801e27,#b43a32);color:#fff7e7;padding:18px clamp(16px,3vw,44px);border-bottom:5px solid #dfaa53}
+header h1{margin:0;font-size:25px}header p{margin:5px 0;font-size:13px;opacity:.94}
+main{max-width:1380px;margin:20px auto;padding:0 18px;display:grid;grid-template-columns:280px minmax(0,1fr) 300px;gap:18px;align-items:start}
+.panel{background:white;border:1px solid #e7d4b9;border-radius:16px;box-shadow:0 3px 16px #40220c0b;padding:18px;min-width:0}
+h2{font-size:18px;margin:0 0 14px}h3{font-size:15px;margin:22px 0 10px}
+label{display:block;font-size:13px;font-weight:750;margin:10px 0 5px}
+input,select,textarea{width:100%;padding:9px;border-radius:9px;border:1px solid #cdbfae;background:#fffdf9;color:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid #d79f55;outline-offset:1px}
+textarea{min-height:115px;resize:vertical}
+button{background:#922b30;color:white;border:0;border-radius:10px;padding:10px 13px;cursor:pointer;font-weight:750}
+button.secondary{background:#f9ebd3;color:#763d28;border:1px solid #ddbf8f}
+button.danger{background:#a52f2f}
+button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.row{display:flex;gap:10px}.row>*{min-width:0;flex:1}
+#entries{display:flex;flex-direction:column;gap:6px;max-height:70vh;overflow:auto}
+.entry{width:100%;text-align:left;background:#fff9ed;border:1px solid #ead7b5;color:#543627;line-height:1.4}
+.entry.active{background:#f7d9a5;border-color:#ac742d}
+.entry small{display:block;font-size:11px;color:#836150;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.condition{border:1px solid #e4d6bc;border-radius:12px;padding:10px;margin:10px 0;background:#fffaf3}
+.condition .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.condition .top select{flex:1}.condition .top button{flex:none}
+.hint{font-size:12px;color:#796356}.status{font-size:13px;min-height:20px;margin:12px 0 0;color:#316347}
+.status.error{color:#b42c32}
+#previewBox{border-radius:12px;padding:15px;background:#fdf4df;border:1px solid #e9c78b;min-height:110px;white-space:pre-wrap;line-height:1.6}
+#previewBox strong{color:#7c1c32}
+.controls{display:flex;align-items:center;gap:8px}
+.controls input[type=checkbox]{width:auto}
+@media(max-width:1120px){main{grid-template-columns:250px minmax(0,1fr)}main>.panel:last-child{grid-column:1/-1}}
+@media(max-width:700px){main{display:block}main>.panel{margin-bottom:16px}#entries{max-height:230px}}
+</style>
+</head>
+<body>
+<header><h1>🌸 コトホグ セリフCMS</h1><p>ローカル専用｜キャラクター・ミッション累計・日付・AND/ORを編集してJSONに保存</p></header>
+<main>
+<section class="panel">
+  <h2>セリフ一覧 <span id="count"></span></h2>
+  <label for="filter">キャラクターで絞る</label><select id="filter"></select>
+  <div class="actions"><button id="add">＋ 追加</button><button class="secondary" id="reload">保存済みを再読込</button></div>
+  <div id="entries"></div>
+</section>
+<section class="panel">
+  <h2>編集</h2>
+  <div id="editor"></div>
+  <div class="actions"><button id="save">💾 JSONへ保存</button><button class="danger" id="delete">選択を削除</button></div>
+  <p class="hint">保存すると <code>assets/dialogues/dialogues.json</code> を直接更新します。公開アプリへ反映するにはGitへコミットし、アプリを再ビルドしてください。</p>
+  <p class="status" id="status" role="status"></p>
+</section>
+<section class="panel">
+  <h2>表示プレビュー</h2>
+  <p class="hint">仮の今日・ミッション達成数を入力して、どのセリフになるか確認できます。アプリの実データは変更しません。</p>
+  <label>プレビューするキャラ</label><select id="previewResident"></select>
+  <label>仮の日付（日本時間）</label><input id="previewDay" type="date" value="2026-10-13">
+  <label>累計ミッション総数</label><input id="previewTotal" type="number" value="0" min="0">
+  <label>ことほぎ</label><input id="previewPoints" type="number" value="0" min="0">
+  <details><summary>種類別の累計回数を設定</summary><div id="previewMissions"></div></details>
+  <div class="actions"><button id="runPreview" class="secondary">条件を確認</button></div>
+  <div id="previewBox" aria-live="polite"></div>
+  <p class="hint">優先順位の数値が大きいセリフを優先。同順位は実アプリでタップごとに順番が変わります。「1回のみ」は表示した記録が保存されます。</p>
+</section>
+</main>
+<script>
+"use strict";
+const residents={"01_shiba":"しばいぬ","02_rabbit":"うさぎ","03_penguin":"ペンギン","04_cat":"ねこ","05_squirrel":"りす","06_bear":"くま"};
+const missions={"all":"全ミッション合計","strength":"筋力を使った","outside":"外に出た・歩いた","conversation":"人と話した","movement":"身体を動かした","sittingBreak":"座りっぱなしを途中でやめた","food":"食事をひとつ整えた","hobby":"趣味や学びを楽しんだ","weeklyStrength":"筋トレをした","weeklyActive":"息が弾む運動を楽しんだ","weeklyTogether":"誰かと一緒に活動した","weeklyLearn":"新しいことを学んだ・試した","monthlyCommunity":"地域の活動に参加した","monthlyHabit":"健康習慣をひとつ工夫した","monthlyReview":"今月の言祝ぎを振り返った"};
+const modes={"exact":"指定日","range":"指定期間","annual":"毎年の指定日","annual_range":"毎年の期間","weekday":"毎週の曜日"};
+const byId=id=>document.getElementById(id);
+let data=null,selected=null,dirty=false;
+function node(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el}
+function append(parent,tag,text){const el=node(tag,text);parent.append(el);return el}
+function opts(element,values,value){for(const [key,label] of Object.entries(values)){const o=node("option",label);o.value=key;element.append(o)}element.value=value}
+function labelControl(parent,title,tag,value,onChange,attributes={}){
+  const label=append(parent,"label",title);const control=append(parent,tag);
+  if(tag==="select")opts(control,attributes.options,value);
+  else if(tag==="input"){control.type=attributes.type||"text";control.value=value; if(attributes.min!==undefined)control.min=attributes.min}
+  else control.value=value;
+  control.addEventListener(tag==="select"?"change":"input",()=>{onChange(control.type==="checkbox"?control.checked:control.value);dirty=true;setStatus("未保存の変更があります")});
+  return control;
+}
+function setStatus(message,error=false){const e=byId("status");e.textContent=message;e.className="status"+(error?" error":"")}
+function fresh(){return{id:"line_"+Date.now(),residentId:"01_shiba",text:"新しいセリフ",priority:10,once:false,logic:"all",conditions:[]}}
+function current(){if(selected===null)return null;return data.dialogues.find(e=>e.id===selected)||null}
+function refresh(){
+  const filter=byId("filter").value;
+  const list=byId("entries");list.replaceChildren();
+  const showing=data.dialogues.filter(e=>filter==="all"||e.residentId===filter);
+  byId("count").textContent="("+showing.length+"/"+data.dialogues.length+")";
+  for(const entry of showing){
+    const btn=append(list,"button",residents[entry.residentId]+"｜"+entry.text.substring(0,32));
+    btn.className="entry"+(entry.id===selected?" active":"");
+    append(btn,"small",entry.id+" ｜ 優先 "+entry.priority+
+      (entry.conditions.length?" ｜ 条件 "+entry.conditions.length:" ｜ 通常"));
+    btn.onclick=()=>{selected=entry.id;renderEditor();refresh()};
+  }
+  renderEditor();
+}
+function renderEditor(){
+  const area=byId("editor");area.replaceChildren();const entry=current();
+  if(!entry){append(area,"p","セリフを選択してください。");return}
+  const idBox=labelControl(area,"セリフID（変更後も重複不可）","input",entry.id,v=>{
+    const old=entry.id;entry.id=v;selected=v;refresh();
+  });
+  idBox.autocomplete="off";
+  labelControl(area,"キャラクター","select",entry.residentId,v=>{entry.residentId=v;refresh()},{options:residents});
+  labelControl(area,"セリフ","textarea",entry.text,v=>{entry.text=v;});
+  const line=append(area,"div");line.className="row";
+  labelControl(line,"優先順位（大きいほど優先）","input",entry.priority,v=>{entry.priority=Number(v)},{type:"number"});
+  labelControl(line,"条件の組み合わせ","select",entry.logic,v=>{entry.logic=v},{options:{"all":"すべて満たす AND","any":"いずれかを満たす OR"}});
+  const wrapper=append(area,"label");wrapper.className="controls";
+  const once=append(wrapper,"input");once.type="checkbox";once.checked=entry.once;
+  append(wrapper,"span","1回だけ表示（保存済みの閲覧記録で判定）");
+  once.onchange=()=>{entry.once=once.checked;dirty=true;setStatus("未保存の変更があります")};
+  append(area,"h3","表示条件");
+  append(area,"p","条件が0件なら常に表示。日付判定は日本時間で、開始日・終了日も含みます。").className="hint";
+  for(const [index,condition] of entry.conditions.entries())renderCondition(area,entry,condition,index);
+  const add=append(area,"button","＋ 条件を追加");add.className="secondary";
+  add.onclick=()=>{entry.conditions.push({type:"mission",missionId:"all",minCount:5});dirty=true;refresh()};
+}
+function renderCondition(area,entry,condition,index){
+  const box=append(area,"div");box.className="condition";
+  const top=append(box,"div");top.className="top";
+  const kind=append(top,"select");opts(kind,{"mission":"ミッション累計","date":"日付","kotohogi":"ことほぎ累計"},condition.type);
+  kind.onchange=()=>{
+    entry.conditions[index]=kind.value==="mission"?{type:"mission",missionId:"all",minCount:1}:
+      kind.value==="date"?{type:"date",mode:"exact",date:"2026-12-25"}:{type:"kotohogi",min:50};
+    dirty=true;refresh();
+  };
+  const remove=append(top,"button","削除");remove.className="danger";
+  remove.onclick=()=>{entry.conditions.splice(index,1);dirty=true;refresh()};
+  const change=(field,convert)=>(v)=>{condition[field]=convert?convert(v):v};
+  if(condition.type==="mission"){
+    labelControl(box,"種類","select",condition.missionId,change("missionId"),{options:missions});
+    labelControl(box,"累計何回以上","input",condition.minCount,change("minCount",Number),{type:"number",min:1});
+  }else if(condition.type==="kotohogi"){
+    labelControl(box,"ことほぎ何以上","input",condition.min,change("min",Number),{type:"number",min:0});
+  }else{
+    labelControl(box,"日付の形式","select",condition.mode,v=>{
+      const replacement={exact:{date:"2026-12-25"},range:{start:"2026-12-01",end:"2026-12-25"},annual:{date:"01-01"},annual_range:{start:"03-20",end:"04-10"},weekday:{days:[1]}}[v];
+      entry.conditions[index]={type:"date",mode:v,...replacement};dirty=true;refresh();
+    },{options:modes});
+    if(condition.mode==="exact"||condition.mode==="annual"){
+      labelControl(box,"日付（"+(condition.mode==="exact"?"YYYY-MM-DD":"MM-DD")+"）","input",condition.date,change("date"),{type:condition.mode==="exact"?"date":"text"});
+    }else if(condition.mode==="range"||condition.mode==="annual_range"){
+      const type=condition.mode==="range"?"date":"text";
+      const fields=append(box,"div");fields.className="row";
+      labelControl(fields,"開始","input",condition.start,change("start"),{type});
+      labelControl(fields,"終了","input",condition.end,change("end"),{type});
+    }else if(condition.mode==="weekday"){
+      labelControl(box,"曜日（1=月 ... 7=日、カンマ区切り）","input",condition.days.join(","),v=>{
+        condition.days=v.split(",").map(x=>Number(x.trim()));
+      });
+    }
+  }
+}
+function match(condition,context){
+  if(condition.type==="mission")return (condition.missionId==="all"?context.total:(context.missions[condition.missionId]||0))>=condition.minCount;
+  if(condition.type==="kotohogi")return context.points>=condition.min;
+  const day=context.day,md=day.slice(5);
+  if(condition.mode==="exact")return day===condition.date;
+  if(condition.mode==="range")return day>=condition.start&&day<=condition.end;
+  if(condition.mode==="annual")return md===condition.date;
+  if(condition.mode==="annual_range")return condition.start<=condition.end?
+    md>=condition.start&&md<=condition.end:md>=condition.start||md<=condition.end;
+  if(condition.mode==="weekday"){const d=new Date(day+"T00:00:00Z").getUTCDay();return condition.days.includes(d===0?7:d)}
+  throw Error("日付条件の形式が不明");
+}
+function runPreview(){
+  try{
+    const missionsValues={};
+    for(const k of Object.keys(missions))if(k!=="all")missionsValues[k]=Number(byId("m_"+k).value);
+    const context={day:byId("previewDay").value,total:Number(byId("previewTotal").value),
+      points:Number(byId("previewPoints").value),missions:missionsValues};
+    if(!context.day)throw Error("日付を入力してください");
+    const candidates=data.dialogues.filter(entry=>entry.residentId===byId("previewResident").value&&
+      (entry.conditions.length===0||(entry.logic==="all"?entry.conditions.every(c=>match(c,context)):entry.conditions.some(c=>match(c,context)))));
+    candidates.sort((a,b)=>b.priority-a.priority);
+    byId("previewBox").textContent=candidates.length?
+      "選ばれるセリフ｜"+residents[candidates[0].residentId]+"\n"+candidates[0].text+
+      "\nID: "+candidates[0].id+"\n候補: "+candidates.length+"件"+
+      (candidates[0].once?"\n※初回のみ。実際には表示済みなら除外。":""):
+      "表示できるセリフがありません。条件と通常セリフを確認してください。";
+  }catch(err){byId("previewBox").textContent="プレビューエラー: "+err.message}
+}
+async function load(){
+  try{
+    const response=await fetch("/api/dialogues",{cache:"no-store"});
+    const body=await response.json();
+    if(!response.ok)throw Error(body.error||"読込失敗");
+    data=body;selected=data.dialogues[0].id;dirty=false;refresh();runPreview();setStatus("読込成功");
+  }catch(err){setStatus("読込エラー: "+err.message,true)}
+}
+byId("add").onclick=()=>{
+  const entry=fresh();data.dialogues.push(entry);selected=entry.id;
+  byId("filter").value="all";dirty=true;refresh();setStatus("未保存の変更があります");
+};
+byId("delete").onclick=()=>{
+  const entry=current();if(!entry||!confirm("削除しますか？ "+entry.id))return;
+  data.dialogues=data.dialogues.filter(e=>e!==entry);
+  selected=data.dialogues[0]?.id||null;dirty=true;refresh();setStatus("未保存の変更があります");
+};
+byId("save").onclick=async()=>{
+  try{
+    const result=await fetch("/api/dialogues",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+    const payload=await result.json();if(!result.ok)throw Error(payload.error||"保存に失敗しました");
+    dirty=false;setStatus("保存成功（"+payload.count+"件）。アプリに反映するには再ビルドが必要です。");
+    refresh();runPreview();
+  }catch(err){setStatus("保存エラー："+err.message,true)}
+};
+byId("reload").onclick=()=>{if(!dirty||confirm("未保存の変更を破棄しますか？"))load()};
+byId("filter").onchange=refresh;
+byId("runPreview").onclick=runPreview;
+for(const e of [byId("previewDay"),byId("previewResident"),byId("previewTotal"),byId("previewPoints")])e.addEventListener("change",runPreview);
+opts(byId("filter"),{"all":"すべて",...residents},"all");
+opts(byId("previewResident"),residents,"01_shiba");
+for(const [key,title] of Object.entries(missions)){
+  if(key==="all")continue;
+  const input=labelControl(byId("previewMissions"),title,"input",0,runPreview,{type:"number",min:0});
+  input.id="m_"+key;input.addEventListener("input",runPreview);
+}
+window.addEventListener("beforeunload",event=>{if(dirty){event.preventDefault();event.returnValue=""}});
+load();
+</script>
+</body>
+</html>
