@@ -9,6 +9,7 @@ import 'package:future_lift/resident_collection.dart';
 import 'package:future_lift/clap_characters.dart';
 import 'package:future_lift/celebration.dart';
 import 'package:future_lift/main.dart';
+import 'package:future_lift/dialogue_engine.dart';
 import 'package:future_lift/town.dart';
 import 'package:future_lift/gacha_screen.dart';
 
@@ -381,7 +382,12 @@ void main() {
         clock: () => DateTime(2026, 10, 11),
         random: FixedRandom(2),
       );
-      await tester.pumpWidget(FutureLiftApp(controller: controller));
+      final catalog = await tester.runAsync(DialogueCatalog.load);
+      if (catalog == null) throw StateError('Dialogue asset did not load');
+      await tester.pumpWidget(FutureLiftApp(
+        controller: controller,
+        dialogueCatalog: catalog,
+      ));
       await tester.pumpAndSettle();
       await tester.tap(find.text('みんなのまち').last);
       await tester.pumpAndSettle();

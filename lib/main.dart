@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, SynchronousFuture;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,8 +34,14 @@ const orange = Color(0xFFBF4E27);
 const cream = Color(0xFFFBEDD3);
 
 class FutureLiftApp extends StatelessWidget {
-  const FutureLiftApp({super.key, required this.controller});
+  const FutureLiftApp({
+    super.key,
+    required this.controller,
+    this.dialogueCatalog,
+  });
   final ProgressController controller;
+  /// Optional fixed catalog allows deterministic tests without asset-loading races.
+  final DialogueCatalog? dialogueCatalog;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -62,13 +68,18 @@ class FutureLiftApp extends StatelessWidget {
         indicatorColor: Color(0xFFFFD898),
       ),
     ),
-    home: FutureLiftHome(controller: controller),
+    home: FutureLiftHome(controller: controller, dialogueCatalog: dialogueCatalog),
   );
 }
 
 class FutureLiftHome extends StatefulWidget {
-  const FutureLiftHome({super.key, required this.controller});
+  const FutureLiftHome({
+    super.key,
+    required this.controller,
+    this.dialogueCatalog,
+  });
   final ProgressController controller;
+  final DialogueCatalog? dialogueCatalog;
 
   @override
   State<FutureLiftHome> createState() => _FutureLiftHomeState();
@@ -92,7 +103,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _dialoguesFuture = _cachedDialogueCatalog ??= DialogueCatalog.load();
+    _dialoguesFuture = widget.dialogueCatalog != null
+        ? SynchronousFuture(widget.dialogueCatalog!)
+        : (_cachedDialogueCatalog ??= DialogueCatalog.load());
     controller.initialize();
     _scheduleMidnight();
   }
