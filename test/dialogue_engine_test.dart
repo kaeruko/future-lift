@@ -22,7 +22,7 @@ Map<String, Object> row(String id, String resident, String text, {
 DialogueCatalog catalog(List<Map<String, Object>> additions) {
   final defaults = [
     for (final r in TownResident.values)
-      row(r.id.replaceAll('0', '') + '_default', r.id, '通常の雑談'),
+      row('${r.id}_default', r.id, '通常の雑談'),
   ];
   return DialogueCatalog.fromJson(jsonEncode({
     'version': 1,
@@ -32,7 +32,9 @@ DialogueCatalog catalog(List<Map<String, Object>> additions) {
 
 Progress completed(List<Mission> missions) {
   var p = Progress.empty(DateTime(2026, 10, 13));
-  for (final mission in missions) p = p.complete(mission);
+  for (final mission in missions) {
+    p = p.complete(mission);
+  }
   return p;
 }
 
@@ -135,7 +137,7 @@ void main() {
     final root=jsonDecode(jsonEncode({
       'version':1,
       'dialogues':[for(final r in TownResident.values)
-        row(r.id.replaceAll('0','')+'_default',r.id,'普通')],
+        row('${r.id}_default',r.id,'普通')],
     })) as Map<String,dynamic>;
     for(final invalid in [
       {'type':'date','mode':'exact','date':'2026-02-30'},

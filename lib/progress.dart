@@ -763,7 +763,7 @@ class ProgressController extends ChangeNotifier {
       }
       return true;
     } catch (error, stack) {
-      failure = ProgressFailure('会話 ${id} の閲覧記録保存', error, stack);
+      failure = ProgressFailure('会話 $id の閲覧記録保存', error, stack);
       return false;
     } finally {
       _finishOperation();

@@ -178,7 +178,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
 
   Future<void> _showTip(TownResident resident) async {
     if (controller.busy || controller.failure != null ||
-        controller.progress == null) return;
+        controller.progress == null) {
+      return;
+    }
     final catalog = await _dialoguesFuture;
     if (!mounted || controller.failure != null) return;
     final index = _tipIndex[resident] ?? 0;

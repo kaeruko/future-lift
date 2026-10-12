@@ -21,13 +21,13 @@ class DialogueCatalog {
     final ids = <String>{};
     for (final row in root['dialogues'] as List) {
       final entry = DialogueEntry.parse(row);
-      if (!ids.add(entry.id)) throw FormatException('Duplicate dialogue id: ' + entry.id);
+      if (!ids.add(entry.id)) throw FormatException('Duplicate dialogue id: ${entry.id}');
       entries.add(entry);
     }
     for (final resident in TownResident.values) {
       if (!entries.any((e) => e.residentId == resident.id &&
           e.conditions.isEmpty && !e.once)) {
-        throw FormatException('Missing unconditional dialogue: ' + resident.id);
+        throw FormatException('Missing unconditional dialogue: ${resident.id}');
       }
     }
     return DialogueCatalog._(List.unmodifiable(entries));
@@ -43,7 +43,7 @@ class DialogueCatalog {
       entry.residentId == resident.id &&
       (!entry.once || !progress.seenDialogues.contains(entry.id)) &&
       entry.matches(progress, now)).toList();
-    if (available.isEmpty) throw StateError('No dialogue: ' + resident.id);
+    if (available.isEmpty) throw StateError('No dialogue: ${resident.id}');
     available.sort((a, b) => b.priority.compareTo(a.priority));
     final top = available.where((e) => e.priority == available.first.priority).toList();
     return top[rotation % top.length];
@@ -157,9 +157,10 @@ class DialogueCondition {
     if (kind == 'kotohogi') return progress.points >= fields['min'];
     // Convert absolute instant to Japan Standard Time (+09:00).
     final jst = now.toUtc().add(const Duration(hours: 9));
-    final day = jst.year.toString().padLeft(4, '0') + '-' +
-        jst.month.toString().padLeft(2, '0') + '-' +
-        jst.day.toString().padLeft(2, '0');
+    final year = jst.year.toString().padLeft(4, '0');
+    final month = jst.month.toString().padLeft(2, '0');
+    final date = jst.day.toString().padLeft(2, '0');
+    final day = '$year-$month-$date';
     final md = day.substring(5);
     switch (fields['mode']) {
       case 'exact':
@@ -184,13 +185,13 @@ class DialogueCondition {
 }
 
 Map<String, dynamic> _object(Object? value, String field) {
-  if (value is! Map<String, dynamic>) throw FormatException('Expected object: ' + field);
+  if (value is! Map<String, dynamic>) throw FormatException('Expected object: $field');
   return value;
 }
 void _keys(Map<String, dynamic> data, Set<String> expected, String field) {
   if (data.keys.toSet().difference(expected).isNotEmpty ||
       expected.difference(data.keys.toSet()).isNotEmpty) {
-    throw FormatException('Invalid fields: ' + field);
+    throw FormatException('Invalid fields: $field');
   }
 }
 String _fullDay(Object? value) {
@@ -199,9 +200,11 @@ String _fullDay(Object? value) {
     throw const FormatException('Invalid exact date');
   }
   final parsed = DateTime.tryParse(value);
-  if (parsed == null || parsed.year.toString().padLeft(4, '0') + '-' +
-      parsed.month.toString().padLeft(2, '0') + '-' +
-      parsed.day.toString().padLeft(2, '0') != value) {
+  if (parsed == null) throw const FormatException('Invalid calendar date');
+  final year = parsed.year.toString().padLeft(4, '0');
+  final month = parsed.month.toString().padLeft(2, '0');
+  final day = parsed.day.toString().padLeft(2, '0');
+  if ('$year-$month-$day' != value) {
     throw const FormatException('Invalid calendar date');
   }
   return value;
@@ -210,6 +213,6 @@ String _monthDay(Object? value) {
   if (value is! String || !RegExp(r'^\d{2}-\d{2}$').hasMatch(value)) {
     throw const FormatException('Invalid annual date');
   }
-  _fullDay('2000-' + value);
+  _fullDay('2000-$value');
   return value;
 }
