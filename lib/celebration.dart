@@ -100,7 +100,8 @@ class _CelebrationState extends State<Celebration>
                         curve: const Interval(0, .7, curve: Curves.elasticOut),
                       ),
                       child: Semantics(
-                        label: 'ミッション達成！',
+                        label: 'ミッション達成！ 日本の社会保障に貢献！',
+                        excludeSemantics: true,
                         liveRegion: true,
                         child: const _OutlinedHeadline(),
                       ),
