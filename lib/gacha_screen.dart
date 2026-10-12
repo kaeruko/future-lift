@@ -4,7 +4,6 @@ import 'gacha_hud.dart';
 import 'gacha_reveal.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
-import 'ticket_counter_badge.dart';
 
 /// The shrine is a separate, scroll-safe screen instead of an inline town card.
 /// One draw retains the familiar animated reveal, while a bundle lists all 11.
@@ -104,7 +103,12 @@ class _GachaScreenState extends State<GachaScreen> {
                           padding: const EdgeInsets.fromLTRB(10, 12, 10, 14),
                           child: Column(
                             children: [
-                              GachaHud(points: progress.points),
+                              GachaHud(
+                                points: progress.points,
+                                tickets: tickets,
+                                ticketBadgeKey:
+                                    const ValueKey('gacha-screen-tickets'),
+                              ),
                               const SizedBox(height: 18),
                               Image.asset(
                                 'assets/gacya/gacha_title.png',
@@ -113,8 +117,6 @@ class _GachaScreenState extends State<GachaScreen> {
                                 fit: BoxFit.contain,
                                 excludeFromSemantics: true,
                               ),
-                              const SizedBox(height: 10),
-                              _ticketLabel(tickets),
                               const SizedBox(height: 12),
                               SizedBox(
                                 height: 345,
@@ -210,34 +212,6 @@ class _GachaScreenState extends State<GachaScreen> {
     },
   );
 
-  Widget _ticketLabel(int tickets) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: const Color(0xE9FFF0C9),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFC78B36), width: 2),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text('所持ガチャ券',
-                maxLines: 1,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
-            ),
-          ),
-          TicketCounterBadge(
-            key: const ValueKey('gacha-screen-tickets'),
-            tickets: tickets,
-          ),
-        ],
-      ),
-    ),
-  );
-
   Widget _button({
     required String asset,
     required String keyName,
@@ -306,7 +280,14 @@ class GachaBundleReveal extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                 child: Column(
                   children: [
-                    GachaHud(points: controller.progress!.points),
+                    GachaHud(
+                      points: controller.progress!.points,
+                      tickets: controller.progress!.residents.tickets(
+                        controller.progress!.points,
+                      ),
+                      ticketBadgeKey:
+                          const ValueKey('gacha-bundle-tickets'),
+                    ),
                     const SizedBox(height: 12),
                     Image.asset(
                       'assets/gacya/gacha_title.png',
@@ -366,12 +347,6 @@ class GachaBundleReveal extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    TicketCounterBadge(
-                      key: const ValueKey('gacha-bundle-tickets'),
-                      tickets: controller.progress!.residents.tickets(
-                        controller.progress!.points),
-                    ),
-                    const SizedBox(height: 8),
                     FilledButton.icon(
                       key: const ValueKey('gacha-bundle-town'),
                       onPressed: () => Navigator.of(context).pop(true),

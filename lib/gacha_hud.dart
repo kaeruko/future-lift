@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 
 import 'home_skin.dart';
 import 'resident_collection.dart';
+import 'ticket_counter_badge.dart';
 
 /// Compact, responsive game HUD. Names and ranks are deliberately not invented.
 class GachaHud extends StatelessWidget {
-  const GachaHud({super.key, required this.points});
+  const GachaHud({
+    super.key,
+    required this.points,
+    required this.tickets,
+    this.ticketBadgeKey,
+  });
 
   final int points;
+  final int tickets;
+  final Key? ticketBadgeKey;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -85,9 +93,50 @@ class GachaHud extends StatelessWidget {
       const SizedBox(width: 6),
       Expanded(
         flex: 4,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: KotohogiBar(points: points),
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final badgeWidth = (c.maxWidth * .90).clamp(0.0, 156.0);
+            return Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  KotohogiBar(points: points),
+                  const SizedBox(height: 4),
+                  const Padding(
+                    padding: EdgeInsets.only(right: 5, bottom: 2),
+                    child: Text(
+                      '所持ガチャ券',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF63351F),
+                        shadows: [
+                          Shadow(color: Color(0xFFFFF4DA), blurRadius: 3),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Tooltip(
+                    message: 'ガチャ券 $tickets枚',
+                    child: SizedBox(
+                      width: badgeWidth,
+                      height: badgeWidth * 64 / 176,
+                      child: FittedBox(
+                        alignment: Alignment.centerRight,
+                        fit: BoxFit.contain,
+                        child: TicketCounterBadge(
+                          key: ticketBadgeKey,
+                          tickets: tickets,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     ],

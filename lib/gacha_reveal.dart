@@ -6,7 +6,6 @@ import 'home_skin.dart';
 import 'gacha_hud.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
-import 'ticket_counter_badge.dart';
 
 /// Results are already persisted before this route opens.
 class GachaReveal extends StatefulWidget {
@@ -117,7 +116,12 @@ class _GachaRevealState extends State<GachaReveal>
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                GachaHud(points: widget.controller.progress!.points),
+                                GachaHud(
+                                  points: progress.points,
+                                  tickets: tickets,
+                                  ticketBadgeKey:
+                                      const ValueKey('reveal-tickets'),
+                                ),
                                 const SizedBox(height: 12),
                                 Image.asset(
                                   'assets/gacya/gacha_title.png',
@@ -264,11 +268,6 @@ class _GachaRevealState extends State<GachaReveal>
                                   Text(
                                     '累計${progress.residents.counts[_resident.id]}回',
                                     style: const TextStyle(color: wood),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  TicketCounterBadge(
-                                    key: const ValueKey('reveal-tickets'),
-                                    tickets: tickets,
                                   ),
                                   const SizedBox(height: 20),
                                   Wrap(
