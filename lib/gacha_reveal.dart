@@ -103,215 +103,235 @@ class _GachaRevealState extends State<GachaReveal>
                 final progress = widget.controller.progress!;
                 final tickets = progress.residents.tickets(progress.points);
                 return LayoutBuilder(
-                  builder: (context, constraints) => SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(constraints.maxWidth < 420 ? 12 : 20),
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 560),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                GachaHud(
-                                  points: progress.points,
-                                  tickets: tickets,
-                                  ticketBadgeKey:
-                                      const ValueKey('reveal-tickets'),
-                                ),
-                                const SizedBox(height: 12),
-                                Image.asset(
-                                  'assets/gacya/gacha_title.png',
-                                  key: const ValueKey('gacha-reveal-title'),
-                                  width: double.infinity,
-                                  height: 140,
-                                  fit: BoxFit.contain,
-                                  excludeFromSemantics: true,
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  ready ? 'ようこそ、コトホグへ！' : 'だれに会えるかな…',
-                                  style: const TextStyle(
-                                    color: wood,
-                                    fontSize: 18,
+                  builder: (context, constraints) {
+                    // Result mode makes the resident, name and both actions
+                    // visible without scrolling on typical phone viewports.
+                    // Keep the large title/scroll while the reveal is playing.
+                    final viewportHeight = constraints.maxHeight;
+                    final stageHeight = ready
+                        ? (viewportHeight * .36).clamp(164.0, 265.0)
+                        : (viewportHeight * .45).clamp(245.0, 380.0);
+                    final avatarSize = ready
+                        ? (stageHeight * .77).clamp(125.0, 195.0)
+                        : (stageHeight * .74).clamp(180.0, 250.0);
+                    final scrollSize = ready
+                        ? (stageHeight * .93).clamp(156.0, 246.0)
+                        : (stageHeight * .92).clamp(225.0, 320.0);
+                    final compact = viewportHeight < 670;
+                    return SingleChildScrollView(
+                      key: const ValueKey('gacha-reveal-scroll'),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(
+                              constraints.maxWidth < 420 ? 12 : 20,
+                            ),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 560),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  GachaHud(
+                                    points: progress.points,
+                                    tickets: tickets,
+                                    ticketBadgeKey:
+                                        const ValueKey('reveal-tickets'),
                                   ),
-                                ),
-                                SizedBox(
-                                  key: const ValueKey('gacha-reveal-stage'),
-                                  height: 400,
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Positioned.fill(
-                                        child: CustomPaint(
-                                          painter: _Sparkles(t),
-                                        ),
+                                  if (!ready) ...[
+                                    const SizedBox(height: 12),
+                                    Image.asset(
+                                      'assets/gacya/gacha_title.png',
+                                      key: const ValueKey('gacha-reveal-title'),
+                                      width: double.infinity,
+                                      height: compact ? 105 : 140,
+                                      fit: BoxFit.contain,
+                                      excludeFromSemantics: true,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    const Text(
+                                      'だれに会えるかな…',
+                                      style: TextStyle(
+                                        color: wood,
+                                        fontSize: 18,
                                       ),
-                                      Positioned.fill(
-                                        child: Opacity(
-                                          opacity: ((t - .30) / .30).clamp(
-                                            0.0,
-                                            1.0,
-                                          ),
-                                          child: Transform.scale(
-                                            scale: 1.00 + .24 * t,
-                                            child: Image.asset(
-                                              'assets/gacya/summon_glow.png',
-                                              key: const ValueKey('gacha-reveal-glow'),
-                                              fit: BoxFit.contain,
-                                              excludeFromSemantics: true,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      for (var i = 0; i < 3; i++)
-                                        Opacity(
-                                          opacity: _scrollOpacity(i, t),
-                                          child: Image.asset(
-                                            'assets/gacya/parts/${['scroll_closed', 'scroll_half', 'scroll_open'][i]}.png',
-                                            height: 320,
-                                            width: double.infinity,
-                                            fit: BoxFit.contain,
-                                            excludeFromSemantics: true,
-                                          ),
-                                        ),
-                                      if (t >= .62)
-                                        Transform.translate(
-                                          offset: Offset(0, 24 * (1 - reveal)),
-                                          child: Transform.scale(
-                                            scale: reveal,
-                                            child: TownResidentAvatar(
-                                              resident: _resident,
-                                              size: 250,
-                                            ),
-                                          ),
-                                        ),
-                                      if (ready)
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: Image.asset(
-                                            'assets/gacya/parts/${_isNew ? 'badge_new' : 'badge_reunion'}.png',
-                                            width: 105,
-                                            height: 105,
-                                            semanticLabel: _isNew
-                                                ? 'NEW'
-                                                : 'また会えた',
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                if (ready) ...[
+                                    ),
+                                  ] else
+                                    SizedBox(height: compact ? 4 : 10),
                                   SizedBox(
-                                    key: const ValueKey('resident-nameplate'),
-                                    width: 306,
-                                    height: 204,
+                                    key: const ValueKey('gacha-reveal-stage'),
+                                    height: stageHeight,
                                     child: Stack(
-                                      fit: StackFit.expand,
+                                      alignment: Alignment.center,
                                       children: [
-                                        Image.asset(
-                                          'assets/gacya/resident_nameplate.png',
-                                          fit: BoxFit.contain,
-                                          excludeFromSemantics: true,
+                                        Positioned.fill(
+                                          child: CustomPaint(
+                                            painter: _Sparkles(t),
+                                          ),
                                         ),
-                                        Positioned(
-                                          left: 43,
-                                          right: 43,
-                                          top: 108,
-                                          bottom: 30,
-                                          child: Center(
-                                            child: FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: Text(
-                                                _resident.label,
-                                                key: const ValueKey('resident-name'),
-                                                textAlign: TextAlign.center,
-                                                style: const TextStyle(
-                                                  color: wood,
-                                                  fontSize: 28,
-                                                  fontWeight: FontWeight.w900,
-                                                  shadows: [
-                                                    Shadow(
-                                                      color: Color(0xFFFBE9BD),
-                                                      blurRadius: 4,
-                                                    ),
-                                                  ],
-                                                ),
+                                        Positioned.fill(
+                                          child: Opacity(
+                                            opacity: ((t - .30) / .30).clamp(
+                                              0.0,
+                                              1.0,
+                                            ),
+                                            child: Transform.scale(
+                                              scale: 1.00 + .24 * t,
+                                              child: Image.asset(
+                                                'assets/gacya/summon_glow.png',
+                                                key: const ValueKey('gacha-reveal-glow'),
+                                                fit: BoxFit.contain,
+                                                excludeFromSemantics: true,
                                               ),
                                             ),
                                           ),
                                         ),
+                                        for (var i = 0; i < 3; i++)
+                                          Opacity(
+                                            opacity: _scrollOpacity(i, t),
+                                            child: Image.asset(
+                                              'assets/gacya/parts/${['scroll_closed', 'scroll_half', 'scroll_open'][i]}.png',
+                                              height: scrollSize,
+                                              width: double.infinity,
+                                              fit: BoxFit.contain,
+                                              excludeFromSemantics: true,
+                                            ),
+                                          ),
+                                        if (t >= .62)
+                                          Transform.translate(
+                                            offset: Offset(0, 24 * (1 - reveal)),
+                                            child: Transform.scale(
+                                              scale: reveal,
+                                              child: TownResidentAvatar(
+                                                resident: _resident,
+                                                size: avatarSize,
+                                              ),
+                                            ),
+                                          ),
+                                        if (ready)
+                                          Positioned(
+                                            top: 0,
+                                            right: 0,
+                                            child: Image.asset(
+                                              'assets/gacya/parts/${_isNew ? 'badge_new' : 'badge_reunion'}.png',
+                                              width: compact ? 68 : 85,
+                                              height: compact ? 68 : 85,
+                                              semanticLabel:
+                                                  _isNew ? 'NEW' : 'また会えた',
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(height: 9),
-                                  Semantics(
-                                    liveRegion: true,
-                                    child: Text(
-                                      _isNew
-                                          ? '${_resident.label}が、まちにやってきました！'
-                                          : '${_resident.label}とまた出会いました！',
-                                      key: const ValueKey('gacha-result'),
+                                  if (ready) ...[
+                                    SizedBox(height: compact ? 2 : 6),
+                                    Text(
+                                      _resident.label,
+                                      key: const ValueKey('resident-name'),
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
                                         color: wood,
-                                        fontSize: 17,
+                                        fontSize: 27,
                                         fontWeight: FontWeight.w900,
+                                        shadows: [
+                                          Shadow(
+                                            color: Color(0xFFFFF2D7),
+                                            blurRadius: 5,
+                                          ),
+                                          Shadow(
+                                            color: Color(0xFFFFF2D7),
+                                            blurRadius: 9,
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    '累計${progress.residents.counts[_resident.id]}回',
-                                    style: const TextStyle(color: wood),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Wrap(
-                                    alignment: WrapAlignment.center,
-                                    spacing: 12,
-                                    runSpacing: 12,
-                                    children: [
-                                      _ArtButton(
-                                        name: 'button_town',
-                                        label: 'まちへ',
-                                        onPressed: _drawing
-                                            ? null
-                                            : () =>
-                                                  Navigator.of(context)
+                                    SizedBox(height: compact ? 2 : 4),
+                                    Semantics(
+                                      liveRegion: true,
+                                      child: Text(
+                                        _isNew
+                                            ? '${_resident.label}が、まちにやってきました！'
+                                            : '${_resident.label}とまた出会いました！',
+                                        key: const ValueKey('gacha-result'),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: wood,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w900,
+                                          shadows: [
+                                            Shadow(
+                                              color: Color(0xFFFFF2D7),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: compact ? 7 : 12),
+                                    ConstrainedBox(
+                                      constraints:
+                                          const BoxConstraints(maxWidth: 380),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: _ArtButton(
+                                              name: 'button_town',
+                                              label: 'まちへ',
+                                              height: compact ? 58 : 70,
+                                              onPressed: _drawing
+                                                  ? null
+                                                  : () => Navigator.of(context)
                                                       .pop(true),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: _ArtButton(
+                                              name: 'button_again',
+                                              label: 'もう1回（券1枚）',
+                                              height: compact ? 58 : 70,
+                                              onPressed:
+                                                  _drawing || tickets == 0
+                                                      ? null
+                                                      : _again,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      _ArtButton(
-                                        name: 'button_again',
-                                        label: 'もう1回（券1枚）',
-                                        onPressed: _drawing || tickets == 0
-                                            ? null
-                                            : _again,
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      '累計${progress.residents.counts[_resident.id]}回',
+                                      style: const TextStyle(
+                                        color: wood,
+                                        fontSize: 12,
                                       ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    _drawing
-                                        ? '住民を迎えています…'
-                                        : tickets == 0
-                                        ? '次の券は、日々の行動で。また会いにきてね。'
-                                        : 'もう1回はガチャ券を1枚使います。',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(color: wood),
-                                  ),
-                                ] else
-                                  const SizedBox(height: 160),
-                              ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _drawing
+                                          ? '住民を迎えています…'
+                                          : tickets == 0
+                                              ? '次の券は、日々の行動で。また会いにきてね。'
+                                              : 'もう1回はガチャ券を1枚使います。',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: wood,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ] else
+                                    const SizedBox(height: 90),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 );
               },
             ),
@@ -333,8 +353,14 @@ class _GachaRevealState extends State<GachaReveal>
 }
 
 class _ArtButton extends StatelessWidget {
-  const _ArtButton({required this.name, required this.label, this.onPressed});
+  const _ArtButton({
+    required this.name,
+    required this.label,
+    required this.height,
+    this.onPressed,
+  });
   final String name, label;
+  final double height;
   final VoidCallback? onPressed;
   @override
   Widget build(BuildContext context) => Semantics(
@@ -346,13 +372,17 @@ class _ArtButton extends StatelessWidget {
       child: TextButton(
         key: ValueKey(name),
         onPressed: onPressed,
-        style: TextButton.styleFrom(padding: EdgeInsets.zero),
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.zero,
+          minimumSize: Size(48, height),
+          tapTargetSize: MaterialTapTargetSize.padded,
+        ),
         child: Opacity(
           opacity: onPressed == null ? .45 : 1,
           child: Image.asset(
             'assets/gacya/parts/$name.png',
-            width: 170,
-            height: 85,
+            width: double.infinity,
+            height: height,
             fit: BoxFit.contain,
             excludeFromSemantics: true,
           ),

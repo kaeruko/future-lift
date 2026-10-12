@@ -135,15 +135,19 @@ void main() {
     expect(store.writes, 1);
     await tester.pump(const Duration(milliseconds: 1000));
     expect(find.byKey(const ValueKey('gacha-result')), findsNothing);
-    await tester.pumpAndSettle();
     final title = tester.widget<Image>(
       find.byKey(const ValueKey('gacha-reveal-title')),
     );
-    expect(title.height, 140);
+    expect(title.height, 105);
+    expect(find.text('だれに会えるかな…'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('gacha-reveal-title')), findsNothing);
+    expect(find.text('だれに会えるかな…'), findsNothing);
+    expect(find.byKey(const ValueKey('resident-nameplate')), findsNothing);
     final stage = tester.widget<SizedBox>(
       find.byKey(const ValueKey('gacha-reveal-stage')),
     );
-    expect(stage.height, 400);
+    expect(stage.height, inInclusiveRange(164, 265));
     final scrollFrames = tester.widgetList<Image>(
       find.byWidgetPredicate(
         (widget) =>
@@ -155,12 +159,12 @@ void main() {
       ),
     );
     expect(scrollFrames.length, 3);
-    expect(scrollFrames.every((frame) => frame.height == 320), isTrue);
+    expect(scrollFrames.every((frame) => frame.height! < 250), isTrue);
     expect(
       tester
           .widget<TownResidentAvatar>(find.byType(TownResidentAvatar))
           .size,
-      250,
+      lessThan(195),
     );
     final glow = find.byKey(const ValueKey('gacha-reveal-glow'));
     expect(glow, findsOneWidget);
@@ -169,15 +173,6 @@ void main() {
     );
     expect(transform.transform.getMaxScaleOnAxis(), closeTo(1.24, 0.001));
     expect(find.bySemanticsLabel('NEW'), findsOneWidget);
-    final nameplate = find.byKey(const ValueKey('resident-nameplate'));
-    expect(nameplate, findsOneWidget);
-    final frame = tester.widget<Image>(
-      find.descendant(of: nameplate, matching: find.byType(Image)),
-    );
-    expect(
-      (frame.image as AssetImage).assetName,
-      'assets/gacya/resident_nameplate.png',
-    );
     expect(
       tester.widget<Text>(find.byKey(const ValueKey('resident-name'))).data,
       'ペンギン',
@@ -188,6 +183,19 @@ void main() {
       ).tickets,
       1,
     );
+    // First-view results on a 360x640 phone, without scrolling.
+    final name = find.byKey(const ValueKey('resident-name'));
+    final townButton = find.byKey(const ValueKey('button_town'));
+    final againButton = find.byKey(const ValueKey('button_again'));
+    expect(tester.getRect(name).top, greaterThan(
+      tester.getRect(find.byKey(const ValueKey('gacha-reveal-stage'))).bottom));
+    expect(tester.getRect(townButton).bottom,
+        lessThanOrEqualTo(tester.view.physicalSize.height));
+    expect(tester.getRect(againButton).bottom,
+        lessThanOrEqualTo(tester.view.physicalSize.height));
+    expect(tester.getRect(townButton).right,
+        lessThan(tester.getRect(againButton).left));
+
     await tester.ensureVisible(find.byKey(const ValueKey('button_again')));
     await tester.tap(find.byKey(const ValueKey('button_again')));
     await tester.pump();
@@ -195,7 +203,7 @@ void main() {
     expect(find.byKey(const ValueKey('button_again')), findsNothing);
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('また会えた'), findsOneWidget);
-    expect(find.byKey(const ValueKey('resident-nameplate')), findsOneWidget);
+    expect(find.byKey(const ValueKey('resident-nameplate')), findsNothing);
     expect(
       tester.widget<Text>(find.byKey(const ValueKey('resident-name'))).data,
       'ペンギン',
@@ -258,7 +266,8 @@ void main() {
       await open(tester, store, reduced: true);
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('gacha-result')), findsOneWidget);
-      expect(find.byKey(const ValueKey('resident-nameplate')), findsOneWidget);
+      expect(find.byKey(const ValueKey('resident-nameplate')), findsNothing);
+      expect(find.byKey(const ValueKey('gacha-reveal-title')), findsNothing);
       await tester.ensureVisible(find.byKey(const ValueKey('button_town')));
       await tester.tap(find.byKey(const ValueKey('button_town')));
       await tester.pumpAndSettle();
