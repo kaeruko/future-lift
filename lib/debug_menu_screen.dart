@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'home_skin.dart';
 import 'progress.dart';
 
-/// Debug-only controls for previewing and resetting missions.
+/// Debug-only controls for testing celebrations, tickets and resets.
 class DebugMenuScreen extends StatelessWidget {
   const DebugMenuScreen({
     super.key,
@@ -12,6 +12,7 @@ class DebugMenuScreen extends StatelessWidget {
     required this.onMissionChanged,
     required this.onPreview,
     required this.onResetAll,
+    required this.onAddTickets,
     required this.busy,
   });
 
@@ -20,7 +21,17 @@ class DebugMenuScreen extends StatelessWidget {
   final ValueChanged<Mission> onMissionChanged;
   final VoidCallback onPreview;
   final Future<bool> Function() onResetAll;
+  final Future<bool> Function(int) onAddTickets;
   final bool busy;
+
+  Future<void> _addTickets(BuildContext context, int amount) async {
+    if (busy) return;
+    final succeeded = await onAddTickets(amount);
+    if (!context.mounted || !succeeded) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('ガチャ券を$amount枚追加しました')),
+    );
+  }
 
   Future<void> _confirmReset(BuildContext context) async {
     if (busy) return;
@@ -164,6 +175,47 @@ class DebugMenuScreen extends StatelessWidget {
                       foregroundColor: const Color(0xFFFFF7DD),
                     ),
                   ),
+                ),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 8),
+                const Text(
+                  'ガチャ券の追加',
+                  style: TextStyle(
+                    color: wood,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '現在のガチャ券：${progress.residents.tickets(progress.points)}枚',
+                  key: const ValueKey('debug-ticket-count'),
+                  style: const TextStyle(color: wood),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  '演出の動作確認用です。社会貢献ポイントや達成履歴は変わりません。',
+                  style: TextStyle(color: wood, fontSize: 12, height: 1.6),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      key: const ValueKey('debug-add-ticket-1'),
+                      onPressed: busy ? null : () => _addTickets(context, 1),
+                      icon: const Icon(Icons.confirmation_number_outlined),
+                      label: const Text('ガチャ券 +1枚'),
+                    ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('debug-add-ticket-10'),
+                      onPressed: busy ? null : () => _addTickets(context, 10),
+                      icon: const Icon(Icons.confirmation_number_outlined),
+                      label: const Text('ガチャ券 +10枚'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 const Divider(),

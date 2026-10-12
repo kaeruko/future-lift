@@ -189,6 +189,19 @@ class Progress {
     debugResets: debugResets,
   );
 
+  /// Add test-only gacha tickets without changing contributions or history.
+  Progress grantTicketsForDebug(int amount) => Progress(
+    day: day,
+    lastCompletedDay: lastCompletedDay,
+    points: points,
+    residents: residents.grantTicketsForDebug(amount),
+    completed: completed,
+    weeklyCompleted: weeklyCompleted,
+    monthlyCompleted: monthlyCompleted,
+    history: history,
+    debugResets: debugResets,
+  );
+
   Progress acquireResident(TownResident resident) => Progress(
     day: day,
     lastCompletedDay: lastCompletedDay,
@@ -554,6 +567,31 @@ class ProgressController extends ChangeNotifier {
     } catch (error, stack) {
       failure = ProgressFailure('住民ガチャの抽選・保存', error, stack);
       return null;
+    } finally {
+      _finishOperation();
+    }
+  }
+
+  /// Grant extra tickets only in debug builds. Commit before publishing.
+  Future<bool> grantTicketsForDebug(int amount) async {
+    if (!kDebugMode) {
+      throw StateError('Ticket grants are available only in debug builds.');
+    }
+    if (amount <= 0) {
+      throw ArgumentError.value(amount, 'amount', 'Must be positive.');
+    }
+    if (busy || failure != null || progress == null) return false;
+    busy = true;
+    notifyListeners();
+    try {
+      final today = progress!.onDay(clock());
+      final next = today.grantTicketsForDebug(amount);
+      await store.save(next);
+      progress = next;
+      return true;
+    } catch (error, stack) {
+      failure = ProgressFailure('デバッグ用ガチャ券 $amount 枚の追加保存', error, stack);
+      return false;
     } finally {
       _finishOperation();
     }

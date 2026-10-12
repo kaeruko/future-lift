@@ -67,6 +67,7 @@ class ResidentCollection {
   ResidentCollection({
     required this.baselinePoints,
     required Map<String, int> counts,
+    this.debugTicketsGranted = 0,
   }) : counts = Map.unmodifiable(counts);
   factory ResidentCollection.initial(int points) => ResidentCollection(
     baselinePoints: points,
@@ -74,10 +75,12 @@ class ResidentCollection {
   );
   final int baselinePoints;
   final Map<String, int> counts;
+  /// Extra test tickets, separate from mission-earned tickets.
+  final int debugTicketsGranted;
   List<TownResident> get owned => counts.keys.map(TownResident.fromId).toList();
   int get draws => counts.values.fold(0, (a, b) => a + b) - 2;
   int earnedTickets(int points) => (points - baselinePoints) ~/ 30;
-  int tickets(int points) => earnedTickets(points) - draws;
+  int tickets(int points) => earnedTickets(points) + debugTicketsGranted - draws;
   int untilNextTicket(int points) => 30 - (points - baselinePoints) % 30;
   ResidentCollection acquire(TownResident resident, int points) {
     if (tickets(points) <= 0) {
@@ -86,22 +89,46 @@ class ResidentCollection {
     return ResidentCollection(
       baselinePoints: baselinePoints,
       counts: {...counts, resident.id: (counts[resident.id] ?? 0) + 1},
+      debugTicketsGranted: debugTicketsGranted,
+    );
+  }
+
+  ResidentCollection grantTicketsForDebug(int amount) {
+    if (amount <= 0) {
+      throw ArgumentError.value(amount, 'amount', 'Must be positive.');
+    }
+    return ResidentCollection(
+      baselinePoints: baselinePoints,
+      counts: counts,
+      debugTicketsGranted: debugTicketsGranted + amount,
     );
   }
 
   Map<String, Object> encode() => {
     'baselinePoints': baselinePoints,
     'counts': counts,
+    if (debugTicketsGranted > 0) 'debugTicketsGranted': debugTicketsGranted,
   };
   static ResidentCollection decode(dynamic raw, int points) {
     if (raw is! Map<String, dynamic> ||
-        raw.length != 2 ||
+        raw.keys
+            .toSet()
+            .difference({'baselinePoints', 'counts', 'debugTicketsGranted'})
+            .isNotEmpty ||
+        raw.length != (raw.containsKey('debugTicketsGranted') ? 3 : 2) ||
         raw['baselinePoints'] is! int ||
-        raw['counts'] is! Map<String, dynamic>) {
+        raw['counts'] is! Map<String, dynamic> ||
+        (raw.containsKey('debugTicketsGranted') &&
+            (raw['debugTicketsGranted'] is! int ||
+                (raw['debugTicketsGranted'] as int) <= 0))) {
       throw const FormatException('Invalid resident collection schema.');
     }
     final baseline = raw['baselinePoints'] as int;
     final entries = raw['counts'] as Map<String, dynamic>;
+    // Older v4 saves have no debugTicketsGranted field: exactly zero extras.
+    final extras = raw.containsKey('debugTicketsGranted')
+        ? raw['debugTicketsGranted'] as int
+        : 0;
     if (baseline < 0 ||
         baseline > points ||
         baseline % 10 != 0 ||
@@ -118,7 +145,11 @@ class ResidentCollection {
       }
       counts[entry.key] = entry.value as int;
     }
-    final result = ResidentCollection(baselinePoints: baseline, counts: counts);
+    final result = ResidentCollection(
+      baselinePoints: baseline,
+      counts: counts,
+      debugTicketsGranted: extras,
+    );
     if (result.tickets(points) < 0) {
       throw const FormatException('Too many resident draws.');
     }

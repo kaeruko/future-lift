@@ -437,6 +437,44 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('debug ticket buttons update and persist balance without points', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final store = MemoryStore();
+    final controller = await launch(tester, store);
+    await tester.tap(find.text('メニュー').last);
+    await tester.pumpAndSettle();
+
+    final plusOne = find.byKey(const ValueKey('debug-add-ticket-1'));
+    final plusTen = find.byKey(const ValueKey('debug-add-ticket-10'));
+    await tester.ensureVisible(plusOne);
+    await tester.pumpAndSettle();
+    await tester.tap(plusOne);
+    await tester.pumpAndSettle();
+    expect(controller.progress!.residents.tickets(0), 1);
+    expect(find.text('現在のガチャ券：1枚'), findsOneWidget);
+    await tester.ensureVisible(plusTen);
+    await tester.tap(plusTen);
+    await tester.pumpAndSettle();
+    expect(controller.progress!.residents.tickets(0), 11);
+    expect(controller.progress!.points, 0);
+    expect(controller.progress!.history, isEmpty);
+    expect(store.writes, 2);
+    expect(Progress.decode(store.raw!).residents.tickets(0), 11);
+
+    await tester.tap(find.text('みんなのまち').last);
+    await tester.pumpAndSettle();
+    expect(
+      controller.progress!.residents.tickets(controller.progress!.points),
+      11,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('debug menu reset confirms and clears mission flags only', (
     tester,
   ) async {

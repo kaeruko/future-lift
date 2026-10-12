@@ -65,6 +65,78 @@ void main() {
     }
   });
 
+  test('debug grant is separate, persistent and consumed by ordinary draws', () {
+    final original = Progress.empty(DateTime(2026, 10, 11));
+    final granted = original.grantTicketsForDebug(11);
+    expect(granted.points, 0);
+    expect(granted.history, isEmpty);
+    expect(granted.completed, isEmpty);
+    expect(granted.residents.earnedTickets(0), 0);
+    expect(granted.residents.debugTicketsGranted, 11);
+    expect(granted.residents.tickets(0), 11);
+    final restored = Progress.decode(granted.encode(), expectedVersion: 4);
+    expect(restored.residents.tickets(0), 11);
+    final after = restored.acquireResident(TownResident.cat);
+    expect(after.residents.tickets(0), 10);
+    expect(after.residents.debugTicketsGranted, 11);
+    expect(
+      after.onDay(DateTime(2026, 10, 12)).residents.tickets(0),
+      10,
+    );
+    expect(Progress.decode(after.encode()).residents.tickets(0), 10);
+    expect(() => original.grantTicketsForDebug(0), throwsArgumentError);
+    expect(() => original.grantTicketsForDebug(-1), throwsArgumentError);
+  });
+
+  test('legacy ticket records remain valid; malformed bonus fails fast', () {
+    final raw = jsonDecode(funded().encode()) as Map<String, dynamic>;
+    final record = raw['residents'] as Map<String, dynamic>;
+    expect(Progress.decode(jsonEncode(raw)).residents.debugTicketsGranted, 0);
+    for (final invalid in [0, -2, 1.5, '10', null]) {
+      expect(
+        () => Progress.decode(jsonEncode({
+          ...raw,
+          'residents': {...record, 'debugTicketsGranted': invalid},
+        })),
+        throwsFormatException,
+      );
+    }
+    expect(
+      () => Progress.decode(jsonEncode({
+        ...raw,
+        'residents': {...record, 'notATicketField': 2},
+      })),
+      throwsFormatException,
+    );
+  });
+
+  test('debug controller saves once, rejects concurrent grants and keeps errors', () async {
+    final store = MemoryStore();
+    final controller = ProgressController(
+      store,
+      clock: () => DateTime(2026, 10, 11),
+    );
+    await controller.initialize();
+    store.gate = Completer<void>();
+    final first = controller.grantTicketsForDebug(1);
+    expect(controller.busy, isTrue);
+    expect(await controller.grantTicketsForDebug(10), isFalse);
+    expect(controller.progress!.residents.tickets(0), 0);
+    store.gate!.complete();
+    expect(await first, isTrue);
+    expect(store.writes, 1);
+    expect(controller.progress!.residents.tickets(0), 1);
+    expect(Progress.decode(store.raw!).residents.tickets(0), 1);
+
+    final error = StateError('debug ticket save failed');
+    store.saveError = error;
+    expect(await controller.grantTicketsForDebug(10), isFalse);
+    expect(controller.failure!.error, same(error));
+    expect(controller.failure!.stackTrace.toString(), isNotEmpty);
+    expect(controller.progress!.residents.tickets(0), 1);
+    expect(await controller.grantTicketsForDebug(1), isFalse);
+  });
+
   test('all six residents never stop draws or ticket earning', () {
     var progress = funded(points: 240);
     for (final resident in TownResident.values.skip(2)) {
