@@ -65,7 +65,10 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 700));
 
-    expect(find.text('🎊 日本の社会保障に貢献！ 🎊'), findsOneWidget);
+    expect(
+      find.text('🎊 日本の社会保障に貢献！ 🎊').hitTestable(),
+      findsOneWidget,
+    );
     expect(
       find.text('推計 12,345円分、医療・介護費の負担軽減に貢献しました'),
       findsOneWidget,
