@@ -10,6 +10,7 @@ import 'package:future_lift/clap_characters.dart';
 import 'package:future_lift/celebration.dart';
 import 'package:future_lift/main.dart';
 import 'package:future_lift/town.dart';
+import 'package:future_lift/gacha_screen.dart';
 
 import 'progress_test.dart' show MemoryStore;
 
@@ -258,6 +259,114 @@ void main() {
     },
   );
 
+  test('ten tickets give eleven residents with one persisted bonus', () {
+    final initial = Progress.empty(DateTime(2026, 10, 11))
+        .grantTicketsForDebug(11);
+    final batch = List<TownResident>.filled(11, TownResident.cat);
+    final next = initial.acquireResidentsTenPlusOne(batch);
+    expect(next.residents.tickets(0), 1);
+    expect(next.residents.bonusDraws, 1);
+    expect(next.residents.counts[TownResident.cat.id], 11);
+    final restored = Progress.decode(next.encode());
+    expect(restored.residents.tickets(0), 1);
+    expect(restored.residents.bonusDraws, 1);
+    expect(restored.residents.counts[TownResident.cat.id], 11);
+    expect(restored.residents.owned,
+        [TownResident.shiba, TownResident.rabbit, TownResident.cat]);
+    final single = restored.acquireResident(TownResident.cat);
+    expect(single.residents.tickets(0), 0);
+    expect(single.residents.bonusDraws, 1);
+    expect(() => initial.acquireResidentsTenPlusOne(batch.take(10).toList()),
+        throwsArgumentError);
+    expect(
+      () => Progress.empty(DateTime(2026, 10, 11))
+          .grantTicketsForDebug(9).acquireResidentsTenPlusOne(batch),
+      throwsStateError,
+    );
+    final raw = jsonDecode(next.encode()) as Map<String, dynamic>;
+    for (final invalid in [-1, 0, 2, '1', null]) {
+      final residentRecord = raw['residents'] as Map<String, dynamic>;
+      expect(() => Progress.decode(jsonEncode({
+        ...raw,
+        'residents': {...residentRecord, 'bonusDraws': invalid},
+      })), throwsFormatException);
+    }
+  });
+
+  test('bundle draw persists once, rejects concurrent taps and save errors', () async {
+    final random = FixedRandom(3);
+    final store = MemoryStore()
+      ..raw = Progress.empty(DateTime(2026, 10, 11))
+          .grantTicketsForDebug(10).encode();
+    final controller = ProgressController(store,
+      clock: () => DateTime(2026, 10, 11), random: random);
+    await controller.initialize();
+    store.gate = Completer<void>();
+    final pending = controller.drawResidentsTenPlusOne();
+    expect(controller.busy, isTrue);
+    expect(await controller.drawResidentsTenPlusOne(), isNull);
+    expect(controller.progress!.residents.tickets(0), 10);
+    store.gate!.complete();
+    final results = await pending;
+    expect(results, List<TownResident>.filled(11, TownResident.cat));
+    expect(random.calls, 11);
+    expect(store.writes, 1);
+    expect(controller.progress!.residents.tickets(0), 0);
+    expect(controller.progress!.residents.bonusDraws, 1);
+    expect(Progress.decode(store.raw!).residents.bonusDraws, 1);
+
+    final failure = StateError('bundle storage is unavailable');
+    final failedStore = MemoryStore()
+      ..raw = Progress.empty(DateTime(2026, 10, 11))
+          .grantTicketsForDebug(10).encode()
+      ..saveError = failure;
+    final failed = ProgressController(failedStore,
+      clock: () => DateTime(2026, 10, 11), random: FixedRandom(3));
+    await failed.initialize();
+    expect(await failed.drawResidentsTenPlusOne(), isNull);
+    expect(failed.failure!.error, same(failure));
+    expect(failed.progress!.residents.tickets(0), 10);
+    expect(failed.progress!.residents.bonusDraws, 0);
+    expect(await failed.drawResidentsTenPlusOne(), isNull);
+  });
+
+  testWidgets('shrine bundle result shows all 11, preserves live tickets',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final store = MemoryStore()
+      ..raw = Progress.empty(DateTime(2026, 10, 11))
+          .grantTicketsForDebug(10).encode();
+    final controller = ProgressController(store,
+      clock: () => DateTime(2026, 10, 11),
+      random: FixedRandom(3));
+    await controller.initialize();
+    await tester.pumpWidget(MaterialApp(
+      home: GachaScreen(controller: controller),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('gacha-shrine-bg')), findsOneWidget);
+    expect(find.byKey(const ValueKey('gacha-scroll-stand')), findsOneWidget);
+    expect(find.byKey(const ValueKey('gacha-draw-ten')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('gacha-draw-ten')));
+    await tester.pumpAndSettle();
+    expect(find.byType(GachaBundleReveal), findsOneWidget);
+    expect(find.byKey(const ValueKey('gacha-bundle-title')), findsOneWidget);
+    expect(find.text('10回分の券で、1回おまけ'), findsOneWidget);
+    expect(find.byKey(const ValueKey('gacha-result-10')), findsOneWidget);
+    expect(controller.progress!.residents.tickets(0), 0);
+    expect(controller.progress!.residents.counts[TownResident.cat.id], 11);
+    await tester.tap(find.byKey(const ValueKey('gacha-bundle-again')));
+    await tester.pumpAndSettle();
+    expect(find.byType(GachaScreen), findsOneWidget);
+    final tenButton = tester.widget<TextButton>(
+      find.byKey(const ValueKey('gacha-draw-ten')));
+    expect(tenButton.onPressed, isNull);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
     'new resident appears in town, applause and restored collection',
     (tester) async {
@@ -284,6 +393,14 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('draw-resident')));
+      await tester.pumpAndSettle();
+      expect(find.byType(GachaScreen), findsOneWidget);
+      expect(find.byKey(const ValueKey('gacha-shrine-bg')), findsOneWidget);
+      expect(find.byKey(const ValueKey('gacha-player-nameplate')), findsOneWidget);
+      expect(find.byKey(const ValueKey('gacha-scroll-stand')), findsOneWidget);
+      expect(find.byKey(const ValueKey('gacha-draw-one')), findsOneWidget);
+      expect(find.byKey(const ValueKey('gacha-draw-ten')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('gacha-draw-one')));
       await tester.pumpAndSettle();
       expect(find.text('ペンギンが、まちにやってきました！'), findsOneWidget);
       expect(controller.progress!.residents.tickets(30), 0);

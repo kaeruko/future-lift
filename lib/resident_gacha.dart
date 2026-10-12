@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
 import 'home_skin.dart';
-import 'gacha_reveal.dart';
+import 'gacha_screen.dart';
 import 'ticket_counter_badge.dart';
 
 /// Inline panel keeps save failures visible on the main diagnostic screen.
@@ -18,24 +18,12 @@ class ResidentGacha extends StatefulWidget {
 class _ResidentGachaState extends State<ResidentGacha> {
   bool _revealing = false;
 
-  Future<void> _draw() async {
+  Future<void> _openShrine() async {
     if (_revealing) return;
     setState(() => _revealing = true);
-    final before = widget.controller.progress!.residents.counts;
-    final result = await widget.controller.drawResident();
-    if (!mounted) return;
-    if (result == null) {
-      setState(() => _revealing = false);
-      return;
-    }
     final town = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => GachaReveal(
-          controller: widget.controller,
-          resident: result,
-          isNew: !before.containsKey(result.id),
-        ),
+        builder: (_) => GachaScreen(controller: widget.controller),
       ),
     );
     if (!mounted) return;
@@ -84,16 +72,16 @@ class _ResidentGachaState extends State<ResidentGacha> {
           Center(
             child: Semantics(
               button: true,
-              enabled: !_revealing && !widget.controller.busy && tickets > 0,
-              label: '住民を迎える（券1枚）',
+              enabled: !_revealing && !widget.controller.busy,
+              label: '桜神社のガチャ会場へ',
               child: Tooltip(
-                message: '住民を迎える（券1枚）',
+                message: '桜神社のガチャ会場へ',
                 child: TextButton(
                   key: const ValueKey('draw-resident'),
                   onPressed:
-                      _revealing || widget.controller.busy || tickets == 0
+                      _revealing || widget.controller.busy
                       ? null
-                      : _draw,
+                      : _openShrine,
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: const Size(200, 72),

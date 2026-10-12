@@ -214,6 +214,19 @@ class Progress {
     debugResets: debugResets,
   );
 
+  /// One durable transaction for ten tickets and eleven residents.
+  Progress acquireResidentsTenPlusOne(List<TownResident> results) => Progress(
+    day: day,
+    lastCompletedDay: lastCompletedDay,
+    points: points,
+    residents: residents.acquireTenPlusOne(results, points),
+    completed: completed,
+    weeklyCompleted: weeklyCompleted,
+    monthlyCompleted: monthlyCompleted,
+    history: history,
+    debugResets: debugResets,
+  );
+
   String encode() => jsonEncode({
     'version': 4,
     'residents': residents.encode(),
@@ -566,6 +579,33 @@ class ProgressController extends ChangeNotifier {
       return resident;
     } catch (error, stack) {
       failure = ProgressFailure('住民ガチャの抽選・保存', error, stack);
+      return null;
+    } finally {
+      _finishOperation();
+    }
+  }
+
+  /// Ten tickets buy eleven draws, committed and published together.
+  Future<List<TownResident>?> drawResidentsTenPlusOne() async {
+    if (busy ||
+        failure != null ||
+        progress == null ||
+        progress!.residents.tickets(progress!.points) < 10) {
+      return null;
+    }
+    busy = true;
+    notifyListeners();
+    try {
+      final results = List<TownResident>.generate(
+        11,
+        (_) => TownResident.values[random.nextInt(TownResident.values.length)],
+      );
+      final next = progress!.onDay(clock()).acquireResidentsTenPlusOne(results);
+      await store.save(next);
+      progress = next;
+      return results;
+    } catch (error, stack) {
+      failure = ProgressFailure('住民ガチャ10連の抽選・保存', error, stack);
       return null;
     } finally {
       _finishOperation();

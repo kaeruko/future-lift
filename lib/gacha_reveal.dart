@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'home_skin.dart';
+import 'gacha_hud.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
 import 'ticket_counter_badge.dart';
@@ -85,12 +86,12 @@ class _GachaRevealState extends State<GachaReveal>
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/kotohogu/town_background_001.jpg',
+              'assets/gacya/bg.png',
               fit: BoxFit.cover,
               excludeFromSemantics: true,
             ),
           ),
-          Positioned.fill(child: ColoredBox(color: const Color(0xCCFFF4D6))),
+          Positioned.fill(child: ColoredBox(color: const Color(0x40FFF4D6))),
           SafeArea(
             child: AnimatedBuilder(
               animation: _animation,
@@ -116,6 +117,8 @@ class _GachaRevealState extends State<GachaReveal>
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                GachaHud(points: widget.controller.progress!.points),
+                                const SizedBox(height: 12),
                                 Image.asset(
                                   'assets/gacya/gacha_title.png',
                                   key: const ValueKey('gacha-reveal-title'),

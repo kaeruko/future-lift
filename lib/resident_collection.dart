@@ -68,6 +68,7 @@ class ResidentCollection {
     required this.baselinePoints,
     required Map<String, int> counts,
     this.debugTicketsGranted = 0,
+    this.bonusDraws = 0,
   }) : counts = Map.unmodifiable(counts);
   factory ResidentCollection.initial(int points) => ResidentCollection(
     baselinePoints: points,
@@ -77,8 +78,10 @@ class ResidentCollection {
   final Map<String, int> counts;
   /// Extra test tickets, separate from mission-earned tickets.
   final int debugTicketsGranted;
+  /// Free eleventh draws from ten-ticket bundles; not paid with tickets.
+  final int bonusDraws;
   List<TownResident> get owned => counts.keys.map(TownResident.fromId).toList();
-  int get draws => counts.values.fold(0, (a, b) => a + b) - 2;
+  int get draws => counts.values.fold(0, (a, b) => a + b) - 2 - bonusDraws;
   int earnedTickets(int points) => (points - baselinePoints) ~/ 30;
   int tickets(int points) => earnedTickets(points) + debugTicketsGranted - draws;
   int untilNextTicket(int points) => 30 - (points - baselinePoints) % 30;
@@ -90,6 +93,23 @@ class ResidentCollection {
       baselinePoints: baselinePoints,
       counts: {...counts, resident.id: (counts[resident.id] ?? 0) + 1},
       debugTicketsGranted: debugTicketsGranted,
+      bonusDraws: bonusDraws,
+    );
+  }
+
+  /// Draw eleven residents using ten tickets, preserving the bonus across saves.
+  ResidentCollection acquireTenPlusOne(List<TownResident> results, int points) {
+    if (results.length != 11) throw ArgumentError.value(results.length, 'results');
+    if (tickets(points) < 10) throw StateError('Not enough resident tickets.');
+    final next = Map<String, int>.of(counts);
+    for (final resident in results) {
+      next[resident.id] = (next[resident.id] ?? 0) + 1;
+    }
+    return ResidentCollection(
+      baselinePoints: baselinePoints,
+      counts: next,
+      debugTicketsGranted: debugTicketsGranted,
+      bonusDraws: bonusDraws + 1,
     );
   }
 
@@ -101,6 +121,7 @@ class ResidentCollection {
       baselinePoints: baselinePoints,
       counts: counts,
       debugTicketsGranted: debugTicketsGranted + amount,
+      bonusDraws: bonusDraws,
     );
   }
 
@@ -108,27 +129,31 @@ class ResidentCollection {
     'baselinePoints': baselinePoints,
     'counts': counts,
     if (debugTicketsGranted > 0) 'debugTicketsGranted': debugTicketsGranted,
+    if (bonusDraws > 0) 'bonusDraws': bonusDraws,
   };
   static ResidentCollection decode(dynamic raw, int points) {
     if (raw is! Map<String, dynamic> ||
-        raw.keys
-            .toSet()
-            .difference({'baselinePoints', 'counts', 'debugTicketsGranted'})
-            .isNotEmpty ||
-        raw.length != (raw.containsKey('debugTicketsGranted') ? 3 : 2) ||
+        raw.keys.toSet().difference({
+          'baselinePoints', 'counts', 'debugTicketsGranted', 'bonusDraws',
+        }).isNotEmpty ||
+        raw.length != 2 +
+            (raw.containsKey('debugTicketsGranted') ? 1 : 0) +
+            (raw.containsKey('bonusDraws') ? 1 : 0) ||
         raw['baselinePoints'] is! int ||
         raw['counts'] is! Map<String, dynamic> ||
         (raw.containsKey('debugTicketsGranted') &&
             (raw['debugTicketsGranted'] is! int ||
-                (raw['debugTicketsGranted'] as int) <= 0))) {
+                (raw['debugTicketsGranted'] as int) <= 0)) ||
+        (raw.containsKey('bonusDraws') &&
+            (raw['bonusDraws'] is! int ||
+                (raw['bonusDraws'] as int) <= 0))) {
       throw const FormatException('Invalid resident collection schema.');
     }
     final baseline = raw['baselinePoints'] as int;
     final entries = raw['counts'] as Map<String, dynamic>;
-    // Older v4 saves have no debugTicketsGranted field: exactly zero extras.
     final extras = raw.containsKey('debugTicketsGranted')
-        ? raw['debugTicketsGranted'] as int
-        : 0;
+        ? raw['debugTicketsGranted'] as int : 0;
+    final free = raw.containsKey('bonusDraws') ? raw['bonusDraws'] as int : 0;
     if (baseline < 0 ||
         baseline > points ||
         baseline % 10 != 0 ||
@@ -145,10 +170,15 @@ class ResidentCollection {
       }
       counts[entry.key] = entry.value as int;
     }
+    final total = counts.values.fold<int>(0, (a, b) => a + b) - 2;
+    if (free > total ~/ 11 || free > total || total < 0) {
+      throw const FormatException('Invalid free draw count.');
+    }
     final result = ResidentCollection(
       baselinePoints: baseline,
       counts: counts,
       debugTicketsGranted: extras,
+      bonusDraws: free,
     );
     if (result.tickets(points) < 0) {
       throw const FormatException('Too many resident draws.');
