@@ -102,12 +102,16 @@ class _GachaRevealState extends State<GachaReveal>
                 final ready = _animation.isCompleted;
                 final progress = widget.controller.progress!;
                 final tickets = progress.residents.tickets(progress.points);
-                return LayoutBuilder(
+                return PinnedGachaHud(
+                  points: progress.points,
+                  tickets: tickets,
+                  ticketBadgeKey: const ValueKey('reveal-tickets'),
+                  contentBuilder: (context, availableHeight) => LayoutBuilder(
                   builder: (context, constraints) {
                     // Result mode makes the resident, name and both actions
                     // visible without scrolling on typical phone viewports.
                     // Keep the large title/scroll while the reveal is playing.
-                    final viewportHeight = constraints.maxHeight;
+                    final viewportHeight = availableHeight;
                     final stageHeight = ready
                         ? (viewportHeight * .36).clamp(164.0, 265.0)
                         : (viewportHeight * .45).clamp(245.0, 380.0);
@@ -122,7 +126,7 @@ class _GachaRevealState extends State<GachaReveal>
                       key: const ValueKey('gacha-reveal-scroll'),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
+                          minHeight: availableHeight,
                         ),
                         child: Center(
                           child: Padding(
@@ -134,12 +138,6 @@ class _GachaRevealState extends State<GachaReveal>
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  GachaHud(
-                                    points: progress.points,
-                                    tickets: tickets,
-                                    ticketBadgeKey:
-                                        const ValueKey('reveal-tickets'),
-                                  ),
                                   if (!ready) ...[
                                     const SizedBox(height: 12),
                                     Image.asset(
@@ -332,6 +330,7 @@ class _GachaRevealState extends State<GachaReveal>
                       ),
                     );
                   },
+                ),
                 );
               },
             ),

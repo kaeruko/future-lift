@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'home_skin.dart';
@@ -135,4 +137,66 @@ class PlayerNameplate extends StatelessWidget {
             ),
           ),
         );
+}
+
+/// A fixed HUD at the same safe-area position across home, town, shrine,
+/// and result screens. Only the content underneath it is scrollable.
+/// The builder gets the actual remaining height (after the HUD).
+class PinnedGachaHud extends StatelessWidget {
+  const PinnedGachaHud({
+    super.key,
+    required this.points,
+    required this.tickets,
+    required this.contentBuilder,
+    this.ticketBadgeKey,
+  });
+
+  final int points;
+  final int tickets;
+  final Key? ticketBadgeKey;
+  final Widget Function(BuildContext, double) contentBuilder;
+
+  static const double edge = 12;
+  static const double top = 12;
+  static const double bottomGap = 10;
+  static const double maxHudWidth = 570;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = math.min(maxHudWidth, constraints.maxWidth - edge * 2);
+      final leftWidth = (width - 6) * 7 / 11;
+      final rightWidth = (width - 6) * 4 / 11;
+      final badgeWidth = math.min(156, rightWidth * .90);
+      final leftHeight = leftWidth * 209 / 788;
+      final rightHeight = 4 + rightWidth * 211 / 982 + 4 +
+          badgeWidth * 64 / 176;
+      final reservedHeight =
+          top + math.max(leftHeight, rightHeight) + bottomGap;
+      final remainingHeight = math.max(0, constraints.maxHeight - reservedHeight);
+      return Stack(
+        children: [
+          Positioned.fill(
+            top: reservedHeight,
+            child: contentBuilder(context, remainingHeight),
+          ),
+          Positioned(
+            left: edge,
+            right: edge,
+            top: top,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: maxHudWidth),
+                child: GachaHud(
+                  points: points,
+                  tickets: tickets,
+                  ticketBadgeKey: ticketBadgeKey,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
 }

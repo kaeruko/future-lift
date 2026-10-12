@@ -289,10 +289,16 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                             excludeFromSemantics: true,
                           ),
                         ),
-                        ListView(
-                          key: ValueKey('page-$_page'),
-                          padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
-                          children: _town(progress),
+                        PinnedGachaHud(
+                          points: progress.points,
+                          tickets: progress.residents.tickets(progress.points),
+                          ticketBadgeKey:
+                              const ValueKey('town-header-ticket-counter'),
+                          contentBuilder: (context, availableHeight) => ListView(
+                            key: ValueKey('page-$_page'),
+                            padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
+                            children: _town(progress),
+                          ),
                         ),
                       ],
                     )
@@ -353,12 +359,6 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   );
 
   List<Widget> _town(Progress progress) => [
-    GachaHud(
-      points: progress.points,
-      tickets: progress.residents.tickets(progress.points),
-      ticketBadgeKey: const ValueKey('town-header-ticket-counter'),
-    ),
-    const SizedBox(height: 18),
     Container(
       key: const ValueKey('town-page-title-panel'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

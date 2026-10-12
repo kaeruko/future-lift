@@ -65,7 +65,20 @@ class _GameHomeState extends State<GameHome> {
       final height = math.max(constraints.maxHeight, 620.0);
       final scale = MediaQuery.textScalerOf(context).scale(1);
       final sceneHeight = height + math.max(0, scale - 1) * 300;
-      return ListView(
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/kotohogu/town_background.png',
+              fit: BoxFit.cover,
+              excludeFromSemantics: true,
+            ),
+          ),
+          PinnedGachaHud(
+            points: widget.progress.points,
+            tickets: widget.progress.residents.tickets(widget.progress.points),
+            ticketBadgeKey: const ValueKey('home-header-ticket-counter'),
+            contentBuilder: (context, availableHeight) => ListView(
         controller: _scroll,
         padding: EdgeInsets.zero,
         children: [
@@ -74,39 +87,9 @@ class _GameHomeState extends State<GameHome> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset(
-                  'assets/kotohogu/town_background.png',
-                  fit: BoxFit.cover,
-                  excludeFromSemantics: true,
-                ),
-                Positioned(
-                  top: 14,
-                  left: 14,
-                  right: 14,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Expanded(
-                        flex: 7,
-                        child: PlayerNameplate(),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        flex: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: KotohogiBar(points: widget.progress.points),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 Positioned(
                   // Keep the lobby title below the shared profile/nameplate.
-                  top: math.max(
-                    sceneHeight * .16,
-                    14 + (constraints.maxWidth - 34) * 7 / 11 * 209 / 788 + 18,
-                  ),
+                  top: math.max(sceneHeight * .045, 16.0),
                   left: 24,
                   right: 24,
                   child: Column(
@@ -328,6 +311,9 @@ class _GameHomeState extends State<GameHome> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
           ),
         ],
       );

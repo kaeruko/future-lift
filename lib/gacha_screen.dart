@@ -92,10 +92,14 @@ class _GachaScreenState extends State<GachaScreen> {
               ),
             ),
             SafeArea(
-              child: LayoutBuilder(
+              child: PinnedGachaHud(
+                points: progress.points,
+                tickets: tickets,
+                ticketBadgeKey: const ValueKey('gacha-screen-tickets'),
+                contentBuilder: (context, availableHeight) => LayoutBuilder(
                 builder: (context, constraints) => SingleChildScrollView(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    constraints: BoxConstraints(minHeight: availableHeight),
                     child: Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 570),
@@ -103,13 +107,7 @@ class _GachaScreenState extends State<GachaScreen> {
                           padding: const EdgeInsets.fromLTRB(10, 12, 10, 14),
                           child: Column(
                             children: [
-                              GachaHud(
-                                points: progress.points,
-                                tickets: tickets,
-                                ticketBadgeKey:
-                                    const ValueKey('gacha-screen-tickets'),
-                              ),
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 6),
                               Image.asset(
                                 'assets/gacya/gacha_title.png',
                                 width: double.infinity,
@@ -210,6 +208,7 @@ class _GachaScreenState extends State<GachaScreen> {
                   ),
                 ),
               ),
+              ),
             ),
           ],
         ),
@@ -278,22 +277,20 @@ class GachaBundleReveal extends StatelessWidget {
           ),
         ),
         SafeArea(
-          child: Center(
+          child: PinnedGachaHud(
+            points: controller.progress!.points,
+            tickets: controller.progress!.residents.tickets(
+              controller.progress!.points,
+            ),
+            ticketBadgeKey: const ValueKey('gacha-bundle-tickets'),
+            contentBuilder: (context, availableHeight) => Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                 child: Column(
                   children: [
-                    GachaHud(
-                      points: controller.progress!.points,
-                      tickets: controller.progress!.residents.tickets(
-                        controller.progress!.points,
-                      ),
-                      ticketBadgeKey:
-                          const ValueKey('gacha-bundle-tickets'),
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                     Image.asset(
                       'assets/gacya/gacha_title.png',
                       height: 108,
@@ -367,6 +364,7 @@ class GachaBundleReveal extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
         ),
       ],

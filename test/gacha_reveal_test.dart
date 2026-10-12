@@ -133,6 +133,9 @@ void main() {
     expect(find.byType(GachaReveal), findsOneWidget);
     expect(find.byKey(const ValueKey('gacha-result')), findsNothing);
     expect(store.writes, 1);
+    final profile = find.byKey(const ValueKey('gacha-player-nameplate'));
+    final initialHudTop = tester.getTopLeft(profile).dy;
+    expect(initialHudTop, lessThan(45));
     await tester.pump(const Duration(milliseconds: 1000));
     expect(find.byKey(const ValueKey('gacha-result')), findsNothing);
     final title = tester.widget<Image>(
@@ -141,6 +144,8 @@ void main() {
     expect(title.height, 105);
     expect(find.text('だれに会えるかな…'), findsOneWidget);
     await tester.pumpAndSettle();
+    // The animated result is centered below the HUD; the HUD never shifts.
+    expect(tester.getTopLeft(profile).dy, closeTo(initialHudTop, .1));
     expect(find.byKey(const ValueKey('gacha-reveal-title')), findsNothing);
     expect(find.text('だれに会えるかな…'), findsNothing);
     expect(find.byKey(const ValueKey('resident-nameplate')), findsNothing);
