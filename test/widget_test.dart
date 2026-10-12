@@ -46,7 +46,7 @@ void main() {
     }
   });
 
-  testWidgets('estimated yen is only shown when explicitly supplied', (
+  testWidgets('researched cost illustration accompanies applause', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 1000);
@@ -59,7 +59,6 @@ void main() {
           missionTitle: '筋力を使った',
           total: 10,
           residents: [],
-          estimatedSavingsYen: 12345,
         ),
       ),
     );
@@ -70,10 +69,10 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.text('推計 12,345円分、医療・介護費の負担軽減に貢献しました'),
+      find.text('参考推計 年間約81,000円の医療・介護費の差！'),
       findsOneWidget,
     );
-    expect(find.textContaining('モデル期待値'), findsOneWidget);
+    expect(find.textContaining('研究2件の集団間費用差'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -156,7 +155,7 @@ void main() {
       find.text('🎊 日本の社会保障に貢献！ 🎊').hitTestable(),
       findsOneWidget,
     );
-    expect(find.text('医療・介護費の負担軽減に、また一歩！'), findsOneWidget);
+    expect(find.text('参考推計 年間約81,000円の医療・介護費の差！'), findsOneWidget);
     expect(find.bySemanticsLabel('ミッション達成！ 日本の社会保障に貢献！'), findsOneWidget);
     expect(
       find.descendant(
