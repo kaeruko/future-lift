@@ -24,7 +24,9 @@ class _GachaScreenState extends State<GachaScreen> {
     final cost = bundle ? 10 : 1;
     if (_drawing || widget.controller.busy ||
         progress == null ||
-        progress.residents.tickets(progress.points) < cost) return;
+        progress.residents.tickets(progress.points) < cost) {
+      return;
+    }
     setState(() => _drawing = true);
     final before = Map<String, int>.of(progress.residents.counts);
     try {
