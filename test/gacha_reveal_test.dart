@@ -144,12 +144,12 @@ void main() {
     final title = tester.widget<Image>(
       find.byKey(const ValueKey('gacha-reveal-title')),
     );
-    expect(title.height, 105);
-    expect(find.text('だれに会えるかな…'), findsOneWidget);
+    expect(title.height, 90);
+    expect(find.text('だれに会えるかな…'), findsNothing);
     await tester.pumpAndSettle();
     // The animated result is centered below the HUD; the HUD never shifts.
     expect(tester.getTopLeft(profile).dy, closeTo(initialHudTop, .1));
-    expect(find.byKey(const ValueKey('gacha-reveal-title')), findsNothing);
+    expect(find.byKey(const ValueKey('gacha-reveal-title')), findsOneWidget);
     expect(find.text('だれに会えるかな…'), findsNothing);
     expect(find.byKey(const ValueKey('resident-nameplate')), findsNothing);
     final stage = tester.widget<SizedBox>(
@@ -181,10 +181,10 @@ void main() {
     );
     expect(transform.transform.getMaxScaleOnAxis(), closeTo(1.24, 0.001));
     expect(find.bySemanticsLabel('NEW'), findsOneWidget);
-    expect(
-      tester.widget<Text>(find.byKey(const ValueKey('resident-name'))).data,
-      'ペンギン',
-    );
+    expect(find.byKey(const ValueKey('resident-name')), findsNothing);
+    expect(find.text('ペンギン'), findsNothing);
+    expect(find.text('ペンギンが、まちにやってきました！'), findsOneWidget);
+    expect(find.text('もう1回はガチャ券を1枚使います。'), findsNothing);
     expect(
       tester.widget<TicketCounterBadge>(
         find.byKey(const ValueKey('reveal-tickets')),
@@ -192,10 +192,13 @@ void main() {
       1,
     );
     // First-view results on a 360x640 phone, without scrolling.
-    final name = find.byKey(const ValueKey('resident-name'));
+    final resultMessage = find.byKey(const ValueKey('gacha-result'));
+    final titleOnResult = find.byKey(const ValueKey('gacha-reveal-title'));
     final townButton = find.byKey(const ValueKey('button_town'));
     final againButton = find.byKey(const ValueKey('button_again'));
-    expect(tester.getRect(name).top, greaterThan(
+    expect(tester.getRect(titleOnResult).bottom, lessThan(
+      tester.getRect(find.byKey(const ValueKey('gacha-reveal-stage'))).top));
+    expect(tester.getRect(resultMessage).top, greaterThan(
       tester.getRect(find.byKey(const ValueKey('gacha-reveal-stage'))).bottom));
     expect(tester.getRect(townButton).bottom,
         lessThanOrEqualTo(tester.view.physicalSize.height));
@@ -212,10 +215,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('また会えた'), findsOneWidget);
     expect(find.byKey(const ValueKey('resident-nameplate')), findsNothing);
-    expect(
-      tester.widget<Text>(find.byKey(const ValueKey('resident-name'))).data,
-      'ペンギン',
-    );
+    expect(find.byKey(const ValueKey('resident-name')), findsNothing);
+    expect(find.text('ペンギンとまた出会いました！'), findsOneWidget);
     expect(controller.progress!.residents.counts['03_penguin'], 2);
     expect(controller.progress!.residents.owned.length, 3);
     expect(
@@ -275,7 +276,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('gacha-result')), findsOneWidget);
       expect(find.byKey(const ValueKey('resident-nameplate')), findsNothing);
-      expect(find.byKey(const ValueKey('gacha-reveal-title')), findsNothing);
+      expect(find.byKey(const ValueKey('gacha-reveal-title')), findsOneWidget);
+      expect(find.byKey(const ValueKey('resident-name')), findsNothing);
+      expect(find.text('だれに会えるかな…'), findsNothing);
       await tester.ensureVisible(find.byKey(const ValueKey('button_town')));
       await tester.tap(find.byKey(const ValueKey('button_town')));
       await tester.pumpAndSettle();

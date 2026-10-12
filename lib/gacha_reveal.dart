@@ -138,26 +138,18 @@ class _GachaRevealState extends State<GachaReveal>
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  if (!ready) ...[
-                                    const SizedBox(height: 12),
-                                    Image.asset(
-                                      'assets/gacya/gacha_title.png',
-                                      key: const ValueKey('gacha-reveal-title'),
-                                      width: double.infinity,
-                                      height: compact ? 105 : 140,
-                                      fit: BoxFit.contain,
-                                      excludeFromSemantics: true,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    const Text(
-                                      'だれに会えるかな…',
-                                      style: TextStyle(
-                                        color: wood,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ] else
-                                    SizedBox(height: compact ? 4 : 10),
+                                  // Keep the scroll title visible even after
+                                  // the resident is revealed; avoid extra text.
+                                  SizedBox(height: compact ? 4 : 8),
+                                  Image.asset(
+                                    'assets/gacya/gacha_title.png',
+                                    key: const ValueKey('gacha-reveal-title'),
+                                    width: double.infinity,
+                                    height: compact ? 90 : 120,
+                                    fit: BoxFit.contain,
+                                    excludeFromSemantics: true,
+                                  ),
+                                  SizedBox(height: compact ? 4 : 8),
                                   SizedBox(
                                     key: const ValueKey('gacha-reveal-stage'),
                                     height: stageHeight,
@@ -224,27 +216,6 @@ class _GachaRevealState extends State<GachaReveal>
                                     ),
                                   ),
                                   if (ready) ...[
-                                    SizedBox(height: compact ? 2 : 6),
-                                    Text(
-                                      _resident.label,
-                                      key: const ValueKey('resident-name'),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: wood,
-                                        fontSize: 27,
-                                        fontWeight: FontWeight.w900,
-                                        shadows: [
-                                          Shadow(
-                                            color: Color(0xFFFFF2D7),
-                                            blurRadius: 5,
-                                          ),
-                                          Shadow(
-                                            color: Color(0xFFFFF2D7),
-                                            blurRadius: 9,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
                                     SizedBox(height: compact ? 2 : 4),
                                     Semantics(
                                       liveRegion: true,
@@ -307,19 +278,8 @@ class _GachaRevealState extends State<GachaReveal>
                                         fontSize: 12,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _drawing
-                                          ? '住民を迎えています…'
-                                          : tickets == 0
-                                              ? '次の券は、日々の行動で。また会いにきてね。'
-                                              : 'もう1回はガチャ券を1枚使います。',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: wood,
-                                        fontSize: 12,
-                                      ),
-                                    ),
+                                    // The ticket cost is available from the
+                                    // repeat button's accessibility label.
                                   ] else
                                     const SizedBox(height: 90),
                                 ],
