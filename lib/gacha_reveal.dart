@@ -196,50 +196,43 @@ class _GachaRevealState extends State<GachaReveal>
                                   ),
                                 ),
                                 if (ready) ...[
-                                  Container(
-                                    width: 270,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 18,
-                                      vertical: 9,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFFF4D6),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: const Color(0xFF8E361F),
-                                        width: 3,
-                                      ),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Color(0xFFE4B04C),
-                                          spreadRadius: 2,
-                                        ),
-                                        BoxShadow(
-                                          color: Color(0x663F2313),
-                                          blurRadius: 8,
-                                          offset: Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
+                                  SizedBox(
+                                    key: const ValueKey('resident-nameplate'),
+                                    width: 306,
+                                    height: 204,
+                                    child: Stack(
+                                      fit: StackFit.expand,
                                       children: [
-                                        Text(
-                                          _isNew ? '仲間登場！' : 'また会えた！',
-                                          style: const TextStyle(
-                                            color: Color(0xFFB83D26),
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w900,
-                                          ),
+                                        Image.asset(
+                                          'assets/gacya/resident_nameplate.png',
+                                          fit: BoxFit.contain,
+                                          excludeFromSemantics: true,
                                         ),
-                                        Text(
-                                          _resident.label,
-                                          key: const ValueKey('resident-name'),
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            color: wood,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.w900,
+                                        Positioned(
+                                          left: 43,
+                                          right: 43,
+                                          top: 108,
+                                          bottom: 30,
+                                          child: Center(
+                                            child: FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                _resident.label,
+                                                key: const ValueKey('resident-name'),
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  color: wood,
+                                                  fontSize: 28,
+                                                  fontWeight: FontWeight.w900,
+                                                  shadows: [
+                                                    Shadow(
+                                                      color: Color(0xFFFBE9BD),
+                                                      blurRadius: 4,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],

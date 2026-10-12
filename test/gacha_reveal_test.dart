@@ -87,7 +87,19 @@ void main() {
     expect(find.byKey(const ValueKey('gacha-result')), findsNothing);
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('NEW'), findsOneWidget);
-    expect(find.byKey(const ValueKey('resident-name')), findsOneWidget);
+    final nameplate = find.byKey(const ValueKey('resident-nameplate'));
+    expect(nameplate, findsOneWidget);
+    final frame = tester.widget<Image>(
+      find.descendant(of: nameplate, matching: find.byType(Image)),
+    );
+    expect(
+      (frame.image as AssetImage).assetName,
+      'assets/gacya/resident_nameplate.png',
+    );
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('resident-name'))).data,
+      'ペンギン',
+    );
     expect(
       tester.widget<TicketCounterBadge>(
         find.byKey(const ValueKey('reveal-tickets')),
@@ -101,6 +113,11 @@ void main() {
     expect(find.byKey(const ValueKey('button_again')), findsNothing);
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('また会えた'), findsOneWidget);
+    expect(find.byKey(const ValueKey('resident-nameplate')), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('resident-name'))).data,
+      'ペンギン',
+    );
     expect(controller.progress!.residents.counts['03_penguin'], 2);
     expect(controller.progress!.residents.owned.length, 3);
     expect(
@@ -159,6 +176,7 @@ void main() {
       await open(tester, store, reduced: true);
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('gacha-result')), findsOneWidget);
+      expect(find.byKey(const ValueKey('resident-nameplate')), findsOneWidget);
       await tester.ensureVisible(find.byKey(const ValueKey('button_town')));
       await tester.tap(find.byKey(const ValueKey('button_town')));
       await tester.pumpAndSettle();

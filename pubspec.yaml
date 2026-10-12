@@ -60,6 +60,7 @@ flutter:
     - assets/gacya/button_resident.png
     - assets/gacya/ticket_counter_bg.png
     - assets/gacya/gacha_title.png
+    - assets/gacya/resident_nameplate.png
     - assets/gacya/summon_glow.png
     - assets/kotohogu/
     - assets/quests/
