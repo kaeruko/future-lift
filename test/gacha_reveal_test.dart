@@ -133,7 +133,10 @@ void main() {
     expect(find.byType(GachaReveal), findsOneWidget);
     expect(find.byKey(const ValueKey('gacha-result')), findsNothing);
     expect(store.writes, 1);
-    final profile = find.byKey(const ValueKey('gacha-player-nameplate'));
+    final profile = find.descendant(
+      of: find.byType(GachaReveal),
+      matching: find.byKey(const ValueKey('gacha-player-nameplate')),
+    );
     final initialHudTop = tester.getTopLeft(profile).dy;
     expect(initialHudTop, lessThan(45));
     await tester.pump(const Duration(milliseconds: 1000));
