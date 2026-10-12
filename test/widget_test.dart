@@ -450,6 +450,18 @@ void main() {
     await tester.pumpAndSettle();
 
     final counter = find.byKey(const ValueKey('town-header-ticket-counter'));
+    final nameplate = find.byKey(const ValueKey('gacha-player-nameplate'));
+    final points = find.byKey(const ValueKey('kotohogi-bar-art'));
+    expect(find.byKey(const ValueKey('town-page-shrine-background')), findsOneWidget);
+    expect(find.byKey(const ValueKey('town-page-title-panel')), findsOneWidget);
+    expect(nameplate, findsOneWidget);
+    expect(points, findsOneWidget);
+    expect(find.text('所持ガチャ券'), findsNothing);
+    expect(find.text('FutureLift'), findsNothing);
+    expect(tester.getRect(nameplate).right,
+        lessThan(tester.getRect(points).left));
+    expect(tester.getRect(counter).top,
+        greaterThan(tester.getRect(points).bottom));
     expect(tester.widget<TicketCounterBadge>(counter).tickets, 0);
     expect(tester.takeException(), isNull);
 

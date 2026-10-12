@@ -39,20 +39,6 @@ class GachaHud extends StatelessWidget {
                 children: [
                   KotohogiBar(points: points),
                   const SizedBox(height: 4),
-                  const Padding(
-                    padding: EdgeInsets.only(right: 5, bottom: 2),
-                    child: Text(
-                      '所持ガチャ券',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF63351F),
-                        shadows: [
-                          Shadow(color: Color(0xFFFFF4DA), blurRadius: 3),
-                        ],
-                      ),
-                    ),
-                  ),
                   Tooltip(
                     message: 'ガチャ券 $tickets枚',
                     child: SizedBox(

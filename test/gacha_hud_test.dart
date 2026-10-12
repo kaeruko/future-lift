@@ -30,7 +30,7 @@ void main() {
       final tickets = find.byKey(const ValueKey('gacha-screen-tickets'));
       expect(kotohogi, findsOneWidget);
       expect(tickets, findsOneWidget);
-      expect(find.text('所持ガチャ券'), findsOneWidget);
+      expect(find.text('所持ガチャ券'), findsNothing);
       expect(tester.widget<TicketCounterBadge>(tickets).tickets, 7);
       expect(tester.getRect(tickets).top,
           greaterThan(tester.getRect(kotohogi).bottom));

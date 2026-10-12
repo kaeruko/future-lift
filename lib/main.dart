@@ -13,7 +13,7 @@ import 'history_screen.dart';
 import 'debug_menu_screen.dart';
 import 'resident_collection.dart';
 import 'resident_gacha.dart';
-import 'ticket_counter_badge.dart';
+import 'gacha_hud.dart';
 import 'town.dart';
 
 void main() {
@@ -279,54 +279,21 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                           setState(() => _missionPeriod = period),
                     )
                   : _page == 2
-                  ? ListView(
-                      key: ValueKey('page-$_page'),
-                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
+                  ? Stack(
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(9),
-                              decoration: BoxDecoration(
-                                color: Color(0xFFBD4927),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Icon(
-                                Icons.spa_rounded,
-                                color: Colors.white,
-                                size: 23,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            const Expanded(
-                              child: FittedBox(
-                                alignment: Alignment.centerLeft,
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'FutureLift',
-                                  style: TextStyle(
-                                    fontSize: 23,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: -.8,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Flexible(
-                              child: Text(
-                                'セルフケアは、\n社会貢献。',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Positioned.fill(
+                          child: Image.asset(
+                            'assets/gacya/bg.png',
+                            key: const ValueKey('town-page-shrine-background'),
+                            fit: BoxFit.cover,
+                            excludeFromSemantics: true,
+                          ),
                         ),
-                        const SizedBox(height: 26),
-                        ..._town(progress),
+                        ListView(
+                          key: ValueKey('page-$_page'),
+                          padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
+                          children: _town(progress),
+                        ),
                       ],
                     )
                   : _page == 3
@@ -385,92 +352,73 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     },
   );
 
-  Widget _points(Progress progress) =>
-      ContributionPanel(points: progress.points);
-
   List<Widget> _town(Progress progress) => [
-    LayoutBuilder(
-      builder: (context, constraints) {
-        final heading = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'みんなのまち',
-              style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900),
+    GachaHud(
+      points: progress.points,
+      tickets: progress.residents.tickets(progress.points),
+      ticketBadgeKey: const ValueKey('town-header-ticket-counter'),
+    ),
+    const SizedBox(height: 18),
+    Container(
+      key: const ValueKey('town-page-title-panel'),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: parchment(),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'みんなのまち',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: wood,
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'あなたの行動が、まちの彩りに。',
-              style: TextStyle(color: Color(0xFF627875)),
+          ),
+          SizedBox(height: 4),
+          Text(
+            'あなたの行動が、まちの彩りに。',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF82583B),
+              fontWeight: FontWeight.w600,
             ),
-          ],
-        );
-        final ticketCounter = Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Text(
-              '所持ガチャ券',
-              style: TextStyle(
-                color: wood,
-                fontSize: 12,
+          ),
+        ],
+      ),
+    ),
+    const SizedBox(height: 22),
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: parchment(),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: teal,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'LEVEL ${progress.townLevel}',
+              style: const TextStyle(
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            TicketCounterBadge(
-              key: const ValueKey('town-header-ticket-counter'),
-              tickets: progress.residents.tickets(progress.points),
-            ),
-          ],
-        );
-        if (constraints.maxWidth < 440) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              heading,
-              const SizedBox(height: 8),
-              Align(alignment: Alignment.centerRight, child: ticketCounter),
-            ],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(child: heading),
-            const SizedBox(width: 12),
-            ticketCounter,
-          ],
-        );
-      },
-    ),
-    const SizedBox(height: 20),
-    _points(progress),
-    const SizedBox(height: 20),
-    Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: teal,
-            borderRadius: BorderRadius.circular(12),
           ),
-          child: Text(
-            'LEVEL ${progress.townLevel}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              townNames[progress.townLevel],
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            townNames[progress.townLevel],
-            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
+        ],
+      ),
     ),
     const SizedBox(height: 14),
     TownScene(
