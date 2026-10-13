@@ -16,7 +16,9 @@ abstract final class ConsultationComposition {
   static const Rect stage = Rect.fromLTWH(90, 1240, 900, 252);
   static const Rect resident = Rect.fromLTWH(330, 975, 420, 385);
   static const Rect glow = Rect.fromLTWH(160, 900, 760, 570);
-  static const Rect banner = Rect.fromLTWH(100, 560, 880, 450);
+  // Leave clear space above the arriving resident's head. Keep the source
+  // banner's size and artwork unchanged; only shift its design-space y.
+  static const Rect banner = Rect.fromLTWH(100, 440, 880, 450);
 
   /// Maps design-space coordinates onto a BoxFit.cover stage.
   static Widget cover(Widget child) => ClipRect(
