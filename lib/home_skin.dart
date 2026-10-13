@@ -117,35 +117,37 @@ class KotohogiBar extends StatelessWidget {
                     excludeFromSemantics: true,
                   ),
                 ),
-                // Mask the source artwork's + button: there is no purchase action.
+                // The replacement asset has a plain red space on the right.
+                // Draw the actual, persisted balance there, without a circle.
+                // Allocate enough width for 4-6 digits on compact phones.
                 Positioned(
-                  right: width * .038,
-                  top: height * .286,
-                  width: width * .089,
-                  height: height * .428,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF75190D),
-                      border: Border.all(
-                        color: const Color(0xFFF6C65E),
-                        width: width * .006,
-                      ),
-                    ),
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(3),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            '$points',
-                            key: const ValueKey('total-points'),
-                            style: const TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFFFFF2CE),
+                  left: width * .63,
+                  right: width * .055,
+                  top: height * .12,
+                  bottom: height * .12,
+                  child: SizedBox(
+                    key: const ValueKey('kotohogi-number-zone'),
+                    child: FittedBox(
+                      alignment: Alignment.centerRight,
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '$points',
+                        key: const ValueKey('total-points'),
+                        maxLines: 1,
+                        softWrap: false,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          fontSize: 46,
+                          fontWeight: FontWeight.w900,
+                          height: 1,
+                          color: Color(0xFFFFF4D6),
+                          shadows: [
+                            Shadow(
+                              color: Color(0xFF3B100B),
+                              blurRadius: 2,
+                              offset: Offset(1, 2),
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     ),
