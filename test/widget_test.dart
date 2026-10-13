@@ -234,6 +234,43 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  for (final size in <Size>[
+    const Size(320, 720),
+    const Size(360, 720),
+    const Size(402, 874),
+  ]) {
+    testWidgets('town fills the first screen without duplicate titles at $size',
+        (tester) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await launch(tester, MemoryStore());
+      await tester.tap(find.text('みんなのまち').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('みんなのまち'), findsOneWidget);
+      expect(find.text(townNames.first), findsOneWidget);
+      expect(find.text('LEVEL 0'), findsOneWidget);
+      expect(find.byKey(const ValueKey('town-page-shrine-background')),
+          findsNothing);
+      final art = find.byType(TownScene);
+      expect(tester.widget<TownScene>(art).fillViewport, isTrue);
+      final scene = tester.getRect(art);
+      final fullScreen = tester.getRect(
+        find.byKey(const ValueKey('town-page-fullscreen')),
+      );
+      final nav = tester.getRect(find.byType(NavigationBar));
+      expect(scene.left, closeTo(fullScreen.left, .1));
+      expect(scene.top, closeTo(fullScreen.top, .1));
+      expect(scene.width, closeTo(fullScreen.width, .1));
+      expect(scene.height, closeTo(fullScreen.height, .1));
+      expect(fullScreen.width, closeTo(size.width, .1));
+      expect(fullScreen.bottom, lessThanOrEqualTo(nav.top + .1));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
+
   testWidgets(
     'storage failure displays halt and original diagnostics, no celebration',
     (tester) async {
@@ -504,7 +541,9 @@ void main() {
     final counter = find.byKey(const ValueKey('town-header-ticket-counter'));
     final nameplate = find.byKey(const ValueKey('gacha-player-nameplate'));
     final points = find.byKey(const ValueKey('kotohogi-bar-art'));
-    expect(find.byKey(const ValueKey('town-page-shrine-background')), findsOneWidget);
+    expect(find.byKey(const ValueKey('town-page-fullscreen')), findsOneWidget);
+    expect(find.byKey(const ValueKey('town-page-shrine-background')), findsNothing);
+    expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
     expect(find.byKey(const ValueKey('town-page-title-panel')), findsOneWidget);
     expect(nameplate, findsOneWidget);
     expect(points, findsOneWidget);
