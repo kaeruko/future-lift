@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -15,26 +16,24 @@ class ConsultationBackground extends StatefulWidget {
       _ConsultationBackgroundState();
 }
 
-class _ConsultationBackgroundState extends State<ConsultationBackground>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _walk = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 2720),
-  )..repeat();
+class _ConsultationBackgroundState extends State<ConsultationBackground> {
+  Timer? _ticker;
+  int _step = 0;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _walk.stop();
-    } else if (!_walk.isAnimating) {
-      _walk.repeat();
-    }
+  void initState() {
+    super.initState();
+    // A discrete sprite timer avoids a continuous frame scheduler.
+    _ticker = Timer.periodic(const Duration(milliseconds: 170), (_) {
+      if (mounted && !MediaQuery.disableAnimationsOf(context)) {
+        setState(() => _step = (_step + 1) % 16);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _walk.dispose();
+    _ticker?.cancel();
     super.dispose();
   }
 
@@ -52,14 +51,11 @@ class _ConsultationBackgroundState extends State<ConsultationBackground>
             fit: BoxFit.cover,
             excludeFromSemantics: true,
           ),
-          AnimatedBuilder(
-            animation: _walk,
-            builder: (context, child) => Stack(
-              children: [
-                for (var i = 0; i < 4; i++)
-                  _walkingResident(i, width, height),
-              ],
-            ),
+          Stack(
+            children: [
+              for (var i = 0; i < 4; i++)
+                _walkingResident(i, width, height),
+            ],
           ),
         ],
       );
@@ -75,9 +71,9 @@ class _ConsultationBackgroundState extends State<ConsultationBackground>
       TownResident.squirrel,
     ];
     final resident = characters[slot];
-    final step = (_walk.value * 2720 + slot * 340).floor();
-    final frame = (step ~/ 170) % 4;
-    final progress = (_walk.value + slot * .23) * math.pi * 2;
+    final step = _step + slot * 2;
+    final frame = step % 4;
+    final progress = ((step % 16) / 16) * math.pi * 2;
     final x = (.055 + slot * .104) * width +
         math.sin(progress) * width * .008;
     final y = (.455 + (slot % 2) * .014) * height;
@@ -118,7 +114,9 @@ void showResidentCollection(BuildContext context, ResidentCollection owned) {
               ),
             ),
             const SizedBox(height: 16),
-            Flexible(
+            SizedBox(
+              height: (MediaQuery.sizeOf(sheetContext).height * .42)
+                  .clamp(130.0, 370.0),
               child: SingleChildScrollView(
                 child: Wrap(
                   alignment: WrapAlignment.center,
