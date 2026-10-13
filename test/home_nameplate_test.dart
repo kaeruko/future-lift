@@ -58,6 +58,7 @@ void main() {
   // Regression: without a non-positioned expanding child, both GameHome and
   // the fixed HUD measured width zero; the bottom signs then requested -29px.
   for (final screen in <Size>[
+    const Size(280, 640),
     const Size(320, 720),
     const Size(360, 720),
     const Size(402, 874),
@@ -100,8 +101,13 @@ void main() {
       expect(tester.getRect(tickets).top,
           greaterThan(tester.getRect(points).bottom));
       expect(find.byKey(const ValueKey('open-missions')), findsOneWidget);
-      expect(tester.getSize(find.byKey(const ValueKey('open-missions'))).width,
-          greaterThan(0));
+      final leftRect = tester.getRect(find.byKey(const ValueKey('open-missions')));
+      final rightRect = tester.getRect(find.byKey(const ValueKey('open-town')));
+      expect(leftRect.width, greaterThan(0));
+      expect(rightRect.width, greaterThan(0));
+      expect(leftRect.right, lessThan(rightRect.left));
+      expect(leftRect.left, greaterThanOrEqualTo(0));
+      expect(rightRect.right, lessThanOrEqualTo(screen.width));
       await tester.drag(find.byType(ListView), const Offset(0, -250));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

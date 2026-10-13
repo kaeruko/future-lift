@@ -65,7 +65,10 @@ class _GameHomeState extends State<GameHome> {
       final height = math.max(constraints.maxHeight, 620.0);
       final scale = MediaQuery.textScalerOf(context).scale(1);
       final sceneHeight = height + math.max(0, scale - 1) * 300;
-      return Stack(
+      // The app's centered wrapper supplies loose constraints. Explicitly
+      // fill the viewport rather than letting the Stack choose zero width.
+      return SizedBox.expand(
+        child: Stack(
         children: [
           Positioned.fill(
             child: Image.asset(
@@ -257,31 +260,36 @@ class _GameHomeState extends State<GameHome> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          SizedBox(
-                            width: math.min(
-                              (constraints.maxWidth - 58) / 2,
-                              175,
-                            ),
-                            child: _LobbySign(
-                              key: const ValueKey('open-missions'),
-                              asset: '10_nav_quest',
-                              title: '本日のミッション',
-                              detail:
-                                  '${widget.progress.completed.length} / ${Mission.forPeriod(MissionPeriod.daily).length} 達成',
-                              onTap: widget.onMissions,
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.bottomLeft,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 175),
+                                child: _LobbySign(
+                                  key: const ValueKey('open-missions'),
+                                  asset: '10_nav_quest',
+                                  title: '本日のミッション',
+                                  detail:
+                                      '${widget.progress.completed.length} / ${Mission.forPeriod(MissionPeriod.daily).length} 達成',
+                                  onTap: widget.onMissions,
+                                ),
+                              ),
                             ),
                           ),
-                          const Spacer(),
-                          SizedBox(
-                            width: math.min(
-                              (constraints.maxWidth - 58) / 2,
-                              175,
-                            ),
-                            child: _LobbySign(
-                              asset: '11_nav_town',
-                              title: 'みんなのまちへ',
-                              detail: 'LEVEL ${widget.progress.townLevel}',
-                              onTap: widget.onTown,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.bottomRight,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 175),
+                                child: _LobbySign(
+                                  key: const ValueKey('open-town'),
+                                  asset: '11_nav_town',
+                                  title: 'みんなのまちへ',
+                                  detail: 'LEVEL ${widget.progress.townLevel}',
+                                  onTap: widget.onTown,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -316,6 +324,7 @@ class _GameHomeState extends State<GameHome> {
       ),
           ),
         ],
+        ),
       );
     },
   );
