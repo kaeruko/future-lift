@@ -5,6 +5,60 @@ import 'package:future_lift/ticket_counter_badge.dart';
 
 void main() {
   for (final width in <double>[320, 402, 570]) {
+    testWidgets('HUD obtains full size from loose Stack constraints at $width px',
+        (tester) async {
+      tester.view.physicalSize = Size(width, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: Stack(
+                children: [
+                  const Positioned.fill(
+                    child: ColoredBox(color: Colors.amber),
+                  ),
+                  PinnedGachaHud(
+                    points: 100,
+                    tickets: 7,
+                    ticketBadgeKey: const ValueKey('loose-hud-tickets'),
+                    contentBuilder: (context, remainingHeight) => ListView(
+                      children: [
+                        Text('Scene has ${remainingHeight.toStringAsFixed(0)}px'),
+                        const SizedBox(height: 1100),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final pinned = tester.getSize(find.byType(PinnedGachaHud));
+      expect(pinned.width, width);
+      expect(pinned.height, 720);
+      expect(find.byKey(const ValueKey('gacha-player-nameplate')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('kotohogi-bar-art')),
+          findsOneWidget);
+      expect(
+        tester.widget<TicketCounterBadge>(
+          find.byKey(const ValueKey('loose-hud-tickets')),
+        ).tickets,
+        7,
+      );
+      expect(tester.getSize(find.byKey(const ValueKey('kotohogi-bar-art'))).width,
+          greaterThan(0));
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('shared HUD stays fixed while scene scrolls at $width px',
         (tester) async {
       tester.view.physicalSize = Size(width, 720);

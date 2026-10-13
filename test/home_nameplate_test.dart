@@ -52,4 +52,60 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
   }
+
+  // The actual app wraps GameHome in SafeArea > Center > ConstrainedBox.
+  // This supplies loose constraints, unlike a directly mounted Scaffold body.
+  // Regression: without a non-positioned expanding child, both GameHome and
+  // the fixed HUD measured width zero; the bottom signs then requested -29px.
+  for (final screen in <Size>[
+    const Size(320, 720),
+    const Size(360, 720),
+    const Size(402, 874),
+  ]) {
+    testWidgets('home fits its actual centered app wrapper at $screen',
+        (tester) async {
+      tester.view.physicalSize = screen;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final progress = Progress.empty(DateTime(2026, 10, 12));
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: GameHome(
+                  progress: progress,
+                  onMissions: () {},
+                  onTown: () {},
+                  onResident: (_) {},
+                ),
+              ),
+            ),
+          ),
+          bottomNavigationBar: const SizedBox(height: 104),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final nameplate = find.byKey(const ValueKey('gacha-player-nameplate'));
+      final points = find.byKey(const ValueKey('kotohogi-bar-art'));
+      final tickets = find.byKey(const ValueKey('home-header-ticket-counter'));
+      expect(nameplate, findsOneWidget);
+      expect(points, findsOneWidget);
+      expect(tickets, findsOneWidget);
+      expect(tester.getSize(nameplate).width, greaterThan(0));
+      expect(tester.getSize(points).width, greaterThan(0));
+      expect(tester.getRect(tickets).top,
+          greaterThan(tester.getRect(points).bottom));
+      expect(find.byKey(const ValueKey('open-missions')), findsOneWidget);
+      expect(tester.getSize(find.byKey(const ValueKey('open-missions'))).width,
+          greaterThan(0));
+      await tester.drag(find.byType(ListView), const Offset(0, -250));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
 }

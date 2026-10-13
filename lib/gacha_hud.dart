@@ -174,8 +174,13 @@ class PinnedGachaHud extends StatelessWidget {
       final reservedHeight =
           top + math.max(leftHeight, rightHeight) + bottomGap;
       final remainingHeight = math.max(0.0, constraints.maxHeight - reservedHeight);
+      // When nested in Center > ConstrainedBox > Stack, the parent can
+      // provide loose constraints. A Stack with only Positioned children
+      // otherwise sizes itself to 0x0, breaking both the points bar and
+      // the home screen's responsive action button widths.
       return Stack(
         children: [
+          const SizedBox.expand(),
           Positioned.fill(
             top: reservedHeight,
             child: contentBuilder(context, remainingHeight),
