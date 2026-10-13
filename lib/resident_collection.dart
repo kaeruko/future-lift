@@ -82,6 +82,13 @@ class ResidentCollection {
   final int bonusDraws;
   List<TownResident> get owned => counts.keys.map(TownResident.fromId).toList();
   int get draws => counts.values.fold(0, (a, b) => a + b) - 2 - bonusDraws;
+  /// Spendable kotohogi derived from the legacy ticket ledger.
+  ///
+  /// Each saved draw costs 30; previously earned partial amounts remain.
+  /// No persistent schema migration or implicit currency conversion occurs.
+  int availableKotohogi(int points) =>
+      points - baselinePoints + (debugTicketsGranted - draws) * 30;
+
   int earnedTickets(int points) => (points - baselinePoints) ~/ 30;
   int tickets(int points) => earnedTickets(points) + debugTicketsGranted - draws;
   int untilNextTicket(int points) => 30 - (points - baselinePoints) % 30;
