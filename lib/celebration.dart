@@ -133,16 +133,33 @@ class _CelebrationState extends State<Celebration>
                         color: const Color(0xEDFFF8E5),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        '参考推計 年間約${SocialSecurityStudyIllustration.illustratedYenLabel}円'
-                        'の医療・介護費の差！',
-                        key: const ValueKey('social-contribution-message'),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF63351F),
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            '社会保障に貢献しました！',
+                            key: ValueKey('social-contribution-message'),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF63351F),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '参考推計：医療・介護費 年間約'
+                            '${SocialSecurityStudyIllustration.illustratedYenLabel}円'
+                            '（研究集団の比較）',
+                            key: const ValueKey('social-contribution-reference'),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Color(0xFF63351F),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 5),
