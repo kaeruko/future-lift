@@ -498,7 +498,14 @@ void main() {
       find.byKey(const ValueKey('debug-replay-celebration')),
       findsOneWidget,
     );
-    expect(find.textContaining('所持ことほぎ：10'), findsOneWidget);
+    expect(find.byKey(const ValueKey('debug-current-points')),
+        findsOneWidget);
+    expect(
+      tester.widget<Text>(
+        find.byKey(const ValueKey('debug-current-points')),
+      ).data,
+      contains('所持ことほぎ：10'),
+    );
     final saved = store.raw;
     final writes = store.writes;
 
