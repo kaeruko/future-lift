@@ -93,8 +93,11 @@ class KotohogiBar extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final width = constraints.maxWidth;
+      // A layout transition may briefly measure the HUD at zero width.
+      // The parent supplies a fixed positive width in normal layouts; do
+      // not crash the entire screen during a transient zero-size pass.
       if (!width.isFinite || width <= 0) {
-        throw StateError('KotohogiBar requires a bounded positive width.');
+        return const SizedBox.shrink();
       }
       final height = width * 211 / 982;
       return Semantics(
