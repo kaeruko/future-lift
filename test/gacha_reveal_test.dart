@@ -6,7 +6,6 @@ import 'package:future_lift/consultation_scene.dart';
 import 'package:future_lift/gacha_reveal.dart';
 import 'package:future_lift/gacha_screen.dart';
 import 'package:future_lift/progress.dart';
-import 'package:future_lift/resident_collection.dart';
 
 import 'progress_test.dart' show MemoryStore;
 import 'resident_collection_test.dart' show funded, FixedRandom;
