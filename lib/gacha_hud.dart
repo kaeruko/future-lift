@@ -6,7 +6,8 @@ import 'home_skin.dart';
 import 'resident_collection.dart';
 import 'ticket_counter_badge.dart';
 
-/// Compact, responsive game HUD. Names and ranks are deliberately not invented.
+/// Compact, responsive game HUD. A temporary display name is used until the
+/// app offers editable profiles; ranks and experience are not invented.
 class GachaHud extends StatelessWidget {
   const GachaHud({
     super.key,
@@ -90,7 +91,13 @@ class GachaHud extends StatelessWidget {
 
 /// The same decorative player nameplate is used in home and gacha.
 class PlayerNameplate extends StatelessWidget {
-  const PlayerNameplate({super.key});
+  const PlayerNameplate({
+    super.key,
+    this.displayName = 'ハル',
+  });
+
+  /// Placeholder from the visual mockup until the app stores a player name.
+  final String displayName;
 
   @override
   Widget build(BuildContext context) => AspectRatio(
@@ -118,39 +125,33 @@ class PlayerNameplate extends StatelessWidget {
                     ),
                   ),
                 ),
+                // One-line name only; keep text centered in the nameplate
+                // with generous breathing room beside the avatar.
                 Positioned(
-                  left: c.maxWidth * .285,
+                  left: c.maxWidth * .30,
                   right: c.maxWidth * .055,
-                  top: c.maxHeight * .17,
+                  top: c.maxHeight * .25,
+                  bottom: c.maxHeight * .25,
                   child: FittedBox(
                     alignment: Alignment.centerLeft,
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      '今日も一歩ずつ',
+                      displayName,
+                      key: const ValueKey('player-display-name'),
+                      maxLines: 1,
+                      softWrap: false,
                       style: TextStyle(
                         color: const Color(0xFFFFEFCD),
                         fontWeight: FontWeight.w900,
-                        fontSize: c.maxHeight * .27,
+                        fontSize: c.maxHeight * .36,
+                        height: 1.05,
                         shadows: const [
-                          Shadow(color: Color(0xFF3F1D16), blurRadius: 2),
+                          Shadow(
+                            color: Color(0xFF3F1D16),
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
                         ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: c.maxWidth * .285,
-                  right: c.maxWidth * .055,
-                  top: c.maxHeight * .54,
-                  child: FittedBox(
-                    alignment: Alignment.centerLeft,
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      '自分を言祝ごう',
-                      style: TextStyle(
-                        color: const Color(0xFFFFEFCD),
-                        fontWeight: FontWeight.w700,
-                        fontSize: c.maxHeight * .20,
                       ),
                     ),
                   ),

@@ -123,8 +123,8 @@ class KotohogiBar extends StatelessWidget {
                 Positioned(
                   left: width * .63,
                   right: width * .055,
-                  top: height * .12,
-                  bottom: height * .12,
+                  top: height * .19,
+                  bottom: height * .09,
                   child: SizedBox(
                     key: const ValueKey('kotohogi-number-zone'),
                     child: FittedBox(
@@ -137,15 +137,15 @@ class KotohogiBar extends StatelessWidget {
                         softWrap: false,
                         textAlign: TextAlign.right,
                         style: const TextStyle(
-                          fontSize: 46,
-                          fontWeight: FontWeight.w900,
+                          fontSize: 36,
+                          fontWeight: FontWeight.w800,
                           height: 1,
-                          color: Color(0xFFFFF4D6),
+                          color: Color(0xFFFFE4AC),
                           shadows: [
                             Shadow(
-                              color: Color(0xFF3B100B),
-                              blurRadius: 2,
-                              offset: Offset(1, 2),
+                              color: Color(0xFF4A1B12),
+                              blurRadius: .6,
+                              offset: Offset(0, 1),
                             ),
                           ],
                         ),

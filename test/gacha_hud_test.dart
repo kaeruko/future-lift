@@ -31,6 +31,13 @@ void main() {
       expect(kotohogi, findsOneWidget);
       expect(tickets, findsOneWidget);
       final nameplate = find.byKey(const ValueKey('gacha-player-nameplate'));
+      final name = find.byKey(const ValueKey('player-display-name'));
+      expect(name, findsOneWidget);
+      expect(tester.widget<Text>(name).data, 'ハル');
+      final nameRect = tester.getRect(name);
+      expect(nameRect.left, greaterThan(tester.getRect(nameplate).left));
+      expect(nameRect.right, lessThanOrEqualTo(
+        tester.getRect(nameplate).right));
       final availableWidth = width - GachaHud.horizontalGap;
       expect(tester.getSize(nameplate).width,
           closeTo(availableWidth * GachaHud.nameplateShare, .02));

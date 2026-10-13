@@ -28,12 +28,17 @@ void main() {
         final zone = find.byKey(const ValueKey('kotohogi-number-zone'));
         expect(number, findsOneWidget);
         expect(zone, findsOneWidget);
-        expect(tester.widget<Text>(number).data, '$balance');
+        final numericText = tester.widget<Text>(number);
+        expect(numericText.data, '$balance');
+        expect(numericText.style!.fontSize, 36);
+        expect(numericText.style!.fontWeight, FontWeight.w800);
+        expect(numericText.style!.color, const Color(0xFFFFE4AC));
         expect(find.bySemanticsLabel('ことほぎ $balance'), findsOneWidget);
 
         final zoneRect = tester.getRect(zone);
         final numberRect = tester.getRect(number);
         expect(zoneRect.left, greaterThan(width * .60));
+        expect(zoneRect.top, closeTo(width * 211 / 982 * .19, .01));
         expect(zoneRect.right, lessThan(width * .97));
         expect(numberRect.width, greaterThan(0));
         expect(numberRect.height, greaterThan(0));

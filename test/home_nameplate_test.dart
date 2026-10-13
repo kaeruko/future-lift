@@ -36,8 +36,13 @@ void main() {
       expect((image.image as AssetImage).assetName,
           'assets/kotohogi_hud/player_nameplate.png');
       expect(image.fit, BoxFit.contain);
-      expect(find.text('今日も一歩ずつ'), findsOneWidget);
-      expect(find.text('自分を言祝ごう'), findsOneWidget);
+      expect(find.text('今日も一歩ずつ'), findsNothing);
+      expect(find.text('自分を言祝ごう'), findsNothing);
+      expect(find.text('ハル'), findsOneWidget);
+      expect(find.byKey(const ValueKey('player-display-name')), findsOneWidget);
+      expect(tester.widget<Text>(
+        find.byKey(const ValueKey('player-display-name')),
+      ).maxLines, 1);
       expect(tester.widget<KotohogiBar>(find.byType(KotohogiBar)).points,
           progress.points);
 
