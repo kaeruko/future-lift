@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 
 import 'resident_collection.dart';
 
-/// Decorative residents wait near the two consultation booths.
-/// Coordinates follow the 1080 x 1920 background composition as fractions,
-/// so the walkers stay aligned on different phone sizes.
+/// Residents queue directly in front of the consultation booths.
+///
+/// The background is 1080 x 1920. Rendering the sprites on the *same*
+/// design-sized canvas keeps them aligned even when BoxFit.cover crops a phone
+/// with a taller or wider aspect ratio.
 class ConsultationBackground extends StatefulWidget {
   const ConsultationBackground({super.key});
 
@@ -23,7 +25,6 @@ class _ConsultationBackgroundState extends State<ConsultationBackground> {
   @override
   void initState() {
     super.initState();
-    // A discrete sprite timer avoids a continuous frame scheduler.
     _ticker = Timer.periodic(const Duration(milliseconds: 170), (_) {
       if (mounted && !MediaQuery.disableAnimationsOf(context)) {
         setState(() => _step = (_step + 1) % 16);
@@ -38,54 +39,57 @@ class _ConsultationBackgroundState extends State<ConsultationBackground> {
   }
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final width = constraints.maxWidth;
-      final height = constraints.maxHeight;
-      return Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            'assets/gacya/bg.png',
-            key: const ValueKey('gacha-shrine-bg'),
-            fit: BoxFit.cover,
-            excludeFromSemantics: true,
-          ),
-          Stack(
-            children: [
-              for (var i = 0; i < 4; i++)
-                _walkingResident(i, width, height),
-            ],
-          ),
-        ],
-      );
-    },
+  Widget build(BuildContext context) => ClipRect(
+    child: FittedBox(
+      fit: BoxFit.cover,
+      child: SizedBox(
+        width: 1080,
+        height: 1920,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/gacya/bg.png',
+                key: const ValueKey('gacha-shrine-bg'),
+                fit: BoxFit.fill,
+                excludeFromSemantics: true,
+              ),
+            ),
+            for (var slot = 0; slot < 4; slot++) _walkingResident(slot),
+          ],
+        ),
+      ),
+    ),
   );
 
-  Widget _walkingResident(int slot, double width, double height) {
-    // All four residents remain in the left-side consultation area.
+  Widget _walkingResident(int slot) {
     const characters = [
       TownResident.rabbit,
       TownResident.penguin,
       TownResident.cat,
       TownResident.squirrel,
     ];
+    // Left-hand booth queues, intentionally above and left of the blue stage.
+    // The later slots stand slightly farther away from the counters.
+    const positions = <(double, double)>[
+      (70, 750),
+      (190, 810),
+      (315, 755),
+      (430, 820),
+    ];
     final resident = characters[slot];
     final step = _step + slot * 2;
     final frame = step % 4;
     final progress = ((step % 16) / 16) * math.pi * 2;
-    final x = (.055 + slot * .104) * width +
-        math.sin(progress) * width * .008;
-    final y = (.455 + (slot % 2) * .014) * height;
-    final size = math.min(width * .155, height * .105);
+    final position = positions[slot];
     return Positioned(
       key: ValueKey('consultation-walker-$slot'),
-      left: x,
-      top: y,
-      width: size,
-      height: size,
+      left: position.$1 + math.sin(progress) * 9,
+      top: position.$2 + math.cos(progress) * 5,
+      width: 220,
+      height: 220,
       child: Image.asset(
-        resident.walkAsset(WalkDirection.front, frame),
+        resident.walkAsset(WalkDirection.back, frame),
         fit: BoxFit.contain,
         excludeFromSemantics: true,
       ),
