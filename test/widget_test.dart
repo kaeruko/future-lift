@@ -119,8 +119,9 @@ void main() {
 
   Future<ProgressController> launch(
     WidgetTester tester,
-    MemoryStore store,
-  ) async {
+    MemoryStore store, {
+    bool showTutorial = false,
+  }) async {
     final controller = ProgressController(
       store,
       clock: () => DateTime(2026, 10, 9, 12),
@@ -130,6 +131,7 @@ void main() {
     await tester.pumpWidget(FutureLiftApp(
       controller: controller,
       dialogueCatalog: catalog,
+      enableTutorial: showTutorial,
     ));
     await tester.pumpAndSettle();
     return controller;
@@ -317,7 +319,11 @@ void main() {
           ),
           child: child!,
         ),
-        home: FutureLiftHome(controller: controller, dialogueCatalog: catalog),
+        home: FutureLiftHome(
+          controller: controller,
+          dialogueCatalog: catalog,
+          enableTutorial: false,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -687,4 +693,42 @@ void main() {
   test('sixteen non-duplicate fixed tips are available', () {
     expect(Resident.values.expand((r) => r.tips).toSet().length, 16);
   });
+  testWidgets('Kotohogisu appears once and guides to missions', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() => tester.view.reset());
+    final store = MemoryStore();
+    final controller = await launch(tester, store, showTutorial: true);
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsOneWidget);
+    expect(find.textContaining('ぼくはコトホギス'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('ミッション」で教えてね'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+    await tester.pumpAndSettle();
+    expect(controller.progress!.seenDialogues, contains('tutorial_kotohogisu_v1'));
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    expect(find.byKey(const ValueKey('complete-strength')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await launch(tester, store, showTutorial: true);
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Kotohogisu skip keeps points unchanged', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() => tester.view.reset());
+    final store = MemoryStore();
+    final controller = await launch(tester, store, showTutorial: true);
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-skip')));
+    await tester.pumpAndSettle();
+    expect(controller.progress!.seenDialogues, contains('tutorial_kotohogisu_v1'));
+    expect(controller.progress!.points, 0);
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
 }

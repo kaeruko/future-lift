@@ -431,6 +431,7 @@ void main() {
       await tester.pumpWidget(FutureLiftApp(
         controller: controller,
         dialogueCatalog: catalog,
+        enableTutorial: false,
       ));
       await tester.pumpAndSettle();
       await tester.tap(find.text('みんなのまち').last);

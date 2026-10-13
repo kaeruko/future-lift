@@ -15,6 +15,7 @@ import 'debug_menu_screen.dart';
 import 'resident_collection.dart';
 import 'resident_gacha.dart';
 import 'gacha_hud.dart';
+import 'kotohogisu_tutorial.dart';
 import 'town.dart';
 
 void main() {
@@ -38,8 +39,10 @@ class FutureLiftApp extends StatelessWidget {
     super.key,
     required this.controller,
     this.dialogueCatalog,
+    this.enableTutorial = true,
   });
   final ProgressController controller;
+  final bool enableTutorial;
   /// Optional fixed catalog allows deterministic tests without asset-loading races.
   final DialogueCatalog? dialogueCatalog;
 
@@ -68,7 +71,11 @@ class FutureLiftApp extends StatelessWidget {
         indicatorColor: Color(0xFFFFD898),
       ),
     ),
-    home: FutureLiftHome(controller: controller, dialogueCatalog: dialogueCatalog),
+    home: FutureLiftHome(
+      controller: controller,
+      dialogueCatalog: dialogueCatalog,
+      enableTutorial: enableTutorial,
+    ),
   );
 }
 
@@ -77,9 +84,11 @@ class FutureLiftHome extends StatefulWidget {
     super.key,
     required this.controller,
     this.dialogueCatalog,
+    this.enableTutorial = true,
   });
   final ProgressController controller;
   final DialogueCatalog? dialogueCatalog;
+  final bool enableTutorial;
 
   @override
   State<FutureLiftHome> createState() => _FutureLiftHomeState();
@@ -93,6 +102,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   Mission _previewMission = Mission.strength;
   int _homeVisit = 0;
   bool _celebrating = false;
+  bool _tutorialSaving = false;
+  static const _tutorialSeenId = 'tutorial_kotohogisu_v1';
   Timer? _midnight;
   final _tipIndex = <TownResident, int>{};
   static Future<DialogueCatalog>? _cachedDialogueCatalog;
@@ -189,6 +200,18 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       );
     } finally {
       _celebrating = false;
+    }
+  }
+
+  Future<void> _endTutorial({required bool openMissions}) async {
+    if (_tutorialSaving || controller.busy || controller.failure != null) return;
+    setState(() => _tutorialSaving = true);
+    try {
+      final recorded = await controller.recordDialogueSeen(_tutorialSeenId);
+      if (!mounted || !recorded) return;
+      if (openMissions) setState(() => _page = 1);
+    } finally {
+      if (mounted) setState(() => _tutorialSaving = false);
     }
   }
 
@@ -326,12 +349,24 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 680),
               child: _page == 0
-                  ? GameHome(
-                      key: ValueKey(_homeVisit),
-                      progress: progress,
-                      onMissions: () => setState(() => _page = 1),
-                      onTown: () => setState(() => _page = 2),
-                      onResident: _showTip,
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        GameHome(
+                          key: ValueKey(_homeVisit),
+                          progress: progress,
+                          onMissions: () => setState(() => _page = 1),
+                          onTown: () => setState(() => _page = 2),
+                          onResident: _showTip,
+                        ),
+                        if (widget.enableTutorial &&
+                            !progress.seenDialogues.contains(_tutorialSeenId))
+                          KotohogisuTutorial(
+                            saving: _tutorialSaving,
+                            onSkip: () => _endTutorial(openMissions: false),
+                            onFinish: () => _endTutorial(openMissions: true),
+                          ),
+                      ],
                     )
                   : _page == 1
                   ? MissionsScreen(
@@ -381,10 +416,17 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
         bottomNavigationBar: NavigationBar(
           height: 104,
           selectedIndex: _page,
-          onDestinationSelected: (index) => setState(() {
-            _page = index;
-            if (index == 0) _homeVisit++;
-          }),
+          onDestinationSelected: (index) {
+            if (_tutorialSaving ||
+                (widget.enableTutorial &&
+                    !progress.seenDialogues.contains(_tutorialSeenId))) {
+              return;
+            }
+            setState(() {
+              _page = index;
+              if (index == 0) _homeVisit++;
+            });
+          },
           destinations: [
             NavigationDestination(
               icon: uiPart('09_nav_home', width: 54, height: 58),
