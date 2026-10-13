@@ -118,24 +118,6 @@ class _GachaRevealState extends State<GachaReveal>
                       width: (width * .54).clamp(170.0, 300.0),
                       child: KotohogiBar(points: balance),
                     ),
-                    Positioned(
-                      top: safe.top + 12,
-                      right: 12,
-                      child: IconButton(
-                        key: const ValueKey('gacha-back-town'),
-                        tooltip: 'まちへ戻る',
-                        onPressed: _drawing
-                            ? null
-                            : () => Navigator.of(context).pop(true),
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Color(0xFF63351F),
-                        ),
-                        style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xEEFFF1D4),
-                        ),
-                      ),
-                    ),
                     // All arrival art shares the background's 1080x1920
                     // coordinate system, including BoxFit.cover cropping.
                     Positioned.fill(
@@ -255,7 +237,7 @@ class _GachaRevealState extends State<GachaReveal>
                     Positioned(
                       left: 10,
                       right: 10,
-                      bottom: safe.bottom + 14,
+                      bottom: safe.bottom + 6,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -285,6 +267,12 @@ class _GachaRevealState extends State<GachaReveal>
                             ),
                             onAgain: canRepeat ? _again : null,
                             againLabel: 'もう一度開く（30ことほぎ）',
+                          ),
+                          const SizedBox(height: 2),
+                          ConsultationTownBackButton(
+                            onPressed: _drawing
+                                ? null
+                                : () => Navigator.of(context).pop(true),
                           ),
                         ],
                       ),

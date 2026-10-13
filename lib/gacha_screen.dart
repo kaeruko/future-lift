@@ -100,24 +100,9 @@ class _GachaScreenState extends State<GachaScreen> {
                 child: KotohogiBar(points: balance),
               ),
               Positioned(
-                top: safe.top + 12,
-                right: 12,
-                child: IconButton(
-                  key: const ValueKey('gacha-back-town'),
-                  tooltip: 'まちへ戻る',
-                  onPressed: _drawing
-                      ? null
-                      : () => Navigator.of(context).pop(false),
-                  icon: const Icon(Icons.arrow_back, color: Color(0xFF63351F)),
-                  style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xEEFFF1D4),
-                  ),
-                ),
-              ),
-              Positioned(
                 left: 10,
                 right: 10,
-                bottom: safe.bottom + 14,
+                bottom: safe.bottom + 6,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -145,6 +130,12 @@ class _GachaScreenState extends State<GachaScreen> {
                       onAgain: enabled ? _draw : null,
                       againLabel: '移住相談会を開く（30ことほぎ）',
                       againKey: const ValueKey('gacha-draw-one'),
+                    ),
+                    const SizedBox(height: 2),
+                    ConsultationTownBackButton(
+                      onPressed: _drawing
+                          ? null
+                          : () => Navigator.of(context).pop(true),
                     ),
                   ],
                 ),

@@ -273,3 +273,23 @@ class ConsultationActions extends StatelessWidget {
     ),
   );
 }
+
+/// A consistent bottom navigation action for the consultation hall and
+/// resident reveal. Uses the supplied art rather than the default arrow icon.
+class ConsultationTownBackButton extends StatelessWidget {
+  const ConsultationTownBackButton({super.key, required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 164,
+    height: 58,
+    child: ConsultationArtButton(
+      asset: 'assets/gacya/back.png',
+      label: 'まちへ',
+      buttonKey: const ValueKey('consultation-town-back'),
+      onPressed: onPressed,
+    ),
+  );
+}

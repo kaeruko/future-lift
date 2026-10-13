@@ -65,6 +65,16 @@ void main() {
     expect(find.byKey(const ValueKey('resident-list-button')),
         findsOneWidget);
     expect(find.byKey(const ValueKey('gacha-draw-ten')), findsNothing);
+    expect(find.byKey(const ValueKey('gacha-back-town')), findsNothing);
+    final hallBack = find.byKey(const ValueKey('consultation-town-back'));
+    expect(hallBack, findsOneWidget);
+    expect(
+      (tester.widget<Image>(
+        find.descendant(of: hallBack, matching: find.byType(Image)),
+      ).image as AssetImage).assetName,
+      'assets/gacya/back.png',
+    );
+    expect(tester.getRect(hallBack).bottom, lessThanOrEqualTo(640));
     expect(find.text('開催費：30ことほぎ'), findsOneWidget);
     expect(controller.progress!.residents.availableKotohogi(60), 60);
 
@@ -103,6 +113,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(GachaReveal), findsOneWidget);
+    expect(find.byKey(const ValueKey('gacha-back-town')), findsNothing);
+    expect(find.byKey(const ValueKey('consultation-town-back')),
+        findsOneWidget);
     expect(find.byKey(const ValueKey('gacha-reveal-glow')), findsOneWidget);
     expect(find.byKey(const ValueKey('gacha-stage-resident')),
         findsOneWidget);
@@ -202,6 +215,11 @@ void main() {
       isNull,
     );
     expect(store.writes, 2);
+    final returnToTown = find.byKey(const ValueKey('consultation-town-back'));
+    final bottomReturn = tester.getRect(returnToTown);
+    final repeat = tester.getRect(find.byKey(const ValueKey('button_again')));
+    expect(bottomReturn.top, greaterThanOrEqualTo(repeat.bottom));
+    expect(bottomReturn.bottom, lessThanOrEqualTo(640));
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -257,6 +275,50 @@ void main() {
     });
   }
 
+  for (final viewport in <Size>[
+    const Size(320, 640),
+    const Size(360, 640),
+    const Size(402, 874),
+  ]) {
+    testWidgets('bottom art back stays below actions at $viewport',
+        (tester) async {
+      tester.view.physicalSize = viewport;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final controller = ProgressController(
+        MemoryStore()..raw = funded(points: 60).encode(),
+        clock: () => DateTime(2026, 10, 11),
+        random: FixedRandom(2),
+      );
+      await controller.initialize();
+      await tester.pumpWidget(MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
+        home: GachaReveal(
+          controller: controller,
+          resident: TownResident.penguin,
+          isNew: false,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      final back = find.byKey(const ValueKey('consultation-town-back'));
+      final residents = find.byKey(const ValueKey('resident-list-button'));
+      final again = find.byKey(const ValueKey('button_again'));
+      expect(back, findsOneWidget);
+      expect(find.byKey(const ValueKey('gacha-back-town')), findsNothing);
+      final rect = tester.getRect(back);
+      expect(rect.left, greaterThanOrEqualTo(0));
+      expect(rect.right, lessThanOrEqualTo(viewport.width));
+      expect(rect.top, greaterThanOrEqualTo(tester.getRect(residents).bottom));
+      expect(rect.top, greaterThanOrEqualTo(tester.getRect(again).bottom));
+      expect(rect.bottom, lessThanOrEqualTo(viewport.height));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
+
   testWidgets('saving blocks another draw until the first finishes',
       (tester) async {
     final store = MemoryStore()..raw = funded(points: 60).encode();
@@ -289,10 +351,14 @@ void main() {
       random: FixedRandom(2),
     );
     await controller.initialize();
+    var visitedTown = false;
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         body: SingleChildScrollView(
-          child: ResidentGacha(controller: controller),
+          child: ResidentGacha(
+            controller: controller,
+            onTown: () => visitedTown = true,
+          ),
         ),
       ),
     ));
@@ -303,6 +369,12 @@ void main() {
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
         findsOneWidget);
     expect(controller.progress!.residents.counts['03_penguin'], 1);
+    expect(store.writes, 1);
+    await tester.tap(find.byKey(const ValueKey('consultation-town-back')));
+    await tester.pumpAndSettle();
+    expect(find.byType(GachaReveal), findsNothing);
+    expect(find.byType(GachaScreen), findsNothing);
+    expect(visitedTown, isTrue);
     expect(store.writes, 1);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
