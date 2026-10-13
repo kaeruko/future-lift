@@ -26,6 +26,12 @@ class CmsTests(unittest.TestCase):
         self.assertEqual(generate_pubspec(PUBSPEC.read_text("utf-8"), registry["characters"]),
                          PUBSPEC.read_text("utf-8"))
 
+    def test_generated_dart_escapes_dollar_sign_in_names(self):
+        entries = copy.deepcopy(load_catalog()["characters"])
+        entries[0]["label"] = "価格$100"
+        output = generate_dart(DART.read_text("utf-8"), entries)
+        self.assertIn(r"価格\$100", output)
+
     def test_existing_character_ids_cannot_change(self):
         original = load_catalog()
         for change in ("remove", "id", "folder"):

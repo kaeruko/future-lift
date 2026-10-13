@@ -111,7 +111,7 @@ def generate_dart(source, characters):
     declarations = []
     for row in characters:
         # Dart interpolates dollar signs inside quoted strings; preserve literal labels.
-        label = json.dumps(row["label"].replace("$", r"\$"), ensure_ascii=False)
+        label = json.dumps(row["label"], ensure_ascii=False).replace("$", r"\$")
         declarations.append(
             f'  {row["key"]}("{row["id"]}", {label}, "{row["artFolder"]}", '
             f'Resident.{row["tipSource"]}, '
