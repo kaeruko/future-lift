@@ -10,9 +10,16 @@ import 'resident_collection.dart';
 /// One consultation meeting welcomes one resident. The old bundle save
 /// schema stays readable, but the ten-draw option is no longer offered.
 class GachaScreen extends StatefulWidget {
-  const GachaScreen({super.key, required this.controller});
+  const GachaScreen({
+    super.key,
+    required this.controller,
+    this.autoStart = false,
+  });
 
   final ProgressController controller;
+  /// True only for the resident-welcome entry point. Manual entry is retained
+  /// for previews and explicit consultation-screen navigation.
+  final bool autoStart;
 
   @override
   State<GachaScreen> createState() => _GachaScreenState();
@@ -20,6 +27,18 @@ class GachaScreen extends StatefulWidget {
 
 class _GachaScreenState extends State<GachaScreen> {
   bool _drawing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoStart) {
+      // Exactly once per entrance. The first frame has already mounted the
+      // route, so the saved resident can transition straight into the reveal.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _draw();
+      });
+    }
+  }
 
   Future<void> _draw() async {
     final progress = widget.controller.progress;
