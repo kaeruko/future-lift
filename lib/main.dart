@@ -344,10 +344,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                     )
                   : _page == 2
                   ? PinnedGachaHud(
-                      points: progress.points,
-                      tickets: progress.residents.tickets(progress.points),
-                      ticketBadgeKey:
-                          const ValueKey('town-header-ticket-counter'),
+                      points: progress.residents.availableKotohogi(
+                        progress.points,
+                      ),
                       contentBehindHud: true,
                       contentBuilder: (context, availableHeight) => ColoredBox(
                         color: const Color(0xFFFFF3DC),
