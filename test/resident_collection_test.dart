@@ -389,14 +389,13 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('draw-resident')));
       await tester.pumpAndSettle();
-      expect(find.byType(GachaScreen), findsOneWidget);
+      // The home button now performs the one draw automatically, rather than
+      // requiring a second tap on the consultation screen.
       expect(find.byKey(const ValueKey('gacha-shrine-bg')), findsOneWidget);
       expect(find.byKey(const ValueKey('consultation-walker-0')), findsOneWidget);
-      expect(find.byKey(const ValueKey('resident-list-button')), findsOneWidget);
-      expect(find.byKey(const ValueKey('gacha-draw-one')), findsOneWidget);
-      expect(find.byKey(const ValueKey('gacha-draw-ten')), findsNothing);
-      await tester.tap(find.byKey(const ValueKey('gacha-draw-one')));
-      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('gacha-stage-resident')), findsOneWidget);
+      expect(find.byKey(const ValueKey('resident-arrival-banner')), findsOneWidget);
+      expect(find.byKey(const ValueKey('gacha-draw-one')), findsNothing);
       expect(find.text('ペンギンが、まちにやってきました！'), findsOneWidget);
       expect(controller.progress!.residents.tickets(30), 0);
       await tester.tap(find.byKey(const ValueKey('gacha-back-town')));
