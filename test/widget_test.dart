@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/celebration.dart';
 import 'package:future_lift/clap_characters.dart';
 import 'package:future_lift/main.dart';
+import 'package:future_lift/dialogue_engine.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/residents.dart';
 import 'package:future_lift/town.dart';
@@ -124,7 +125,12 @@ void main() {
       store,
       clock: () => DateTime(2026, 10, 9, 12),
     );
-    await tester.pumpWidget(FutureLiftApp(controller: controller));
+    final catalog = await tester.runAsync(DialogueCatalog.load);
+    if (catalog == null) throw StateError('Dialogue asset did not load');
+    await tester.pumpWidget(FutureLiftApp(
+      controller: controller,
+      dialogueCatalog: catalog,
+    ));
     await tester.pumpAndSettle();
     return controller;
   }
@@ -255,6 +261,8 @@ void main() {
       MemoryStore(),
       clock: () => DateTime(2026, 10, 9),
     );
+    final catalog = await tester.runAsync(DialogueCatalog.load);
+    if (catalog == null) throw StateError('Dialogue asset did not load');
     await tester.pumpWidget(
       MaterialApp(
         builder: (context, child) => MediaQuery(
@@ -264,7 +272,7 @@ void main() {
           ),
           child: child!,
         ),
-        home: FutureLiftHome(controller: controller),
+        home: FutureLiftHome(controller: controller, dialogueCatalog: catalog),
       ),
     );
     await tester.pumpAndSettle();

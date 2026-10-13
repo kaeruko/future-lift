@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, SynchronousFuture;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'celebration.dart';
+import 'dialogue_engine.dart';
 import 'progress.dart';
 import 'home_skin.dart';
 import 'game_home.dart';
@@ -33,8 +34,14 @@ const orange = Color(0xFFBF4E27);
 const cream = Color(0xFFFBEDD3);
 
 class FutureLiftApp extends StatelessWidget {
-  const FutureLiftApp({super.key, required this.controller});
+  const FutureLiftApp({
+    super.key,
+    required this.controller,
+    this.dialogueCatalog,
+  });
   final ProgressController controller;
+  /// Optional fixed catalog allows deterministic tests without asset-loading races.
+  final DialogueCatalog? dialogueCatalog;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -61,13 +68,18 @@ class FutureLiftApp extends StatelessWidget {
         indicatorColor: Color(0xFFFFD898),
       ),
     ),
-    home: FutureLiftHome(controller: controller),
+    home: FutureLiftHome(controller: controller, dialogueCatalog: dialogueCatalog),
   );
 }
 
 class FutureLiftHome extends StatefulWidget {
-  const FutureLiftHome({super.key, required this.controller});
+  const FutureLiftHome({
+    super.key,
+    required this.controller,
+    this.dialogueCatalog,
+  });
   final ProgressController controller;
+  final DialogueCatalog? dialogueCatalog;
 
   @override
   State<FutureLiftHome> createState() => _FutureLiftHomeState();
@@ -83,12 +95,17 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   bool _celebrating = false;
   Timer? _midnight;
   final _tipIndex = <TownResident, int>{};
+  static Future<DialogueCatalog>? _cachedDialogueCatalog;
+  late final Future<DialogueCatalog> _dialoguesFuture;
   ProgressController get controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _dialoguesFuture = widget.dialogueCatalog != null
+        ? SynchronousFuture(widget.dialogueCatalog!)
+        : (_cachedDialogueCatalog ??= DialogueCatalog.load());
     controller.initialize();
     _scheduleMidnight();
   }
@@ -174,9 +191,25 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   }
 
   Future<void> _showTip(TownResident resident) async {
+    if (controller.busy || controller.failure != null ||
+        controller.progress == null) {
+      return;
+    }
+    final catalog = await _dialoguesFuture;
+    if (!mounted || controller.failure != null) return;
     final index = _tipIndex[resident] ?? 0;
-    final tip = resident.tips[index % resident.tips.length];
+    final line = catalog.select(
+      resident: resident,
+      progress: controller.progress!,
+      now: controller.clock(),
+      rotation: index,
+    );
+    if (line.once) {
+      final persisted = await controller.recordDialogueSeen(line.id);
+      if (!persisted || !mounted) return;
+    }
     _tipIndex[resident] = index + 1;
+    final tip = line.text;
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -200,7 +233,36 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
+  Widget build(BuildContext context) => FutureBuilder<DialogueCatalog>(
+    future: _dialoguesFuture,
+    builder: (context, snapshot) {
+      if (snapshot.hasError) {
+        return Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: SelectableText(
+                  'セリフデータを確認できないため、停止しました。\n'
+                  'assets/dialogues/dialogues.json\n'
+                  '${snapshot.error}\n${snapshot.stackTrace}',
+                  key: const ValueKey('dialogue-load-error'),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+      if (!snapshot.hasData) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+      return _buildWithProgress();
+    },
+  );
+
+  Widget _buildWithProgress() => ListenableBuilder(
     listenable: controller,
     builder: (context, child) {
       if (controller.failure case final failure?) {

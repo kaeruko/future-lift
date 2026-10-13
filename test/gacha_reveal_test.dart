@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/main.dart';
+import 'package:future_lift/dialogue_engine.dart';
 import 'package:future_lift/gacha_reveal.dart';
 import 'package:future_lift/gacha_screen.dart';
 import 'package:future_lift/progress.dart';
@@ -26,6 +27,8 @@ void main() {
       clock: () => DateTime(2026, 10, 11),
       random: FixedRandom(2),
     );
+    final catalog = await tester.runAsync(DialogueCatalog.load);
+    if (catalog == null) throw StateError('Dialogue asset did not load');
     await tester.pumpWidget(
       MaterialApp(
         builder: (context, child) => MediaQuery(
@@ -35,7 +38,7 @@ void main() {
           ),
           child: child!,
         ),
-        home: FutureLiftHome(controller: controller),
+        home: FutureLiftHome(controller: controller, dialogueCatalog: catalog),
       ),
     );
     await tester.pumpAndSettle();
