@@ -738,4 +738,60 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('debug tutorial replay is repeatable and never writes progress', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final initial = Progress.empty(DateTime(2026, 10, 9))
+        .complete(Mission.strength)
+        .markDialogueSeen('tutorial_kotohogisu_v1');
+    final original = initial.encode();
+    final store = MemoryStore()..raw = original;
+    final controller = await launch(tester, store, showTutorial: true);
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+
+    await tester.tap(find.text('メニュー').last);
+    await tester.pumpAndSettle();
+    final replay = find.byKey(const ValueKey('debug-replay-tutorial'));
+    await tester.ensureVisible(replay);
+    await tester.pumpAndSettle();
+    await tester.tap(replay);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsOneWidget);
+    expect(find.textContaining('ぼくはコトホギス'), findsOneWidget);
+
+    // Navigation cannot leave the replay before the user finishes or skips.
+    await tester.tap(find.text('ミッション').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-skip')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    expect(find.byKey(const ValueKey('open-missions')), findsOneWidget);
+    expect(store.writes, 0);
+    expect(store.raw, original);
+
+    await tester.tap(find.text('メニュー').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(replay);
+    await tester.pumpAndSettle();
+    await tester.tap(replay);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('ぼくはコトホギス'), findsOneWidget);
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    expect(find.byKey(const ValueKey('complete-strength')), findsOneWidget);
+    expect(controller.progress!.points, initial.points);
+    expect(controller.progress!.seenDialogues, initial.seenDialogues);
+    expect(controller.progress!.completed, initial.completed);
+    expect(store.writes, 0);
+    expect(store.raw, original);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
 }

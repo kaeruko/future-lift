@@ -11,6 +11,7 @@ class DebugMenuScreen extends StatelessWidget {
     required this.selectedMission,
     required this.onMissionChanged,
     required this.onPreview,
+    required this.onReplayTutorial,
     required this.onResetAll,
     required this.onAddTickets,
     required this.busy,
@@ -20,6 +21,7 @@ class DebugMenuScreen extends StatelessWidget {
   final Mission selectedMission;
   final ValueChanged<Mission> onMissionChanged;
   final VoidCallback onPreview;
+  final VoidCallback onReplayTutorial;
   final Future<bool> Function() onResetAll;
   final Future<bool> Function(int) onAddTickets;
   final bool busy;
@@ -119,6 +121,37 @@ class DebugMenuScreen extends StatelessWidget {
                   style: TextStyle(color: wood, height: 1.65),
                 ),
                 const SizedBox(height: 18),
+                const Text(
+                  'チュートリアルの確認',
+                  style: TextStyle(
+                    color: wood,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'コトホギスの案内を最初から再生します。'
+                  '\n閲覧記録やことほぎ、ミッションの達成状況は変わりません。',
+                  style: TextStyle(color: wood, height: 1.65),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('debug-replay-tutorial'),
+                    onPressed: busy ? null : onReplayTutorial,
+                    icon: const Icon(Icons.replay_rounded),
+                    label: const Text('チュートリアルをもう一度見る'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF277A70),
+                      minimumSize: const Size(0, 52),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 8),
                 const Text(
                   '表示するミッション',
                   style: TextStyle(

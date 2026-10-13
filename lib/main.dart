@@ -103,6 +103,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   int _homeVisit = 0;
   bool _celebrating = false;
   bool _tutorialSaving = false;
+  // Replaying is UI-only; it must not modify persisted tutorial or mission state.
+  bool _tutorialReplay = false;
   static const _tutorialSeenId = 'tutorial_kotohogisu_v1';
   Timer? _midnight;
   final _tipIndex = <TownResident, int>{};
@@ -203,7 +205,32 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     }
   }
 
+  void _replayTutorial() {
+    if (!kDebugMode ||
+        _tutorialSaving ||
+        _tutorialReplay ||
+        _celebrating ||
+        controller.busy ||
+        controller.failure != null ||
+        controller.progress == null) {
+      return;
+    }
+    setState(() {
+      _tutorialReplay = true;
+      _page = 0;
+      _homeVisit++;
+    });
+  }
+
   Future<void> _endTutorial({required bool openMissions}) async {
+    if (_tutorialReplay) {
+      // Preview-only: neither read nor mutate the saved seenDialogues flag.
+      setState(() {
+        _tutorialReplay = false;
+        if (openMissions) _page = 1;
+      });
+      return;
+    }
     if (_tutorialSaving || controller.busy || controller.failure != null) return;
     setState(() => _tutorialSaving = true);
     try {
@@ -359,8 +386,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                           onTown: () => setState(() => _page = 2),
                           onResident: _showTip,
                         ),
-                        if (widget.enableTutorial &&
-                            !progress.seenDialogues.contains(_tutorialSeenId))
+                        if (_tutorialReplay ||
+                            (widget.enableTutorial &&
+                                !progress.seenDialogues.contains(_tutorialSeenId)))
                           KotohogisuTutorial(
                             saving: _tutorialSaving,
                             onSkip: () => _endTutorial(openMissions: false),
@@ -406,6 +434,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                       onMissionChanged: (mission) =>
                           setState(() => _previewMission = mission),
                       onPreview: _previewCelebration,
+                      onReplayTutorial: _replayTutorial,
                       onResetAll: controller.resetAllMissionsForDebug,
                       onAddTickets: controller.grantTicketsForDebug,
                       busy: controller.busy || _celebrating,
@@ -418,6 +447,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           selectedIndex: _page,
           onDestinationSelected: (index) {
             if (_tutorialSaving ||
+                _tutorialReplay ||
                 (widget.enableTutorial &&
                     !progress.seenDialogues.contains(_tutorialSeenId))) {
               return;
