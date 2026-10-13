@@ -106,8 +106,24 @@ void main() {
     expect(stageResident.bottom, inInclusiveRange(360, 420));
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
         findsOneWidget);
+    final arrival = tester.widget<Image>(
+      find.byKey(const ValueKey('resident-arrival-banner')),
+    );
+    expect(
+      (arrival.image as AssetImage).assetName,
+      'assets/gacya/resident_arrival_banner.png',
+    );
     expect(find.text('ペンギンが、まちにやってきました！'),
         findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('gacha-banner-resident-name')),
+      findsOneWidget,
+    );
+    expect(
+      tester.getRect(find.byKey(const ValueKey('resident-arrival-banner')))
+          .width,
+      greaterThan(200),
+    );
     expect(store.writes, 1);
     expect(controller.progress!.residents.availableKotohogi(60), 30);
 
@@ -123,8 +139,16 @@ void main() {
     expect(find.text('ペンギンとまた出会いました！'), findsOneWidget);
     expect(find.byKey(const ValueKey('gacha-reunion-badge')),
         findsOneWidget);
+    // A returning resident still gets the arrival panel, with the reunion
+    // badge added separately. Repeated draws must not silently omit it.
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
-        findsNothing);
+        findsOneWidget);
+    expect(
+      tester.widget<Text>(
+        find.byKey(const ValueKey('gacha-banner-resident-name')),
+      ).data,
+      'ペンギン',
+    );
     expect(controller.progress!.residents.counts['03_penguin'], 2);
     expect(controller.progress!.residents.availableKotohogi(60), 0);
     expect(
