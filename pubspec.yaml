@@ -59,6 +59,7 @@ flutter:
     - assets/gacya/parts/
     - assets/dialogues/dialogues.json
     - assets/gacya/bg.png
+    - assets/gacya/stage.png
     - assets/gacya/resident_list_button.png
     - assets/gacya/resident_arrival_banner.png
     - assets/gacya/scroll_display_stand.png
