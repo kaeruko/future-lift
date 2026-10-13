@@ -403,7 +403,7 @@ void main() {
         'ペンギンが、まちにやってきました！',
       );
       expect(controller.progress!.residents.tickets(30), 0);
-      await tester.tap(find.byKey(const ValueKey('gacha-back-town')));
+      await tester.tap(find.byKey(const ValueKey('consultation-town-back')));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(find.byType(TownScene), -180);
       await tester.pumpAndSettle();
