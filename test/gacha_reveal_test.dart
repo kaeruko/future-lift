@@ -48,6 +48,13 @@ void main() {
       MemoryStore()..raw = funded(points: 60).encode(),
     );
     expect(find.byKey(const ValueKey('gacha-shrine-bg')), findsOneWidget);
+    expect(find.byKey(const ValueKey('consultation-stage')), findsOneWidget);
+    expect(
+      (tester.widget<Image>(
+        find.byKey(const ValueKey('consultation-stage')),
+      ).image as AssetImage).assetName,
+      'assets/gacya/stage.png',
+    );
     expect(find.byType(ConsultationBackground), findsOneWidget);
     for (var index = 0; index < 4; index++) {
       expect(find.byKey(ValueKey('consultation-walker-$index')),
@@ -103,7 +110,16 @@ void main() {
     );
     expect(stageResident.height, greaterThan(120));
     // Feet remain on the blue stage instead of dropping below its front edge.
-    expect(stageResident.bottom, inInclusiveRange(360, 420));
+    final stage = tester.getRect(
+      find.byKey(const ValueKey('consultation-stage')),
+    );
+    // The platform is lower than before, bridging the blank space above the
+    // bottom actions. The resident's feet rest on its blue upper surface.
+    expect(stage.top, inInclusiveRange(400, 435));
+    expect(stage.bottom, inInclusiveRange(480, 510));
+    expect(stageResident.bottom, inInclusiveRange(430, 470));
+    expect(stageResident.bottom, greaterThan(stage.top));
+    expect(stageResident.bottom, lessThan(stage.bottom);
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
         findsOneWidget);
     final arrival = tester.widget<Image>(
@@ -113,8 +129,12 @@ void main() {
       (arrival.image as AssetImage).assetName,
       'assets/gacya/resident_arrival_banner.png',
     );
-    expect(find.text('ペンギンが、まちにやってきました！'),
-        findsOneWidget);
+    expect(
+      tester.widget<Semantics>(
+        find.byKey(const ValueKey('gacha-result')),
+      ).properties.label,
+      'ペンギンが、まちにやってきました！',
+    );
     expect(
       find.byKey(const ValueKey('gacha-banner-resident-name')),
       findsOneWidget,
@@ -142,16 +162,24 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('button_again')));
     await tester.pumpAndSettle();
-    expect(find.text('ペンギンとまた出会いました！'), findsOneWidget);
+    expect(
+      tester.widget<Semantics>(
+        find.byKey(const ValueKey('gacha-result')),
+      ).properties.label,
+      'ペンギンとまた出会いました！',
+    );
     expect(find.byKey(const ValueKey('gacha-reunion-badge')),
         findsOneWidget);
-    expect(
-      tester.getRect(find.byKey(const ValueKey('gacha-reunion-badge'))).top,
-      greaterThanOrEqualTo(
-        tester.getRect(find.byKey(const ValueKey('resident-arrival-banner')))
-            .bottom,
-      ),
+    final badge = tester.getRect(
+      find.byKey(const ValueKey('gacha-reunion-badge')),
     );
+    final banner = tester.getRect(
+      find.byKey(const ValueKey('resident-arrival-banner')),
+    );
+    expect(badge.left, lessThan(banner.left));
+    expect(badge.top, lessThan(banner.top));
+    expect(badge.right, greaterThan(banner.left));
+    expect(badge.bottom, greaterThan(banner.top));
     // A returning resident still gets the arrival panel, with the reunion
     // badge added separately. Repeated draws must not silently omit it.
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
