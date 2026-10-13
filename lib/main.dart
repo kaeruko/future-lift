@@ -137,9 +137,6 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
 
   Future<void> _complete(Mission mission) async {
     if (_celebrating) return;
-    final beforeTickets = controller.progress!.residents.earnedTickets(
-      controller.progress!.points,
-    );
     final beforeBalance = controller.progress!.residents.availableKotohogi(
       controller.progress!.points,
     );
@@ -158,11 +155,6 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           controller.progress!.points,
         ) - beforeBalance,
         residents: controller.progress!.residents.owned,
-        ticketEarned:
-            controller.progress!.residents.earnedTickets(
-              controller.progress!.points,
-            ) >
-            beforeTickets,
       ),
     );
     _celebrating = false;

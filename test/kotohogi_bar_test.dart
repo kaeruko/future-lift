@@ -30,16 +30,22 @@ void main() {
         expect(zone, findsOneWidget);
         final numericText = tester.widget<Text>(number);
         expect(numericText.data, '$balance');
-        expect(numericText.style!.fontSize, 36);
-        expect(numericText.style!.fontWeight, FontWeight.w800);
-        expect(numericText.style!.color, const Color(0xFFFFE4AC));
+        expect(numericText.style!.fontSize, 41);
+        expect(numericText.style!.fontWeight, FontWeight.w900);
+        expect(numericText.style!.color, const Color(0xFFFFF0C9));
         expect(find.bySemanticsLabel('ことほぎ $balance'), findsOneWidget);
+        expect(find.byKey(const ValueKey('kotohogi-bar-label')), findsOneWidget);
+        expect(tester.widget<Text>(
+          find.byKey(const ValueKey('kotohogi-bar-label')),
+        ).data, 'ことほぎ');
+        final bar = find.byType(KotohogiBar);
+        expect(tester.getSize(bar).height, closeTo(width * 314 / 982, .01));
 
         final zoneRect = tester.getRect(zone);
         final numberRect = tester.getRect(number);
-        expect(zoneRect.left, greaterThan(width * .60));
-        expect(zoneRect.top, closeTo(width * 211 / 982 * .19, .01));
-        expect(zoneRect.right, lessThan(width * .97));
+        expect(zoneRect.left, greaterThan(width * .59));
+        expect(zoneRect.top, closeTo(width * 314 / 982 * .28, .01));
+        expect(zoneRect.right, lessThan(width * .90));
         expect(numberRect.width, greaterThan(0));
         expect(numberRect.height, greaterThan(0));
         expect(numberRect.left, greaterThanOrEqualTo(zoneRect.left - .5));

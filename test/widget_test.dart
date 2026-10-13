@@ -9,7 +9,6 @@ import 'package:future_lift/dialogue_engine.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/residents.dart';
 import 'package:future_lift/town.dart';
-import 'package:future_lift/ticket_counter_badge.dart';
 
 import 'progress_test.dart' show MemoryStore;
 
@@ -534,7 +533,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('town header shows current gacha tickets on narrow phones', (
+  testWidgets('town HUD shows only the spendable kotohogi on small phones', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 640);
@@ -545,41 +544,37 @@ void main() {
     await tester.tap(find.text('みんなのまち').last);
     await tester.pumpAndSettle();
 
-    final counter = find.byKey(const ValueKey('town-header-ticket-counter'));
     final nameplate = find.byKey(const ValueKey('gacha-player-nameplate'));
-    final points = find.byKey(const ValueKey('kotohogi-bar-art'));
+    final art = find.byKey(const ValueKey('kotohogi-bar-art'));
+    final amount = find.byKey(const ValueKey('total-points'));
     expect(find.byKey(const ValueKey('town-page-fullscreen')), findsOneWidget);
-    expect(find.byKey(const ValueKey('town-page-shrine-background')), findsNothing);
     expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
-    expect(find.byKey(const ValueKey('town-page-title-panel')), findsOneWidget);
     expect(nameplate, findsOneWidget);
-    expect(points, findsOneWidget);
-    expect(find.text('所持ガチャ券'), findsNothing);
-    expect(find.text('FutureLift'), findsNothing);
+    expect(art, findsOneWidget);
+    expect(find.byKey(const ValueKey('kotohogi-bar-label')), findsOneWidget);
+    expect(tester.widget<Text>(amount).data, '0');
+    expect(find.textContaining('ガチャ券'), findsNothing);
     expect(tester.getRect(nameplate).right,
-        lessThan(tester.getRect(points).left));
-    expect(tester.getRect(counter).top,
-        greaterThan(tester.getRect(points).bottom));
-    expect(tester.widget<TicketCounterBadge>(counter).tickets, 0);
+        lessThan(tester.getRect(art).left));
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.text('メニュー').last);
     await tester.pumpAndSettle();
-    final addTickets = find.byKey(const ValueKey('debug-add-ticket-10'));
-    await tester.ensureVisible(addTickets);
+    final addCurrency = find.byKey(const ValueKey('debug-add-ticket-10'));
+    await tester.ensureVisible(addCurrency);
     await tester.pumpAndSettle();
-    await tester.tap(addTickets);
+    await tester.tap(addCurrency);
     await tester.pumpAndSettle();
-    expect(controller.progress!.residents.tickets(0), 10);
-
+    expect(controller.progress!.residents.availableKotohogi(0), 300);
     await tester.tap(find.text('みんなのまち').last);
     await tester.pumpAndSettle();
-    expect(tester.widget<TicketCounterBadge>(counter).tickets, 10);
+    expect(tester.widget<Text>(amount).data, '300');
+    expect(find.textContaining('ガチャ券'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('debug ticket buttons update and persist balance without points', (
+  testWidgets('debug currency buttons update and persist balance without lifetime points', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 1000);
@@ -597,15 +592,18 @@ void main() {
     await tester.tap(plusOne);
     await tester.pumpAndSettle();
     expect(controller.progress!.residents.tickets(0), 1);
-    expect(find.text('現在のガチャ券：1枚'), findsOneWidget);
+    expect(find.text('所持ことほぎ：30'), findsOneWidget);
+    expect(find.text('ガチャ券 +1枚'), findsNothing);
     await tester.ensureVisible(plusTen);
     await tester.tap(plusTen);
     await tester.pumpAndSettle();
     expect(controller.progress!.residents.tickets(0), 11);
+    expect(controller.progress!.residents.availableKotohogi(0), 330);
     expect(controller.progress!.points, 0);
     expect(controller.progress!.history, isEmpty);
     expect(store.writes, 2);
     expect(Progress.decode(store.raw!).residents.tickets(0), 11);
+    expect(Progress.decode(store.raw!).residents.availableKotohogi(0), 330);
 
     await tester.tap(find.text('みんなのまち').last);
     await tester.pumpAndSettle();

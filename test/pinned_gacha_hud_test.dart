@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/gacha_hud.dart';
-import 'package:future_lift/ticket_counter_badge.dart';
 import 'package:future_lift/home_skin.dart';
 
 void main() {
   for (final width in <double>[320, 402, 570]) {
-    testWidgets('HUD obtains full size from loose Stack constraints at $width px',
+    testWidgets('pinned HUD has a single large currency bar at $width px',
         (tester) async {
       tester.view.physicalSize = Size(width, 720);
       tester.view.devicePixelRatio = 1;
@@ -19,16 +18,12 @@ void main() {
               constraints: const BoxConstraints(maxWidth: 680),
               child: Stack(
                 children: [
-                  const Positioned.fill(
-                    child: ColoredBox(color: Colors.amber),
-                  ),
+                  const Positioned.fill(child: ColoredBox(color: Colors.amber)),
                   PinnedGachaHud(
-                    points: 100,
-                    tickets: 7,
-                    ticketBadgeKey: const ValueKey('loose-hud-tickets'),
-                    contentBuilder: (context, remainingHeight) => ListView(
+                    points: 999,
+                    contentBuilder: (context, remaining) => ListView(
                       children: [
-                        Text('Scene has ${remainingHeight.toStringAsFixed(0)}px'),
+                        Text('Content ${remaining.toStringAsFixed(0)}px'),
                         const SizedBox(height: 1100),
                       ],
                     ),
@@ -40,54 +35,36 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-
       expect(tester.takeException(), isNull);
-      final pinned = tester.getSize(find.byType(PinnedGachaHud));
-      expect(pinned.width, width);
-      expect(pinned.height, 720);
-      expect(find.byKey(const ValueKey('gacha-player-nameplate')),
-          findsOneWidget);
-      expect(find.byKey(const ValueKey('kotohogi-bar-art')),
-          findsOneWidget);
-      expect(
-        tester.widget<TicketCounterBadge>(
-          find.byKey(const ValueKey('loose-hud-tickets')),
-        ).tickets,
-        7,
-      );
-      final art = find.byKey(const ValueKey('kotohogi-bar-art'));
+      expect(tester.getSize(find.byType(PinnedGachaHud)), Size(width, 720));
+      final name = find.byKey(const ValueKey('gacha-player-nameplate'));
       final bar = find.byType(KotohogiBar);
+      expect(name, findsOneWidget);
       expect(bar, findsOneWidget);
-      expect(tester.getSize(art).width, greaterThan(0));
-      expect(tester.getSize(bar).width, greaterThan(0));
-      final contentWidth =
-          width - PinnedGachaHud.edge * 2 - GachaHud.horizontalGap;
+      expect(find.byKey(const ValueKey('total-points')), findsOneWidget);
+      expect(find.textContaining('ガチャ券'), findsNothing);
+      final contentWidth = width - PinnedGachaHud.edge * 2 -
+          GachaHud.horizontalGap;
       expect(tester.getSize(bar).width,
           closeTo(contentWidth * GachaHud.balanceShare, .02));
-      expect(tester.getSize(
-          find.byKey(const ValueKey('gacha-player-nameplate'))).width,
+      expect(tester.getSize(name).width,
           closeTo(contentWidth * GachaHud.nameplateShare, .02));
-      expect(tester.getSize(art).width,
-          closeTo(tester.getSize(bar).width, .01));
-      expect(tester.getRect(bar).left,
-          greaterThan(tester.getRect(find.byKey(
-            const ValueKey('gacha-player-nameplate'))).right));
+      expect(tester.getRect(name).right, lessThan(tester.getRect(bar).left));
+      expect(tester.getSize(bar).height,
+          closeTo(tester.getSize(bar).width * 314 / 982, .02));
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('shared HUD stays fixed while scene scrolls at $width px',
+    testWidgets('currency bar stays pinned while content scrolls at $width px',
         (tester) async {
       tester.view.physicalSize = Size(width, 720);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-
-      Future<void> build(int tickets) async {
+      Future<void> build(int amount) async {
         await tester.pumpWidget(MaterialApp(
           home: Scaffold(
             body: PinnedGachaHud(
-              points: 170,
-              tickets: tickets,
-              ticketBadgeKey: const ValueKey('fixed-tickets'),
+              points: amount,
               contentBuilder: (context, height) => ListView(
                 key: const ValueKey('scene-scroll'),
                 children: [
@@ -100,37 +77,21 @@ void main() {
         ));
       }
 
-      await build(8);
+      await build(80);
       final name = find.byKey(const ValueKey('gacha-player-nameplate'));
-      final points = find.byKey(const ValueKey('kotohogi-bar-art'));
-      final tickets = find.byKey(const ValueKey('fixed-tickets'));
-      expect(name, findsOneWidget);
-      expect(points, findsOneWidget);
-      expect(tickets, findsOneWidget);
-      final actualBar = find.byType(KotohogiBar);
-      expect(tester.getSize(actualBar).width, greaterThan(0));
-      expect(tester.getSize(actualBar).height, greaterThan(0));
-      final actualHudWidth = tester.getSize(find.byType(GachaHud)).width;
-      expect(actualHudWidth, closeTo(width - PinnedGachaHud.edge * 2, .01));
-      expect(tester.getRect(name).right, lessThan(tester.getRect(points).left));
-      expect(tester.getRect(tickets).top,
-          greaterThan(tester.getRect(points).bottom));
-      final nameAt = tester.getRect(name);
-      final pointsAt = tester.getRect(points);
-      final ticketsAt = tester.getRect(tickets);
+      final art = find.byKey(const ValueKey('kotohogi-bar-art'));
+      final digit = find.byKey(const ValueKey('total-points'));
+      final oldNameRect = tester.getRect(name);
+      final oldArtRect = tester.getRect(art);
+      expect(tester.widget<Text>(digit).data, '80');
       await tester.drag(find.byKey(const ValueKey('scene-scroll')),
           const Offset(0, -420));
       await tester.pumpAndSettle();
-      expect(tester.getRect(name), nameAt);
-      expect(tester.getRect(points), pointsAt);
-      expect(tester.getRect(tickets), ticketsAt);
-      expect(tester.widget<TicketCounterBadge>(tickets).tickets, 8);
-
-      await build(7);
-      expect(tester.getRect(name), nameAt);
-      expect(tester.getRect(points), pointsAt);
-      expect(tester.getRect(tickets), ticketsAt);
-      expect(tester.widget<TicketCounterBadge>(tickets).tickets, 7);
+      expect(tester.getRect(name), oldNameRect);
+      expect(tester.getRect(art), oldArtRect);
+      await build(999);
+      expect(tester.getRect(art), oldArtRect);
+      expect(tester.widget<Text>(digit).data, '999');
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });

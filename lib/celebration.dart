@@ -13,13 +13,11 @@ class Celebration extends StatefulWidget {
     required this.total,
     this.preview = false,
     required this.residents,
-    this.ticketEarned = false,
     this.creditedKotohogi = 10,
   });
   final String missionTitle;
   final int total;
   final List<TownResident> residents;
-  final bool ticketEarned;
   final int creditedKotohogi;
 
   /// An animation-only replay that does not award points.
@@ -213,11 +211,6 @@ class _CelebrationState extends State<Celebration>
                         ),
                       ),
                     ],
-                    if (widget.ticketEarned)
-                      const Chip(
-                        avatar: Icon(Icons.confirmation_number_outlined),
-                        label: Text('住民ガチャ券 +1枚'),
-                      ),
                     const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,

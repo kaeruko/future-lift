@@ -99,7 +99,8 @@ class KotohogiBar extends StatelessWidget {
       if (!width.isFinite || width <= 0) {
         return const SizedBox.shrink();
       }
-      final height = width * 211 / 982;
+      // Preserve the new 982 x 314 transparent asset's aspect ratio.
+      final height = width * 314 / 982;
       return Semantics(
         label: 'ことほぎ $points',
         liveRegion: true,
@@ -117,14 +118,31 @@ class KotohogiBar extends StatelessWidget {
                     excludeFromSemantics: true,
                   ),
                 ),
-                // The replacement asset has a plain red space on the right.
-                // Draw the actual, persisted balance there, without a circle.
-                // Allocate enough width for 4-6 digits on compact phones.
+                // The new artwork has a dark inset without printed text.
                 Positioned(
-                  left: width * .63,
-                  right: width * .055,
-                  top: height * .19,
-                  bottom: height * .09,
+                  left: width * .408,
+                  width: width * .205,
+                  top: height * .32,
+                  bottom: height * .31,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'ことほぎ',
+                      key: const ValueKey('kotohogi-bar-label'),
+                      maxLines: 1,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFFFE9B4),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: width * .606,
+                  right: width * .105,
+                  top: height * .28,
+                  bottom: height * .27,
                   child: SizedBox(
                     key: const ValueKey('kotohogi-number-zone'),
                     child: FittedBox(
@@ -137,14 +155,14 @@ class KotohogiBar extends StatelessWidget {
                         softWrap: false,
                         textAlign: TextAlign.right,
                         style: const TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 41,
+                          fontWeight: FontWeight.w900,
                           height: 1,
-                          color: Color(0xFFFFE4AC),
+                          color: Color(0xFFFFF0C9),
                           shadows: [
                             Shadow(
                               color: Color(0xFF4A1B12),
-                              blurRadius: .6,
+                              blurRadius: 1,
                               offset: Offset(0, 1),
                             ),
                           ],

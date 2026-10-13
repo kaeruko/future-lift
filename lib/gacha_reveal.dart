@@ -56,7 +56,7 @@ class _GachaRevealState extends State<GachaReveal>
     if (_drawing || !_animation.isCompleted) return;
     final progress = widget.controller.progress!;
     if (widget.controller.busy ||
-        progress.residents.tickets(progress.points) <= 0) {
+        progress.residents.availableKotohogi(progress.points) < 30) {
       return;
     }
     setState(() => _drawing = true);
@@ -107,7 +107,7 @@ class _GachaRevealState extends State<GachaReveal>
                 final canRepeat = ready &&
                     !_drawing &&
                     !widget.controller.busy &&
-                    progress.residents.tickets(progress.points) > 0;
+                    progress.residents.availableKotohogi(progress.points) >= 30;
                 final safe = MediaQuery.paddingOf(context);
 
                 return Stack(
