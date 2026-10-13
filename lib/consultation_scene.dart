@@ -5,6 +5,32 @@ import 'package:flutter/material.dart';
 
 import 'resident_collection.dart';
 
+/// Shared design coordinates for the 1080 x 1920 consultation artwork.
+/// The background, platform, and arrival effects all use the same cover scale.
+abstract final class ConsultationComposition {
+  static const double width = 1080;
+  static const double height = 1920;
+
+  // The separately exported stage is intentionally lower than the old
+  // background's baked-in stage, filling the empty lower half.
+  static const Rect stage = Rect.fromLTWH(90, 1240, 900, 252);
+  static const Rect resident = Rect.fromLTWH(330, 975, 420, 385);
+  static const Rect glow = Rect.fromLTWH(160, 900, 760, 570);
+  static const Rect banner = Rect.fromLTWH(100, 560, 880, 450);
+
+  /// Maps design-space coordinates onto a BoxFit.cover stage.
+  static Widget cover(Widget child) => ClipRect(
+    child: FittedBox(
+      fit: BoxFit.cover,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: child,
+      ),
+    ),
+  );
+}
+
 /// Residents queue directly in front of the consultation booths.
 ///
 /// The background is 1080 x 1920. Rendering the sprites on the *same*
@@ -39,26 +65,30 @@ class _ConsultationBackgroundState extends State<ConsultationBackground> {
   }
 
   @override
-  Widget build(BuildContext context) => ClipRect(
-    child: FittedBox(
-      fit: BoxFit.cover,
-      child: SizedBox(
-        width: 1080,
-        height: 1920,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/gacya/bg.png',
-                key: const ValueKey('gacha-shrine-bg'),
-                fit: BoxFit.fill,
-                excludeFromSemantics: true,
-              ),
-            ),
-            for (var slot = 0; slot < 4; slot++) _walkingResident(slot),
-          ],
+  Widget build(BuildContext context) => ConsultationComposition.cover(
+    Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/gacya/bg.png',
+            key: const ValueKey('gacha-shrine-bg'),
+            fit: BoxFit.fill,
+            excludeFromSemantics: true,
+          ),
         ),
-      ),
+        // The stage is now an independent transparent PNG, drawn on both
+        // the waiting screen and the arrival screen.
+        Positioned.fromRect(
+          rect: ConsultationComposition.stage,
+          child: Image.asset(
+            'assets/gacya/stage.png',
+            key: const ValueKey('consultation-stage'),
+            fit: BoxFit.contain,
+            excludeFromSemantics: true,
+          ),
+        ),
+        for (var slot = 0; slot < 4; slot++) _walkingResident(slot),
+      ],
     ),
   );
 
