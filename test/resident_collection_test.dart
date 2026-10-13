@@ -396,7 +396,12 @@ void main() {
       expect(find.byKey(const ValueKey('gacha-stage-resident')), findsOneWidget);
       expect(find.byKey(const ValueKey('resident-arrival-banner')), findsOneWidget);
       expect(find.byKey(const ValueKey('gacha-draw-one')), findsNothing);
-      expect(find.text('ペンギンが、まちにやってきました！'), findsOneWidget);
+      expect(
+        tester.widget<Semantics>(
+          find.byKey(const ValueKey('gacha-result')),
+        ).properties.label,
+        'ペンギンが、まちにやってきました！',
+      );
       expect(controller.progress!.residents.tickets(30), 0);
       await tester.tap(find.byKey(const ValueKey('gacha-back-town')));
       await tester.pumpAndSettle();
