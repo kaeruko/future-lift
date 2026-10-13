@@ -193,6 +193,10 @@ void main() {
     expect(find.text('できた！  達成済み'), findsOneWidget);
     await tester.tap(find.text('ホーム').last);
     await tester.pumpAndSettle();
+    // On shorter screens, the larger currency/ticket HUD reserves more
+    // vertical space. The bottom home action remains reachable by scrolling.
+    await tester.ensureVisible(find.byKey(const ValueKey('open-missions')));
+    await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('open-missions')).hitTestable(),
       findsOneWidget,
