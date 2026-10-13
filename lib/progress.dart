@@ -162,7 +162,7 @@ class Progress {
       day: day,
       lastCompletedDay: day,
       points: points + 10,
-      residents: residents,
+      residents: residents.withKotohogiCap(points + 10),
       completed: mission.period == MissionPeriod.daily
           ? {...completed, mission}
           : completed,

@@ -140,6 +140,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     final beforeTickets = controller.progress!.residents.earnedTickets(
       controller.progress!.points,
     );
+    final beforeBalance = controller.progress!.residents.availableKotohogi(
+      controller.progress!.points,
+    );
     final earned = await controller.complete(mission);
     if (!mounted || !earned) return;
     _celebrating = true;
@@ -148,7 +151,12 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       barrierDismissible: false,
       builder: (context) => Celebration(
         missionTitle: mission.title,
-        total: controller.progress!.points,
+        total: controller.progress!.residents.availableKotohogi(
+          controller.progress!.points,
+        ),
+        creditedKotohogi: controller.progress!.residents.availableKotohogi(
+          controller.progress!.points,
+        ) - beforeBalance,
         residents: controller.progress!.residents.owned,
         ticketEarned:
             controller.progress!.residents.earnedTickets(
@@ -171,7 +179,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
         controller.progress == null) {
       return;
     }
-    final total = controller.progress!.points;
+    final total = controller.progress!.residents.availableKotohogi(
+      controller.progress!.points,
+    );
     final missionTitle = _previewMission.title;
     _celebrating = true;
     try {

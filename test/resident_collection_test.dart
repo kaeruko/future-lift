@@ -40,6 +40,63 @@ Progress funded({int points = 30}) => Progress(
 );
 
 void main() {
+  test('spendable kotohogi stops at 999 without stopping lifetime progress', () {
+    var progress = funded(points: 990);
+    expect(progress.residents.availableKotohogi(progress.points), 990);
+
+    progress = progress.complete(Mission.strength);
+    expect(progress.points, 1000);
+    expect(progress.residents.availableKotohogi(progress.points), 999);
+    expect(progress.residents.expiredKotohogi, 1);
+    expect(progress.completed, contains(Mission.strength));
+    expect(progress.townLevel, 3);
+
+    progress = progress.complete(Mission.outside);
+    expect(progress.points, 1010);
+    expect(progress.residents.availableKotohogi(progress.points), 999);
+    expect(progress.residents.expiredKotohogi, 11);
+    expect(progress.residents.tickets(progress.points), 33);
+
+    final persisted = Progress.decode(progress.encode(), expectedVersion: 5);
+    expect(persisted.points, 1010);
+    expect(persisted.residents.expiredKotohogi, 11);
+    expect(persisted.residents.availableKotohogi(persisted.points), 999);
+    expect(persisted.completed, {Mission.strength, Mission.outside});
+
+    // Spending restores room in the wallet; the next mission can earn again.
+    progress = persisted.acquireResident(TownResident.shiba);
+    expect(progress.residents.availableKotohogi(progress.points), 969);
+    progress = progress.complete(Mission.conversation);
+    expect(progress.points, 1020);
+    expect(progress.residents.availableKotohogi(progress.points), 979);
+    expect(Progress.decode(progress.encode()).residents.availableKotohogi(
+      progress.points,
+    ), 979);
+  });
+
+  test('legacy wallets and invalid expired balances are handled safely', () {
+    final old = funded(points: 1000);
+    final oldData = jsonDecode(old.encode()) as Map<String, dynamic>;
+    final restored = Progress.decode(jsonEncode(oldData));
+    expect(restored.points, 1000);
+    // Never truncate a pre-existing wallet just because the app updated.
+    expect(restored.residents.availableKotohogi(restored.points), 1000);
+    expect(restored.residents.expiredKotohogi, 0);
+
+    final next = restored.complete(Mission.strength);
+    expect(next.residents.availableKotohogi(next.points), 999);
+
+    final ledger = Map<String, dynamic>.from(oldData['residents'] as Map);
+    for (final bad in [-1, '2', 1001]) {
+      final invalid = {
+        ...oldData,
+        'residents': {...ledger, 'expiredKotohogi': bad},
+      };
+      expect(() => Progress.decode(jsonEncode(invalid)),
+          throwsFormatException);
+    }
+  });
+
   test('tickets every 30 new points; duplicates do not add town residents', () {
     var progress = Progress.empty(DateTime(2026, 10, 11));
     expect(progress.residents.owned, [TownResident.shiba, TownResident.rabbit]);

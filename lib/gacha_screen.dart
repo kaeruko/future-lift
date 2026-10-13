@@ -176,7 +176,9 @@ class GachaBundleReveal extends StatelessWidget {
         ),
         SafeArea(
           child: PinnedGachaHud(
-            points: controller.progress!.points,
+            points: controller.progress!.residents.availableKotohogi(
+              controller.progress!.points,
+            ),
             tickets: controller.progress!.residents.tickets(
               controller.progress!.points,
             ),

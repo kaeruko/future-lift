@@ -6,6 +6,9 @@ const ownedResidentLimit = 8;
 const townResidentLimit = 8;
 const applauseResidentLimit = 8;
 
+/// Maximum spendable kotohogi; contribution totals keep growing.
+const maxSpendableKotohogi = 999;
+
 enum WalkDirection { front, back, left, right }
 
 enum TownResident {
@@ -69,6 +72,7 @@ class ResidentCollection {
     required Map<String, int> counts,
     this.debugTicketsGranted = 0,
     this.bonusDraws = 0,
+    this.expiredKotohogi = 0,
   }) : counts = Map.unmodifiable(counts);
   factory ResidentCollection.initial(int points) => ResidentCollection(
     baselinePoints: points,
@@ -80,6 +84,8 @@ class ResidentCollection {
   final int debugTicketsGranted;
   /// Free eleventh draws from ten-ticket bundles; not paid with tickets.
   final int bonusDraws;
+  /// Credits forfeited because the balance would exceed 999.
+  final int expiredKotohogi;
   List<TownResident> get owned => counts.keys.map(TownResident.fromId).toList();
   int get draws => counts.values.fold(0, (a, b) => a + b) - 2 - bonusDraws;
   /// Spendable kotohogi derived from the legacy ticket ledger.
@@ -87,11 +93,27 @@ class ResidentCollection {
   /// Each saved draw costs 30; previously earned partial amounts remain.
   /// No persistent schema migration or implicit currency conversion occurs.
   int availableKotohogi(int points) =>
-      points - baselinePoints + (debugTicketsGranted - draws) * 30;
+      points - baselinePoints - expiredKotohogi +
+      (debugTicketsGranted - draws) * 30;
 
-  int earnedTickets(int points) => (points - baselinePoints) ~/ 30;
+  int earnedTickets(int points) =>
+      (points - baselinePoints - expiredKotohogi) ~/ 30;
   int tickets(int points) => earnedTickets(points) + debugTicketsGranted - draws;
-  int untilNextTicket(int points) => 30 - (points - baselinePoints) % 30;
+  int untilNextTicket(int points) =>
+      30 - (points - baselinePoints - expiredKotohogi) % 30;
+
+  /// Preserve lifetime contribution history while limiting unspent credits.
+  ResidentCollection withKotohogiCap(int nextPoints) {
+    final excess = availableKotohogi(nextPoints) - maxSpendableKotohogi;
+    if (excess <= 0) return this;
+    return ResidentCollection(
+      baselinePoints: baselinePoints,
+      counts: counts,
+      debugTicketsGranted: debugTicketsGranted,
+      bonusDraws: bonusDraws,
+      expiredKotohogi: expiredKotohogi + excess,
+    );
+  }
   ResidentCollection acquire(TownResident resident, int points) {
     if (tickets(points) <= 0) {
       throw StateError('No resident tickets available.');
@@ -101,6 +123,7 @@ class ResidentCollection {
       counts: {...counts, resident.id: (counts[resident.id] ?? 0) + 1},
       debugTicketsGranted: debugTicketsGranted,
       bonusDraws: bonusDraws,
+      expiredKotohogi: expiredKotohogi,
     );
   }
 
@@ -117,6 +140,7 @@ class ResidentCollection {
       counts: next,
       debugTicketsGranted: debugTicketsGranted,
       bonusDraws: bonusDraws + 1,
+      expiredKotohogi: expiredKotohogi,
     );
   }
 
@@ -129,6 +153,7 @@ class ResidentCollection {
       counts: counts,
       debugTicketsGranted: debugTicketsGranted + amount,
       bonusDraws: bonusDraws,
+      expiredKotohogi: expiredKotohogi,
     );
   }
 
@@ -137,15 +162,18 @@ class ResidentCollection {
     'counts': counts,
     if (debugTicketsGranted > 0) 'debugTicketsGranted': debugTicketsGranted,
     if (bonusDraws > 0) 'bonusDraws': bonusDraws,
+    if (expiredKotohogi > 0) 'expiredKotohogi': expiredKotohogi,
   };
   static ResidentCollection decode(dynamic raw, int points) {
     if (raw is! Map<String, dynamic> ||
         raw.keys.toSet().difference({
           'baselinePoints', 'counts', 'debugTicketsGranted', 'bonusDraws',
+          'expiredKotohogi',
         }).isNotEmpty ||
         raw.length != 2 +
             (raw.containsKey('debugTicketsGranted') ? 1 : 0) +
-            (raw.containsKey('bonusDraws') ? 1 : 0) ||
+            (raw.containsKey('bonusDraws') ? 1 : 0) +
+            (raw.containsKey('expiredKotohogi') ? 1 : 0) ||
         raw['baselinePoints'] is! int ||
         raw['counts'] is! Map<String, dynamic> ||
         (raw.containsKey('debugTicketsGranted') &&
@@ -153,7 +181,10 @@ class ResidentCollection {
                 (raw['debugTicketsGranted'] as int) <= 0)) ||
         (raw.containsKey('bonusDraws') &&
             (raw['bonusDraws'] is! int ||
-                (raw['bonusDraws'] as int) <= 0))) {
+                (raw['bonusDraws'] as int) <= 0)) ||
+        (raw.containsKey('expiredKotohogi') &&
+            (raw['expiredKotohogi'] is! int ||
+                (raw['expiredKotohogi'] as int) <= 0))) {
       throw const FormatException('Invalid resident collection schema.');
     }
     final baseline = raw['baselinePoints'] as int;
@@ -161,7 +192,10 @@ class ResidentCollection {
     final extras = raw.containsKey('debugTicketsGranted')
         ? raw['debugTicketsGranted'] as int : 0;
     final free = raw.containsKey('bonusDraws') ? raw['bonusDraws'] as int : 0;
-    if (baseline < 0 ||
+    final expired = raw.containsKey('expiredKotohogi')
+        ? raw['expiredKotohogi'] as int
+        : 0;
+    if (expired > points - baseline || baseline < 0 ||
         baseline > points ||
         baseline % 10 != 0 ||
         entries.length > ownedResidentLimit ||
@@ -186,6 +220,7 @@ class ResidentCollection {
       counts: counts,
       debugTicketsGranted: extras,
       bonusDraws: free,
+      expiredKotohogi: expired,
     );
     if (result.tickets(points) < 0) {
       throw const FormatException('Too many resident draws.');

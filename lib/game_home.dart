@@ -76,7 +76,7 @@ class _GameHomeState extends State<GameHome> {
             ),
           ),
           PinnedGachaHud(
-            points: widget.progress.points,
+            points: widget.progress.residents.availableKotohogi(widget.progress.points),
             tickets: widget.progress.residents.tickets(widget.progress.points),
             ticketBadgeKey: const ValueKey('home-header-ticket-counter'),
             contentBuilder: (context, availableHeight) {

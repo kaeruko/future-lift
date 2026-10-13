@@ -14,11 +14,13 @@ class Celebration extends StatefulWidget {
     this.preview = false,
     required this.residents,
     this.ticketEarned = false,
+    this.creditedKotohogi = 10,
   });
   final String missionTitle;
   final int total;
   final List<TownResident> residents;
   final bool ticketEarned;
+  final int creditedKotohogi;
 
   /// An animation-only replay that does not award points.
   final bool preview;
@@ -195,6 +197,7 @@ class _CelebrationState extends State<Celebration>
                       child: _RewardScroll(
                         title: widget.missionTitle,
                         total: widget.total,
+                        creditedKotohogi: widget.creditedKotohogi,
                       ),
                     ),
                     if (widget.preview) ...[
@@ -314,9 +317,14 @@ class _OutlinedHeadline extends StatelessWidget {
 }
 
 class _RewardScroll extends StatelessWidget {
-  const _RewardScroll({required this.title, required this.total});
+  const _RewardScroll({
+    required this.title,
+    required this.total,
+    required this.creditedKotohogi,
+  });
   final String title;
   final int total;
+  final int creditedKotohogi;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -363,10 +371,12 @@ class _RewardScroll extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              const Text(
-                'ことほぎ +10',
+              Text(
+                creditedKotohogi > 0
+                    ? 'ことほぎ +$creditedKotohogi'
+                    : 'ことほぎは上限999',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
                   color: Color(0xFF9C351C),
@@ -374,7 +384,7 @@ class _RewardScroll extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'これまでのことほぎ  $total',
+                '所持ことほぎ  $total',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Color(0xFF63351F),

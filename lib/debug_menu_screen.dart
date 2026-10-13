@@ -251,7 +251,7 @@ class DebugMenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '現在のことほぎ：${progress.points}（再生しても加算されません）',
+                  '所持ことほぎ：${progress.residents.availableKotohogi(progress.points)}（再生しても加算されません）',
                   key: const ValueKey('debug-current-points'),
                   style: const TextStyle(color: wood, fontSize: 12),
                   textAlign: TextAlign.center,
