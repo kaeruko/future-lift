@@ -22,7 +22,7 @@ class _ResidentGachaState extends State<ResidentGacha> {
     if (_revealing ||
         widget.controller.busy ||
         progress == null ||
-        progress.residents.tickets(progress.points) < 1) {
+        progress.residents.availableKotohogi(progress.points) < 30) {
       return;
     }
     setState(() => _revealing = true);

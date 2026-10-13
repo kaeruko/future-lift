@@ -45,7 +45,7 @@ class _GachaScreenState extends State<GachaScreen> {
     if (_drawing ||
         widget.controller.busy ||
         progress == null ||
-        progress.residents.tickets(progress.points) < 1) {
+        progress.residents.availableKotohogi(progress.points) < 30) {
       return;
     }
     setState(() => _drawing = true);
@@ -83,7 +83,7 @@ class _GachaScreenState extends State<GachaScreen> {
       final balance = progress.residents.availableKotohogi(progress.points);
       final enabled = !_drawing &&
           !widget.controller.busy &&
-          progress.residents.tickets(progress.points) > 0;
+          progress.residents.availableKotohogi(progress.points) >= 30;
       final safe = MediaQuery.paddingOf(context);
       final width = MediaQuery.sizeOf(context).width;
       return PopScope(
@@ -95,8 +95,8 @@ class _GachaScreenState extends State<GachaScreen> {
               const Positioned.fill(child: ConsultationBackground()),
               Positioned(
                 top: safe.top + 10,
-                left: 12,
-                width: (width * .54).clamp(170.0, 300.0),
+                right: 12,
+                width: (width * .48).clamp(160.0, 270.0),
                 child: KotohogiBar(points: balance),
               ),
               Positioned(
@@ -179,10 +179,6 @@ class GachaBundleReveal extends StatelessWidget {
             points: controller.progress!.residents.availableKotohogi(
               controller.progress!.points,
             ),
-            tickets: controller.progress!.residents.tickets(
-              controller.progress!.points,
-            ),
-            ticketBadgeKey: const ValueKey('gacha-bundle-tickets'),
             contentBuilder: (context, availableHeight) => Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
@@ -216,7 +212,7 @@ class GachaBundleReveal extends StatelessWidget {
                               fontSize: 24,
                               color: Color(0xFF67371F),
                             )),
-                          const Text('10回分の券で、1回おまけ',
+                          const Text('300ことほぎで10回分＋1回おまけ',
                             style: TextStyle(color: Color(0xFF67371F))),
                           const SizedBox(height: 14),
                           Wrap(

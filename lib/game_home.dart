@@ -77,8 +77,6 @@ class _GameHomeState extends State<GameHome> {
           ),
           PinnedGachaHud(
             points: widget.progress.residents.availableKotohogi(widget.progress.points),
-            tickets: widget.progress.residents.tickets(widget.progress.points),
-            ticketBadgeKey: const ValueKey('home-header-ticket-counter'),
             contentBuilder: (context, availableHeight) {
               // Fit the scene to the actual space below the pinned HUD and
               // above the bottom navigation. Only short displays / enlarged

@@ -202,14 +202,15 @@ void main() {
       expect(tester.takeException(), isNull);
       final nameplate = find.byKey(const ValueKey('gacha-player-nameplate'));
       final points = find.byKey(const ValueKey('kotohogi-bar-art'));
-      final tickets = find.byKey(const ValueKey('home-header-ticket-counter'));
       expect(nameplate, findsOneWidget);
       expect(points, findsOneWidget);
-      expect(tickets, findsOneWidget);
+      expect(find.byKey(const ValueKey('home-header-ticket-counter')),
+          findsNothing);
       expect(tester.getSize(nameplate).width, greaterThan(0));
-      expect(tester.getSize(points).width, greaterThan(0));
-      expect(tester.getRect(tickets).top,
-          greaterThan(tester.getRect(points).bottom));
+      expect(tester.getSize(points).width,
+          greaterThan(tester.getSize(nameplate).width));
+      expect(find.byKey(const ValueKey('kotohogi-bar-label')),
+          findsOneWidget);
       expect(find.byKey(const ValueKey('open-missions')), findsOneWidget);
       final leftRect = tester.getRect(find.byKey(const ValueKey('open-missions')));
       final rightRect = tester.getRect(find.byKey(const ValueKey('open-town')));

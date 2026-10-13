@@ -9,7 +9,6 @@ import 'package:future_lift/dialogue_engine.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/residents.dart';
 import 'package:future_lift/town.dart';
-import 'package:future_lift/ticket_counter_badge.dart';
 
 import 'progress_test.dart' show MemoryStore;
 
@@ -120,8 +119,9 @@ void main() {
 
   Future<ProgressController> launch(
     WidgetTester tester,
-    MemoryStore store,
-  ) async {
+    MemoryStore store, {
+    bool showTutorial = false,
+  }) async {
     final controller = ProgressController(
       store,
       clock: () => DateTime(2026, 10, 9, 12),
@@ -131,6 +131,7 @@ void main() {
     await tester.pumpWidget(FutureLiftApp(
       controller: controller,
       dialogueCatalog: catalog,
+      enableTutorial: showTutorial,
     ));
     await tester.pumpAndSettle();
     return controller;
@@ -318,7 +319,11 @@ void main() {
           ),
           child: child!,
         ),
-        home: FutureLiftHome(controller: controller, dialogueCatalog: catalog),
+        home: FutureLiftHome(
+          controller: controller,
+          dialogueCatalog: catalog,
+          enableTutorial: false,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -493,7 +498,14 @@ void main() {
       find.byKey(const ValueKey('debug-replay-celebration')),
       findsOneWidget,
     );
-    expect(find.textContaining('所持ことほぎ：10'), findsOneWidget);
+    expect(find.byKey(const ValueKey('debug-current-points')),
+        findsOneWidget);
+    expect(
+      tester.widget<Text>(
+        find.byKey(const ValueKey('debug-current-points')),
+      ).data,
+      contains('所持ことほぎ：10'),
+    );
     final saved = store.raw;
     final writes = store.writes;
 
@@ -534,7 +546,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('town header shows current gacha tickets on narrow phones', (
+  testWidgets('town HUD shows only the spendable kotohogi on small phones', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 640);
@@ -545,41 +557,37 @@ void main() {
     await tester.tap(find.text('みんなのまち').last);
     await tester.pumpAndSettle();
 
-    final counter = find.byKey(const ValueKey('town-header-ticket-counter'));
     final nameplate = find.byKey(const ValueKey('gacha-player-nameplate'));
-    final points = find.byKey(const ValueKey('kotohogi-bar-art'));
+    final art = find.byKey(const ValueKey('kotohogi-bar-art'));
+    final amount = find.byKey(const ValueKey('total-points'));
     expect(find.byKey(const ValueKey('town-page-fullscreen')), findsOneWidget);
-    expect(find.byKey(const ValueKey('town-page-shrine-background')), findsNothing);
     expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
-    expect(find.byKey(const ValueKey('town-page-title-panel')), findsOneWidget);
     expect(nameplate, findsOneWidget);
-    expect(points, findsOneWidget);
-    expect(find.text('所持ガチャ券'), findsNothing);
-    expect(find.text('FutureLift'), findsNothing);
+    expect(art, findsOneWidget);
+    expect(find.byKey(const ValueKey('kotohogi-bar-label')), findsOneWidget);
+    expect(tester.widget<Text>(amount).data, '0');
+    expect(find.textContaining('ガチャ券'), findsNothing);
     expect(tester.getRect(nameplate).right,
-        lessThan(tester.getRect(points).left));
-    expect(tester.getRect(counter).top,
-        greaterThan(tester.getRect(points).bottom));
-    expect(tester.widget<TicketCounterBadge>(counter).tickets, 0);
+        lessThan(tester.getRect(art).left));
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.text('メニュー').last);
     await tester.pumpAndSettle();
-    final addTickets = find.byKey(const ValueKey('debug-add-ticket-10'));
-    await tester.ensureVisible(addTickets);
+    final addCurrency = find.byKey(const ValueKey('debug-add-ticket-10'));
+    await tester.ensureVisible(addCurrency);
     await tester.pumpAndSettle();
-    await tester.tap(addTickets);
+    await tester.tap(addCurrency);
     await tester.pumpAndSettle();
-    expect(controller.progress!.residents.tickets(0), 10);
-
+    expect(controller.progress!.residents.availableKotohogi(0), 300);
     await tester.tap(find.text('みんなのまち').last);
     await tester.pumpAndSettle();
-    expect(tester.widget<TicketCounterBadge>(counter).tickets, 10);
+    expect(tester.widget<Text>(amount).data, '300');
+    expect(find.textContaining('ガチャ券'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('debug ticket buttons update and persist balance without points', (
+  testWidgets('debug currency buttons update and persist balance without lifetime points', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 1000);
@@ -597,15 +605,18 @@ void main() {
     await tester.tap(plusOne);
     await tester.pumpAndSettle();
     expect(controller.progress!.residents.tickets(0), 1);
-    expect(find.text('現在のガチャ券：1枚'), findsOneWidget);
+    expect(find.text('所持ことほぎ：30'), findsOneWidget);
+    expect(find.text('ガチャ券 +1枚'), findsNothing);
     await tester.ensureVisible(plusTen);
     await tester.tap(plusTen);
     await tester.pumpAndSettle();
     expect(controller.progress!.residents.tickets(0), 11);
+    expect(controller.progress!.residents.availableKotohogi(0), 330);
     expect(controller.progress!.points, 0);
     expect(controller.progress!.history, isEmpty);
     expect(store.writes, 2);
     expect(Progress.decode(store.raw!).residents.tickets(0), 11);
+    expect(Progress.decode(store.raw!).residents.availableKotohogi(0), 330);
 
     await tester.tap(find.text('みんなのまち').last);
     await tester.pumpAndSettle();
@@ -689,4 +700,98 @@ void main() {
   test('sixteen non-duplicate fixed tips are available', () {
     expect(Resident.values.expand((r) => r.tips).toSet().length, 16);
   });
+  testWidgets('Kotohogisu appears once and guides to missions', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() => tester.view.reset());
+    final store = MemoryStore();
+    final controller = await launch(tester, store, showTutorial: true);
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsOneWidget);
+    expect(find.textContaining('ぼくはコトホギス'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('ミッション」で教えてね'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+    await tester.pumpAndSettle();
+    expect(controller.progress!.seenDialogues, contains('tutorial_kotohogisu_v1'));
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    expect(find.byKey(const ValueKey('complete-strength')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await launch(tester, store, showTutorial: true);
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Kotohogisu skip keeps points unchanged', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() => tester.view.reset());
+    final store = MemoryStore();
+    final controller = await launch(tester, store, showTutorial: true);
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-skip')));
+    await tester.pumpAndSettle();
+    expect(controller.progress!.seenDialogues, contains('tutorial_kotohogisu_v1'));
+    expect(controller.progress!.points, 0);
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('debug tutorial replay is repeatable and never writes progress', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final initial = Progress.empty(DateTime(2026, 10, 9))
+        .complete(Mission.strength)
+        .markDialogueSeen('tutorial_kotohogisu_v1');
+    final original = initial.encode();
+    final store = MemoryStore()..raw = original;
+    final controller = await launch(tester, store, showTutorial: true);
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+
+    await tester.tap(find.text('メニュー').last);
+    await tester.pumpAndSettle();
+    final replay = find.byKey(const ValueKey('debug-replay-tutorial'));
+    await tester.ensureVisible(replay);
+    await tester.pumpAndSettle();
+    await tester.tap(replay);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsOneWidget);
+    expect(find.textContaining('ぼくはコトホギス'), findsOneWidget);
+
+    // Navigation cannot leave the replay before the user finishes or skips.
+    await tester.tap(find.text('ミッション').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-skip')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    expect(find.byKey(const ValueKey('open-missions')), findsOneWidget);
+    expect(store.writes, 0);
+    expect(store.raw, original);
+
+    await tester.tap(find.text('メニュー').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(replay);
+    await tester.pumpAndSettle();
+    await tester.tap(replay);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('ぼくはコトホギス'), findsOneWidget);
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
+    expect(find.byKey(const ValueKey('complete-strength')), findsOneWidget);
+    expect(controller.progress!.points, initial.points);
+    expect(controller.progress!.seenDialogues, initial.seenDialogues);
+    expect(controller.progress!.completed, initial.completed);
+    expect(store.writes, 0);
+    expect(store.raw, original);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
 }

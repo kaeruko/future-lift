@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'home_skin.dart';
 import 'progress.dart';
 
-/// Debug-only controls for testing celebrations, tickets and resets.
+/// Debug-only controls for testing celebrations, currency and resets.
 class DebugMenuScreen extends StatelessWidget {
   const DebugMenuScreen({
     super.key,
@@ -11,6 +11,7 @@ class DebugMenuScreen extends StatelessWidget {
     required this.selectedMission,
     required this.onMissionChanged,
     required this.onPreview,
+    required this.onReplayTutorial,
     required this.onResetAll,
     required this.onAddTickets,
     required this.busy,
@@ -20,6 +21,7 @@ class DebugMenuScreen extends StatelessWidget {
   final Mission selectedMission;
   final ValueChanged<Mission> onMissionChanged;
   final VoidCallback onPreview;
+  final VoidCallback onReplayTutorial;
   final Future<bool> Function() onResetAll;
   final Future<bool> Function(int) onAddTickets;
   final bool busy;
@@ -29,7 +31,7 @@ class DebugMenuScreen extends StatelessWidget {
     final succeeded = await onAddTickets(amount);
     if (!context.mounted || !succeeded) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('ガチャ券を$amount枚追加しました')),
+      SnackBar(content: Text('テスト用ことほぎを${amount * 30}追加しました')),
     );
   }
 
@@ -120,6 +122,37 @@ class DebugMenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 const Text(
+                  'チュートリアルの確認',
+                  style: TextStyle(
+                    color: wood,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'コトホギスの案内を最初から再生します。'
+                  '\n閲覧記録やことほぎ、ミッションの達成状況は変わりません。',
+                  style: TextStyle(color: wood, height: 1.65),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('debug-replay-tutorial'),
+                    onPressed: busy ? null : onReplayTutorial,
+                    icon: const Icon(Icons.replay_rounded),
+                    label: const Text('チュートリアルをもう一度見る'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF277A70),
+                      minimumSize: const Size(0, 52),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 8),
+                const Text(
                   '表示するミッション',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -180,7 +213,7 @@ class DebugMenuScreen extends StatelessWidget {
                 const Divider(),
                 const SizedBox(height: 8),
                 const Text(
-                  'ガチャ券の追加',
+                  'テスト用ことほぎの追加',
                   style: TextStyle(
                     color: wood,
                     fontSize: 20,
@@ -189,13 +222,13 @@ class DebugMenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '現在のガチャ券：${progress.residents.tickets(progress.points)}枚',
+                  '所持ことほぎ：${progress.residents.availableKotohogi(progress.points)}',
                   key: const ValueKey('debug-ticket-count'),
                   style: const TextStyle(color: wood),
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  '演出の動作確認用です。ことほぎや達成履歴は変わりません。',
+                  '動作確認用です。達成履歴は変わりません。',
                   style: TextStyle(color: wood, fontSize: 12, height: 1.6),
                 ),
                 const SizedBox(height: 12),
@@ -207,13 +240,13 @@ class DebugMenuScreen extends StatelessWidget {
                       key: const ValueKey('debug-add-ticket-1'),
                       onPressed: busy ? null : () => _addTickets(context, 1),
                       icon: const Icon(Icons.confirmation_number_outlined),
-                      label: const Text('ガチャ券 +1枚'),
+                      label: const Text('ことほぎ +30'),
                     ),
                     OutlinedButton.icon(
                       key: const ValueKey('debug-add-ticket-10'),
                       onPressed: busy ? null : () => _addTickets(context, 10),
                       icon: const Icon(Icons.confirmation_number_outlined),
-                      label: const Text('ガチャ券 +10枚'),
+                      label: const Text('ことほぎ +300'),
                     ),
                   ],
                 ),

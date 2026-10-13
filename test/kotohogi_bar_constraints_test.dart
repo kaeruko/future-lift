@@ -31,7 +31,7 @@ void main() {
     final art = find.byKey(const ValueKey('kotohogi-bar-art'));
     expect(art, findsOneWidget);
     expect(tester.getSize(art).width, 130);
-    expect(tester.getSize(art).height, closeTo(130 * 211 / 982, .001));
+    expect(tester.getSize(art).height, closeTo(130 * 314 / 982, .001));
 
     await tester.pumpWidget(screen(180));
     await tester.pumpAndSettle();

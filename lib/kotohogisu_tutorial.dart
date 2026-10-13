@@ -1,0 +1,149 @@
+import 'package:flutter/material.dart';
+
+import 'home_skin.dart';
+
+/// Intro text is kept independent from the dialogue CMS; completion is
+/// persisted by the parent through Progress.seenDialogues.
+class KotohogisuTutorial extends StatefulWidget {
+  const KotohogisuTutorial({
+    super.key,
+    required this.onSkip,
+    required this.onFinish,
+    this.saving = false,
+  });
+
+  final VoidCallback onSkip;
+  final VoidCallback onFinish;
+  final bool saving;
+
+  @override
+  State<KotohogisuTutorial> createState() => _KotohogisuTutorialState();
+}
+
+class _KotohogisuTutorialState extends State<KotohogisuTutorial> {
+  static const _lines = [
+    'ちゅん、ちゅん！\nぼくはコトホギス。\nここは、あなたの「できた！」をお祝いするまちだよ。',
+    '今日できたことがあったら、\n「ミッション」で教えてね。\n小さな一歩も、ことほぎになるよ。',
+    'ことほぎがたまると、まちが育つよ。\n新しい住民との出会いも楽しみにね。\nあなたのペースで、のんびりいこう！',
+  ];
+  int _step = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
+    return Stack(
+      key: const ValueKey('kotohogisu-tutorial'),
+      children: [
+        const Positioned.fill(
+          child: ModalBarrier(color: Color(0x660B251D), dismissible: false),
+        ),
+        SafeArea(
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: SingleChildScrollView(
+              reverse: true,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Container(
+                  decoration: parchment(),
+                  padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 1, end: 0),
+                            duration: reducedMotion
+                                ? Duration.zero
+                                : const Duration(milliseconds: 850),
+                            curve: Curves.easeOutBack,
+                            builder: (context, distance, child) =>
+                                Transform.translate(
+                                  offset: Offset(distance * 220, -distance * 65),
+                                  child: child,
+                                ),
+                            // Temporary glyph until Kotohogisu art is ready.
+                            child: Semantics(
+                              label: 'コトホギスが飛んできました',
+                              child: const Text('🐦', style: TextStyle(fontSize: 58)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'コトホギス',
+                              style: TextStyle(
+                                fontSize: 23,
+                                fontWeight: FontWeight.w900,
+                                color: wood,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${_step + 1}/${_lines.length}',
+                            style: const TextStyle(
+                              color: wood,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      AnimatedSwitcher(
+                        duration: reducedMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 180),
+                        child: Text(
+                          _lines[_step],
+                          key: ValueKey('kotohogisu-line-$_step'),
+                          style: const TextStyle(
+                            fontSize: 17,
+                            height: 1.7,
+                            fontWeight: FontWeight.w600,
+                            color: wood,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          TextButton(
+                            key: const ValueKey('kotohogisu-skip'),
+                            onPressed: widget.saving ? null : widget.onSkip,
+                            child: const Text('スキップ'),
+                          ),
+                          const Spacer(),
+                          FilledButton(
+                            key: const ValueKey('kotohogisu-next'),
+                            onPressed: widget.saving
+                                ? null
+                                : _step == _lines.length - 1
+                                ? widget.onFinish
+                                : () => setState(() => _step++),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF277A70),
+                            ),
+                            child: Text(
+                              widget.saving
+                                  ? '保存中…'
+                                  : _step == _lines.length - 1
+                                  ? 'ミッションを見に行く'
+                                  : 'つぎへ',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

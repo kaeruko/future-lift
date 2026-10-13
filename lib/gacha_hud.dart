@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'home_skin.dart';
 import 'resident_collection.dart';
-import 'ticket_counter_badge.dart';
 
 /// Compact, responsive game HUD. A temporary display name is used until the
 /// app offers editable profiles; ranks and experience are not invented.
@@ -12,16 +11,12 @@ class GachaHud extends StatelessWidget {
   const GachaHud({
     super.key,
     required this.points,
-    required this.tickets,
-    this.ticketBadgeKey,
   });
 
   final int points;
-  final int tickets;
-  final Key? ticketBadgeKey;
 
   // Share available HUD width so currency values remain legible on phones.
-  static const double nameplateShare = .56;
+  static const double nameplateShare = .38;
   static const double balanceShare = 1 - nameplateShare;
   static const double horizontalGap = 6;
 
@@ -36,7 +31,6 @@ class GachaHud extends StatelessWidget {
       }
       final leftWidth = (width - horizontalGap) * nameplateShare;
       final rightWidth = (width - horizontalGap) * balanceShare;
-      final badgeWidth = math.min(156.0, rightWidth * .90);
       return SizedBox(
         width: width,
         child: Row(
@@ -49,38 +43,7 @@ class GachaHud extends StatelessWidget {
             const SizedBox(width: horizontalGap),
             SizedBox(
               width: rightWidth,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Column normally gives non-stretch children a *loose*
-                    // cross-axis width. The bar must instead receive a tight
-                    // positive width to render its proportional artwork.
-                    SizedBox(
-                      width: rightWidth,
-                      child: KotohogiBar(points: points),
-                    ),
-                    const SizedBox(height: 4),
-                    Tooltip(
-                      message: 'ガチャ券 $tickets枚',
-                      child: SizedBox(
-                        width: badgeWidth,
-                        height: badgeWidth * 64 / 176,
-                        child: FittedBox(
-                          alignment: Alignment.centerRight,
-                          fit: BoxFit.contain,
-                          child: TicketCounterBadge(
-                            key: ticketBadgeKey,
-                            tickets: tickets,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: KotohogiBar(points: points),
             ),
           ],
         ),
@@ -169,15 +132,11 @@ class PinnedGachaHud extends StatelessWidget {
   const PinnedGachaHud({
     super.key,
     required this.points,
-    required this.tickets,
     required this.contentBuilder,
-    this.ticketBadgeKey,
     this.contentBehindHud = false,
   });
 
   final int points;
-  final int tickets;
-  final Key? ticketBadgeKey;
   final Widget Function(BuildContext, double) contentBuilder;
 
   /// Allow a full-bleed scene to paint behind the pinned HUD.
@@ -198,10 +157,8 @@ class PinnedGachaHud extends StatelessWidget {
           (width - GachaHud.horizontalGap) * GachaHud.nameplateShare;
       final rightWidth =
           (width - GachaHud.horizontalGap) * GachaHud.balanceShare;
-      final badgeWidth = math.min(156, rightWidth * .90);
       final leftHeight = leftWidth * 209 / 788;
-      final rightHeight = 4 + rightWidth * 211 / 982 + 4 +
-          badgeWidth * 64 / 176;
+      final rightHeight = rightWidth * 314 / 982;
       final reservedHeight =
           top + math.max(leftHeight, rightHeight) + bottomGap;
       final remainingHeight = math.max(0.0, constraints.maxHeight - reservedHeight);
@@ -230,8 +187,6 @@ class PinnedGachaHud extends StatelessWidget {
                   width: width,
                   child: GachaHud(
                     points: points,
-                    tickets: tickets,
-                    ticketBadgeKey: ticketBadgeKey,
                   ),
                 ),
               ),

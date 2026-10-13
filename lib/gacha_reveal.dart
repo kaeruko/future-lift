@@ -56,7 +56,7 @@ class _GachaRevealState extends State<GachaReveal>
     if (_drawing || !_animation.isCompleted) return;
     final progress = widget.controller.progress!;
     if (widget.controller.busy ||
-        progress.residents.tickets(progress.points) <= 0) {
+        progress.residents.availableKotohogi(progress.points) < 30) {
       return;
     }
     setState(() => _drawing = true);
@@ -107,15 +107,15 @@ class _GachaRevealState extends State<GachaReveal>
                 final canRepeat = ready &&
                     !_drawing &&
                     !widget.controller.busy &&
-                    progress.residents.tickets(progress.points) > 0;
+                    progress.residents.availableKotohogi(progress.points) >= 30;
                 final safe = MediaQuery.paddingOf(context);
 
                 return Stack(
                   children: [
                     Positioned(
                       top: safe.top + 10,
-                      left: 12,
-                      width: (width * .54).clamp(170.0, 300.0),
+                      right: 12,
+                      width: (width * .48).clamp(160.0, 270.0),
                       child: KotohogiBar(points: balance),
                     ),
                     // All arrival art shares the background's 1080x1920

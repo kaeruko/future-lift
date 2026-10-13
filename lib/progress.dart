@@ -658,7 +658,7 @@ class ProgressController extends ChangeNotifier {
     if (busy ||
         failure != null ||
         progress == null ||
-        progress!.residents.tickets(progress!.points) <= 0) {
+        progress!.residents.availableKotohogi(progress!.points) < 30) {
       return null;
     }
     busy = true;
@@ -671,19 +671,19 @@ class ProgressController extends ChangeNotifier {
       progress = next;
       return resident;
     } catch (error, stack) {
-      failure = ProgressFailure('住民ガチャの抽選・保存', error, stack);
+      failure = ProgressFailure('移住相談会の抽選・保存', error, stack);
       return null;
     } finally {
       _finishOperation();
     }
   }
 
-  /// Ten tickets buy eleven draws, committed and published together.
+  /// Legacy 10-draw bundle costs 300 kotohogi and grants a bonus draw.
   Future<List<TownResident>?> drawResidentsTenPlusOne() async {
     if (busy ||
         failure != null ||
         progress == null ||
-        progress!.residents.tickets(progress!.points) < 10) {
+        progress!.residents.availableKotohogi(progress!.points) < 300) {
       return null;
     }
     busy = true;
@@ -698,7 +698,7 @@ class ProgressController extends ChangeNotifier {
       progress = next;
       return results;
     } catch (error, stack) {
-      failure = ProgressFailure('住民ガチャ10連の抽選・保存', error, stack);
+      failure = ProgressFailure('移住相談会10回分の抽選・保存', error, stack);
       return null;
     } finally {
       _finishOperation();
