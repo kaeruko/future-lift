@@ -257,6 +257,7 @@ function renderCharacterEditor(){
         characterSelected=value;
       }
       rebuildResidentOptions();renderCharacterList();
+      setCharacterStatus("未保存の変更があります");
     });
     element.readOnly=readonly;
     return element;
@@ -265,7 +266,7 @@ function renderCharacterEditor(){
   edit("キャラID（例: 07_owl）","id",locked);
   edit("Dart識別子（例: owl）","key",locked);
   edit("画像フォルダ名（例: 008_hukurou.png）","artFolder",locked);
-  labelControl(box,"Tipsの元キャラ","select",row.tipSource,value=>{row.tipSource=value},
+  labelControl(box,"Tipsの元キャラ","select",row.tipSource,value=>{row.tipSource=value;setCharacterStatus("未保存の変更があります")},
     {options:{child:"こども",student:"学生",adult:"大人",elder:"高齢者"}});
   for(const [field,title] of [["inGacha","ガチャに登場する"],["walkInTown","まちを歩く"]]){
     const label=append(box,"label");label.className="controls";

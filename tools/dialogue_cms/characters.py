@@ -45,7 +45,18 @@ def validate_catalog(document, previous=None, *, characters_root=None):
         if not isinstance(key, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", key):
             raise ValueError(f"Invalid character key at row {index}")
         if key in {"values", "index", "name", "byName", "id", "label", "artFolder",
-                   "tipSource", "inGacha", "walkInTown", "gachaPool"}:
+                   "tipSource", "inGacha", "walkInTown", "gachaPool",
+                   "abstract", "as", "assert", "async", "await", "base", "break",
+                   "case", "catch", "class", "const", "continue", "covariant",
+                   "default", "deferred", "do", "dynamic", "else", "enum",
+                   "export", "extends", "extension", "external", "factory",
+                   "false", "final", "finally", "for", "Function", "get",
+                   "hide", "if", "implements", "import", "in", "interface",
+                   "is", "late", "library", "mixin", "new", "null", "on",
+                   "operator", "part", "required", "rethrow", "return",
+                   "sealed", "set", "show", "static", "super", "switch",
+                   "sync", "this", "throw", "true", "try", "typedef", "var",
+                   "void", "when", "while", "with", "yield"}:
             raise ValueError(f"Reserved character key: {key}")
         if not isinstance(identifier, str) or not re.fullmatch(r"[0-9]{2}_[a-z][a-z0-9_]*", identifier):
             raise ValueError(f"Invalid resident ID at row {index}")
@@ -99,7 +110,8 @@ def replace_section(source, start, end, lines):
 def generate_dart(source, characters):
     declarations = []
     for row in characters:
-        label = json.dumps(row["label"], ensure_ascii=False)
+        # Dart interpolates dollar signs inside quoted strings; preserve literal labels.
+        label = json.dumps(row["label"].replace("$", r"\$"), ensure_ascii=False)
         declarations.append(
             f'  {row["key"]}("{row["id"]}", {label}, "{row["artFolder"]}", '
             f'Resident.{row["tipSource"]}, '
@@ -140,20 +152,22 @@ def commit_files(contents):
         except OSError as original_error:
             rollback_errors = []
             for path in reversed(replaced):
-                with tempfile.NamedTemporaryFile(
-                    "wb", dir=path.parent, prefix=".kotohogu-rollback-",
-                    suffix=".tmp", delete=False
-                ) as restored:
-                    try:
+                try:
+                    with tempfile.NamedTemporaryFile(
+                        "wb", dir=path.parent, prefix=".kotohogu-rollback-",
+                        suffix=".tmp", delete=False
+                    ) as restored:
                         restored.write(originals[path])
                         restored.flush()
                         os.fsync(restored.fileno())
-                        os.replace(restored.name, path)
-                    except OSError as rollback_error:
-                        rollback_errors.append(f"{path}: {rollback_error}")
+                        recovery = restored.name
+                    try:
+                        os.replace(recovery, path)
                     finally:
-                        if os.path.exists(restored.name):
-                            os.unlink(restored.name)
+                        if os.path.exists(recovery):
+                            os.unlink(recovery)
+                except OSError as rollback_error:
+                    rollback_errors.append(f"{path}: {rollback_error}")
             if rollback_errors:
                 raise OSError(f"CMS write failed: {original_error}; "
                               f"rollback failed: {'; '.join(rollback_errors)}") from original_error
