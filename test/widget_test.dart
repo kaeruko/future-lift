@@ -69,8 +69,9 @@ void main() {
       find.text('🎊 日本の社会保障に貢献！ 🎊').hitTestable(),
       findsOneWidget,
     );
+    expect(find.text('社会保障に貢献しました！'), findsOneWidget);
     expect(
-      find.text('参考推計 年間約81,000円の医療・介護費の差！'),
+      find.text('参考推計：医療・介護費 年間約81,000円（研究集団の比較）'),
       findsOneWidget,
     );
     expect(find.textContaining('研究2件の集団間費用差'), findsOneWidget);
@@ -161,7 +162,11 @@ void main() {
       find.text('🎊 日本の社会保障に貢献！ 🎊').hitTestable(),
       findsOneWidget,
     );
-    expect(find.text('参考推計 年間約81,000円の医療・介護費の差！'), findsOneWidget);
+    expect(find.text('社会保障に貢献しました！'), findsOneWidget);
+    expect(
+      find.text('参考推計：医療・介護費 年間約81,000円（研究集団の比較）'),
+      findsOneWidget,
+    );
     expect(find.bySemanticsLabel('ミッション達成！ 日本の社会保障に貢献！'), findsOneWidget);
     expect(
       find.descendant(
