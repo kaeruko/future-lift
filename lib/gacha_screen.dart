@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
+import 'consultation_scene.dart';
 import 'gacha_hud.dart';
 import 'gacha_reveal.dart';
+import 'home_skin.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
 
-/// The shrine is a separate, scroll-safe screen instead of an inline town card.
-/// One draw retains the familiar animated reveal, while a bundle lists all 11.
+/// One consultation meeting welcomes one resident. The old bundle save
+/// schema stays readable, but the ten-draw option is no longer offered.
 class GachaScreen extends StatefulWidget {
   const GachaScreen({super.key, required this.controller});
+
   final ProgressController controller;
 
   @override
@@ -18,53 +21,33 @@ class GachaScreen extends StatefulWidget {
 class _GachaScreenState extends State<GachaScreen> {
   bool _drawing = false;
 
-  Future<void> _draw({required bool bundle}) async {
+  Future<void> _draw() async {
     final progress = widget.controller.progress;
-    final cost = bundle ? 10 : 1;
-    if (_drawing || widget.controller.busy ||
+    if (_drawing ||
+        widget.controller.busy ||
         progress == null ||
-        progress.residents.tickets(progress.points) < cost) {
+        progress.residents.tickets(progress.points) < 1) {
       return;
     }
     setState(() => _drawing = true);
-    final before = Map<String, int>.of(progress.residents.counts);
+    final existing = Map<String, int>.of(progress.residents.counts);
     try {
-      if (bundle) {
-        final results = await widget.controller.drawResidentsTenPlusOne();
-        if (!mounted || results == null) return;
-        final firstAppearance = <bool>[];
-        for (final resident in results) {
-          firstAppearance.add(!before.containsKey(resident.id));
-          before[resident.id] = (before[resident.id] ?? 0) + 1;
-        }
-        final town = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(
-            builder: (_) => GachaBundleReveal(
-              controller: widget.controller,
-              residents: results,
-              firstAppearance: firstAppearance,
-            ),
+      final result = await widget.controller.drawResident();
+      if (!mounted || result == null) return;
+      final town = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => GachaReveal(
+            controller: widget.controller,
+            resident: result,
+            isNew: !existing.containsKey(result.id),
           ),
-        );
-        if (mounted && town == true) Navigator.of(context).pop(true);
-      } else {
-        final result = await widget.controller.drawResident();
-        if (!mounted || result == null) return;
-        final town = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(
-            builder: (_) => GachaReveal(
-              controller: widget.controller,
-              resident: result,
-              isNew: !before.containsKey(result.id),
-            ),
-          ),
-        );
-        if (mounted && town == true) Navigator.of(context).pop(true);
-      }
+        ),
+      );
+      if (mounted && town == true) Navigator.of(context).pop(true);
     } finally {
       if (mounted) {
         if (widget.controller.failure != null) {
-          // The outer home owns the full diagnostic screen.
+          // Do not conceal the controller's original save error.
           Navigator.of(context).pop(false);
         } else {
           setState(() => _drawing = false);
@@ -78,175 +61,80 @@ class _GachaScreenState extends State<GachaScreen> {
     listenable: widget.controller,
     builder: (context, _) {
       final progress = widget.controller.progress!;
-      final tickets = progress.residents.tickets(progress.points);
-      return Scaffold(
-        backgroundColor: const Color(0xFFFBE9C8),
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/gacya/bg.png',
-                key: const ValueKey('gacha-shrine-bg'),
-                fit: BoxFit.cover,
-                excludeFromSemantics: true,
+      final balance = progress.residents.availableKotohogi(progress.points);
+      final enabled = !_drawing &&
+          !widget.controller.busy &&
+          progress.residents.tickets(progress.points) > 0;
+      final safe = MediaQuery.paddingOf(context);
+      final width = MediaQuery.sizeOf(context).width;
+      return PopScope(
+        canPop: !_drawing,
+        child: Scaffold(
+          backgroundColor: const Color(0xFFFBE9C8),
+          body: Stack(
+            children: [
+              const Positioned.fill(child: ConsultationBackground()),
+              Positioned(
+                top: safe.top + 10,
+                left: 12,
+                width: (width * .54).clamp(170.0, 300.0),
+                child: KotohogiBar(points: balance),
               ),
-            ),
-            SafeArea(
-              child: PinnedGachaHud(
-                points: progress.points,
-                tickets: tickets,
-                ticketBadgeKey: const ValueKey('gacha-screen-tickets'),
-                contentBuilder: (context, availableHeight) => LayoutBuilder(
-                builder: (context, constraints) => SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: availableHeight),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 570),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(10, 12, 10, 14),
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 6),
-                              Image.asset(
-                                'assets/gacya/gacha_title.png',
-                                width: double.infinity,
-                                height: 140,
-                                fit: BoxFit.contain,
-                                excludeFromSemantics: true,
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                height: 345,
-                                child: LayoutBuilder(
-                                  builder: (context, c) {
-                                    final buttonWidth = (c.maxWidth * .32)
-                                        .clamp(90.0, 156.0);
-                                    return Stack(
-                                      clipBehavior: Clip.none,
-                                      alignment: Alignment.center,
-                                      children: [
-                                        Positioned(
-                                          top: 2,
-                                          bottom: 0,
-                                          left: c.maxWidth * .18,
-                                          right: c.maxWidth * .18,
-                                          child: Transform.scale(
-                                            key: const ValueKey('gacha-scroll-stand-scale'),
-                                            scale: .85,
-                                            alignment: Alignment.center,
-                                            child: Image.asset(
-                                              'assets/gacya/scroll_display_stand.png',
-                                              key: const ValueKey('gacha-scroll-stand'),
-                                              fit: BoxFit.contain,
-                                              excludeFromSemantics: true,
-                                            ),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          left: 0,
-                                          bottom: 52,
-                                          width: buttonWidth,
-                                          child: _button(
-                                            asset: 'assets/gacya/button.png',
-                                            keyName: 'gacha-draw-one',
-                                            label: '1回引く（ガチャ券1枚）',
-                                            enabled: !_drawing && !widget.controller.busy && tickets >= 1,
-                                            onTap: () => _draw(bundle: false),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          right: 0,
-                                          bottom: 52,
-                                          width: buttonWidth,
-                                          child: _button(
-                                            asset: 'assets/gacya/button10.png',
-                                            keyName: 'gacha-draw-ten',
-                                            label: '10回引く（券10枚で11回抽選）',
-                                            enabled: !_drawing && !widget.controller.busy && tickets >= 10,
-                                            onTap: () => _draw(bundle: true),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xE8FFF4D8),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                                child: Text(
-                                  _drawing
-                                      ? '仲間を迎えています…'
-                                      : '1回：券1枚 ／ 10回：券10枚で11回（1回無料）',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Color(0xFF653B27),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              TextButton.icon(
-                                key: const ValueKey('gacha-back-town'),
-                                onPressed: _drawing ? null :
-                                    () => Navigator.of(context).pop(false),
-                                icon: const Icon(Icons.arrow_back),
-                                label: const Text('みんなのまちへ戻る'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+              Positioned(
+                top: safe.top + 12,
+                right: 12,
+                child: IconButton(
+                  key: const ValueKey('gacha-back-town'),
+                  tooltip: 'まちへ戻る',
+                  onPressed: _drawing
+                      ? null
+                      : () => Navigator.of(context).pop(false),
+                  icon: const Icon(Icons.arrow_back, color: Color(0xFF63351F)),
+                  style: IconButton.styleFrom(
+                    backgroundColor: const Color(0xEEFFF1D4),
                   ),
                 ),
               ),
+              Positioned(
+                left: 10,
+                right: 10,
+                bottom: safe.bottom + 14,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _drawing
+                          ? '住民をお迎えしています…'
+                          : enabled
+                              ? '開催費：30ことほぎ'
+                              : '開催には30ことほぎが必要です',
+                      key: const ValueKey('consultation-cost'),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF5A2D1D),
+                        shadows: [
+                          Shadow(color: Color(0xFFFFF8E8), blurRadius: 5),
+                        ],
+                      ),
+                    ),
+                    ConsultationActions(
+                      onResidents: () => showResidentCollection(
+                        context,
+                        progress.residents,
+                      ),
+                      onAgain: enabled ? _draw : null,
+                      againLabel: '移住相談会を開く（30ことほぎ）',
+                      againKey: const ValueKey('gacha-draw-one'),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     },
-  );
-
-  Widget _button({
-    required String asset,
-    required String keyName,
-    required String label,
-    required bool enabled,
-    required VoidCallback onTap,
-  }) => Semantics(
-    button: true,
-    enabled: enabled,
-    label: label,
-    child: Tooltip(
-      message: label,
-      child: TextButton(
-        key: ValueKey(keyName),
-        onPressed: enabled ? onTap : null,
-        style: TextButton.styleFrom(
-          padding: EdgeInsets.zero,
-          minimumSize: const Size(64, 64),
-          tapTargetSize: MaterialTapTargetSize.padded,
-        ),
-        child: Opacity(
-          opacity: enabled ? 1 : .5,
-          child: Image.asset(
-            asset,
-            height: 82,
-            fit: BoxFit.contain,
-            excludeFromSemantics: true,
-          ),
-        ),
-      ),
-    ),
   );
 }
 
