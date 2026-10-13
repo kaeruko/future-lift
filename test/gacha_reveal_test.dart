@@ -139,6 +139,13 @@ void main() {
     expect(find.text('ペンギンとまた出会いました！'), findsOneWidget);
     expect(find.byKey(const ValueKey('gacha-reunion-badge')),
         findsOneWidget);
+    expect(
+      tester.getRect(find.byKey(const ValueKey('gacha-reunion-badge'))).top,
+      greaterThanOrEqualTo(
+        tester.getRect(find.byKey(const ValueKey('resident-arrival-banner')))
+            .bottom,
+      ),
+    );
     // A returning resident still gets the arrival panel, with the reunion
     // badge added separately. Repeated draws must not silently omit it.
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
