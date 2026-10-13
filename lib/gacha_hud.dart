@@ -20,49 +20,66 @@ class GachaHud extends StatelessWidget {
   final Key? ticketBadgeKey;
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Expanded(
-        flex: 7,
-        child: PlayerNameplate(),
-      ),
-      const SizedBox(width: 6),
-      Expanded(
-        flex: 4,
-        child: LayoutBuilder(
-          builder: (context, c) {
-            final badgeWidth = (c.maxWidth * .90).clamp(0.0, 156.0);
-            return Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  KotohogiBar(points: points),
-                  const SizedBox(height: 4),
-                  Tooltip(
-                    message: 'ガチャ券 $tickets枚',
-                    child: SizedBox(
-                      width: badgeWidth,
-                      height: badgeWidth * 64 / 176,
-                      child: FittedBox(
-                        alignment: Alignment.centerRight,
-                        fit: BoxFit.contain,
-                        child: TicketCounterBadge(
-                          key: ticketBadgeKey,
-                          tickets: tickets,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      // Never ask KotohogiBar to lay out with a zero/unbounded width.
+      // A positioned HUD supplies a finite, explicit width below.
+      if (!width.isFinite || width <= 6) {
+        return const SizedBox.shrink();
+      }
+      final leftWidth = (width - 6) * 7 / 11;
+      final rightWidth = (width - 6) * 4 / 11;
+      final badgeWidth = math.min(156.0, rightWidth * .90);
+      return SizedBox(
+        width: width,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: leftWidth,
+              child: const PlayerNameplate(),
+            ),
+            const SizedBox(width: 6),
+            SizedBox(
+              width: rightWidth,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Column normally gives non-stretch children a *loose*
+                    // cross-axis width. The bar must instead receive a tight
+                    // positive width to render its proportional artwork.
+                    SizedBox(
+                      width: rightWidth,
+                      child: KotohogiBar(points: points),
+                    ),
+                    const SizedBox(height: 4),
+                    Tooltip(
+                      message: 'ガチャ券 $tickets枚',
+                      child: SizedBox(
+                        width: badgeWidth,
+                        height: badgeWidth * 64 / 176,
+                        child: FittedBox(
+                          alignment: Alignment.centerRight,
+                          fit: BoxFit.contain,
+                          child: TicketCounterBadge(
+                            key: ticketBadgeKey,
+                            tickets: tickets,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            );
-          },
+            ),
+          ],
         ),
-      ),
-    ],
+      );
+    },
   );
 }
 
@@ -164,7 +181,8 @@ class PinnedGachaHud extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final width = math.min(maxHudWidth, constraints.maxWidth - edge * 2);
+      final width =
+          math.min(maxHudWidth, math.max(0.0, constraints.maxWidth - edge * 2));
       final leftWidth = (width - 6) * 7 / 11;
       final rightWidth = (width - 6) * 4 / 11;
       final badgeWidth = math.min(156, rightWidth * .90);
@@ -185,21 +203,23 @@ class PinnedGachaHud extends StatelessWidget {
             top: reservedHeight,
             child: contentBuilder(context, remainingHeight),
           ),
-          Positioned(
-            left: edge,
-            right: edge,
-            top: top,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: maxHudWidth),
-                child: GachaHud(
-                  points: points,
-                  tickets: tickets,
-                  ticketBadgeKey: ticketBadgeKey,
+          if (width > 6)
+            Positioned(
+              left: edge,
+              right: edge,
+              top: top,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: width,
+                  child: GachaHud(
+                    points: points,
+                    tickets: tickets,
+                    ticketBadgeKey: ticketBadgeKey,
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       );
     },

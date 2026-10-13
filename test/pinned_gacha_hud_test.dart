@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/gacha_hud.dart';
 import 'package:future_lift/ticket_counter_badge.dart';
+import 'package:future_lift/home_skin.dart';
 
 void main() {
   for (final width in <double>[320, 402, 570]) {
@@ -54,8 +55,16 @@ void main() {
         ).tickets,
         7,
       );
-      expect(tester.getSize(find.byKey(const ValueKey('kotohogi-bar-art'))).width,
-          greaterThan(0));
+      final art = find.byKey(const ValueKey('kotohogi-bar-art'));
+      final bar = find.byType(KotohogiBar);
+      expect(bar, findsOneWidget);
+      expect(tester.getSize(art).width, greaterThan(0));
+      expect(tester.getSize(bar).width, greaterThan(0));
+      expect(tester.getSize(art).width,
+          closeTo(tester.getSize(bar).width, .01));
+      expect(tester.getRect(bar).left,
+          greaterThan(tester.getRect(find.byKey(
+            const ValueKey('gacha-player-nameplate'))).right));
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -91,6 +100,11 @@ void main() {
       expect(name, findsOneWidget);
       expect(points, findsOneWidget);
       expect(tickets, findsOneWidget);
+      final actualBar = find.byType(KotohogiBar);
+      expect(tester.getSize(actualBar).width, greaterThan(0));
+      expect(tester.getSize(actualBar).height, greaterThan(0));
+      final actualHudWidth = tester.getSize(find.byType(GachaHud)).width;
+      expect(actualHudWidth, closeTo(width - PinnedGachaHud.edge * 2, .01));
       expect(tester.getRect(name).right, lessThan(tester.getRect(points).left));
       expect(tester.getRect(tickets).top,
           greaterThan(tester.getRect(points).bottom));
