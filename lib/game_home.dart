@@ -62,9 +62,7 @@ class _GameHomeState extends State<GameHome> {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final height = math.max(constraints.maxHeight, 620.0);
       final scale = MediaQuery.textScalerOf(context).scale(1);
-      final sceneHeight = height + math.max(0, scale - 1) * 300;
       // The app's centered wrapper supplies loose constraints. Explicitly
       // fill the viewport rather than letting the Stack choose zero width.
       return SizedBox.expand(
@@ -81,7 +79,14 @@ class _GameHomeState extends State<GameHome> {
             points: widget.progress.points,
             tickets: widget.progress.residents.tickets(widget.progress.points),
             ticketBadgeKey: const ValueKey('home-header-ticket-counter'),
-            contentBuilder: (context, availableHeight) => ListView(
+            contentBuilder: (context, availableHeight) {
+              // Fit the scene to the actual space below the pinned HUD and
+              // above the bottom navigation. Only short displays / enlarged
+              // text need the scrollable minimum height.
+              final sceneHeight =
+                  math.max(availableHeight, 440.0) +
+                  math.max(0, scale - 1) * 300;
+              return ListView(
         controller: _scroll,
         padding: EdgeInsets.zero,
         children: [
@@ -113,7 +118,7 @@ class _GameHomeState extends State<GameHome> {
                   ),
                 ),
                 Positioned(
-                  top: sceneHeight * .43,
+                  top: sceneHeight * .31,
                   left: 22,
                   right: 22,
                   child: Column(
@@ -138,7 +143,7 @@ class _GameHomeState extends State<GameHome> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 8),
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: constraints.maxWidth * .10,
@@ -242,6 +247,7 @@ class _GameHomeState extends State<GameHome> {
                       ),
                       const SizedBox(height: 12),
                       Container(
+                        key: const ValueKey('home-footer-message'),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 5,
@@ -267,7 +273,8 @@ class _GameHomeState extends State<GameHome> {
             ),
           ),
         ],
-      ),
+      );
+            },
           ),
         ],
         ),
