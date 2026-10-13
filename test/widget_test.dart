@@ -343,6 +343,13 @@ void main() {
       find.byKey(const ValueKey('resident-0')),
       100,
     );
+    // This page intentionally paints behind the pinned currency HUD.
+    // Bring the sprite to the visible middle before tapping, not directly
+    // underneath the overlay at the top of the scrollable.
+    await Scrollable.ensureVisible(
+      tester.element(find.byKey(const ValueKey('resident-0'))),
+      alignment: .5,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('resident-0')));
     await tester.pumpAndSettle();
