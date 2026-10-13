@@ -119,7 +119,7 @@ void main() {
     expect(stage.bottom, inInclusiveRange(480, 510));
     expect(stageResident.bottom, inInclusiveRange(430, 470));
     expect(stageResident.bottom, greaterThan(stage.top));
-    expect(stageResident.bottom, lessThan(stage.bottom);
+    expect(stageResident.bottom, lessThan(stage.bottom));
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
         findsOneWidget);
     final arrival = tester.widget<Image>(
