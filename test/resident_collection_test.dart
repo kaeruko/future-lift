@@ -333,7 +333,7 @@ void main() {
     expect(await failed.drawResidentsTenPlusOne(), isNull);
   });
 
-  testWidgets('shrine bundle result shows all 11, preserves live tickets',
+  testWidgets('consultation hall does not offer the legacy bundle action',
       (tester) async {
     tester.view.physicalSize = const Size(430, 1000);
     tester.view.devicePixelRatio = 1;
@@ -348,24 +348,11 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: GachaScreen(controller: controller),
     ));
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(find.byKey(const ValueKey('gacha-shrine-bg')), findsOneWidget);
-    expect(find.byKey(const ValueKey('gacha-scroll-stand')), findsOneWidget);
-    expect(find.byKey(const ValueKey('gacha-draw-ten')), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('gacha-draw-ten')));
-    await tester.pumpAndSettle();
-    expect(find.byType(GachaBundleReveal), findsOneWidget);
-    expect(find.byKey(const ValueKey('gacha-bundle-title')), findsOneWidget);
-    expect(find.text('10回分の券で、1回おまけ'), findsOneWidget);
-    expect(find.byKey(const ValueKey('gacha-result-10')), findsOneWidget);
-    expect(controller.progress!.residents.tickets(0), 0);
-    expect(controller.progress!.residents.counts[TownResident.cat.id], 11);
-    await tester.tap(find.byKey(const ValueKey('gacha-bundle-again')));
-    await tester.pumpAndSettle();
-    expect(find.byType(GachaScreen), findsOneWidget);
-    final tenButton = tester.widget<TextButton>(
-      find.byKey(const ValueKey('gacha-draw-ten')));
-    expect(tenButton.onPressed, isNull);
+    expect(find.byKey(const ValueKey('gacha-scroll-stand')), findsNothing);
+    expect(find.byKey(const ValueKey('gacha-draw-ten')), findsNothing);
+    expect(find.byKey(const ValueKey('gacha-draw-one')), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -404,17 +391,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(GachaScreen), findsOneWidget);
       expect(find.byKey(const ValueKey('gacha-shrine-bg')), findsOneWidget);
-      expect(find.byKey(const ValueKey('gacha-player-nameplate')), findsOneWidget);
-      expect(find.byKey(const ValueKey('gacha-scroll-stand')), findsOneWidget);
+      expect(find.byKey(const ValueKey('consultation-walker-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('resident-list-button')), findsOneWidget);
       expect(find.byKey(const ValueKey('gacha-draw-one')), findsOneWidget);
-      expect(find.byKey(const ValueKey('gacha-draw-ten')), findsOneWidget);
+      expect(find.byKey(const ValueKey('gacha-draw-ten')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('gacha-draw-one')));
       await tester.pumpAndSettle();
       expect(find.text('ペンギンが、まちにやってきました！'), findsOneWidget);
       expect(controller.progress!.residents.tickets(30), 0);
-      await tester.ensureVisible(find.byKey(const ValueKey('button_town')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('button_town')));
+      await tester.tap(find.byKey(const ValueKey('gacha-back-town')));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(find.byType(TownScene), -180);
       await tester.pumpAndSettle();
