@@ -45,13 +45,59 @@ void main() {
       final pointRect = tester.getRect(points);
       expect(nameRect.right, lessThan(pointRect.left));
       expect((nameRect.width / nameRect.height), closeTo(788 / 209, .01));
-      final title = find.text('FutureLift').first;
-      expect(tester.getRect(title).top, greaterThan(nameRect.bottom));
+      expect(find.text('FutureLift'), findsNothing);
+      expect(find.text('みんなのまち'), findsNothing);
+      final scenery = find.byKey(const ValueKey('open-town-scenery'));
+      expect(scenery, findsOneWidget);
+      expect(tester.getRect(scenery).top, greaterThan(nameRect.bottom));
       expect(tester.takeException(), isNull);
 
       await tester.pumpWidget(const SizedBox());
     });
   }
+
+  testWidgets('tapping the scenery opens town without swallowing resident taps',
+      (tester) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var townVisits = 0;
+    var missionVisits = 0;
+    var residentVisits = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: GameHome(
+          progress: Progress.empty(DateTime(2026, 10, 12)),
+          onMissions: () => missionVisits++,
+          onTown: () => townVisits++,
+          onResident: (_) => residentVisits++,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('FutureLift'), findsNothing);
+    expect(find.text('みんなのまち'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('open-town-scenery')));
+    expect(townVisits, 1);
+    expect(missionVisits, 0);
+    expect(residentVisits, 0);
+
+    await tester.tap(find.byKey(const ValueKey('home-resident-sprite-01_shiba')));
+    expect(townVisits, 1);
+    expect(residentVisits, 1);
+
+    await tester.ensureVisible(find.byKey(const ValueKey('open-town')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('open-town')));
+    expect(townVisits, 2);
+    expect(missionVisits, 0);
+
+    await tester.tap(find.byKey(const ValueKey('open-missions')));
+    expect(missionVisits, 1);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   // The actual app wraps GameHome in SafeArea > Center > ConstrainedBox.
   // This supplies loose constraints, unlike a directly mounted Scaffold body.
