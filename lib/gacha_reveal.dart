@@ -137,149 +137,119 @@ class _GachaRevealState extends State<GachaReveal>
                         ),
                       ),
                     ),
-                    // The glow and resident are centered over the blue stage
-                    // painted in bg.png; the stage itself is not repainted.
-                    if (t >= .20)
-                      Positioned(
-                        key: const ValueKey('gacha-glow-layer'),
-                        left: width * .17,
-                        top: height * .35,
-                        width: width * .66,
-                        height: height * .30,
-                        child: Opacity(
-                          opacity: visible,
-                          child: Transform.scale(
-                            scale: 1 + .12 * t,
-                            child: Image.asset(
-                              'assets/gacya/summon_glow.png',
-                              key: const ValueKey('gacha-reveal-glow'),
-                              fit: BoxFit.contain,
-                              excludeFromSemantics: true,
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (t >= .30)
-                      Positioned(
-                        left: width * .28,
-                        top: height * .39,
-                        width: width * .44,
-                        height: height * .225,
-                        child: Opacity(
-                          opacity: visible,
-                          child: Transform.translate(
-                            offset: Offset(0, (1 - entry) * 35),
-                            child: Transform.scale(
-                              scale: entry,
-                              child: Image.asset(
-                                _resident.idleAsset,
-                                key: const ValueKey('gacha-stage-resident'),
-                                fit: BoxFit.contain,
-                                excludeFromSemantics: true,
+                    // All arrival art shares the background's 1080x1920
+                    // coordinate system, including BoxFit.cover cropping.
+                    Positioned.fill(
+                      child: ConsultationComposition.cover(
+                        Stack(
+                          children: [
+                            if (t >= .20)
+                              Positioned.fromRect(
+                                rect: ConsultationComposition.glow,
+                                child: Opacity(
+                                  opacity: visible,
+                                  child: Transform.scale(
+                                    scale: 1 + .12 * t,
+                                    child: Image.asset(
+                                      'assets/gacya/summon_glow.png',
+                                      key: const ValueKey('gacha-reveal-glow'),
+                                      fit: BoxFit.contain,
+                                      excludeFromSemantics: true,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (t >= .67) ...[
-                      Positioned(
-                        // Keep the full result announcement above the
-                        // banner, not painted across its illustration.
-                        top: height * .15,
-                        left: width * .09,
-                        right: width * .09,
-                        child: Semantics(
-                          liveRegion: true,
-                          child: Text(
-                            _isNew
-                                ? '${_resident.label}が、まちにやってきました！'
-                                : '${_resident.label}とまた出会いました！',
-                            key: const ValueKey('gacha-result'),
-                            maxLines: 2,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: const Color(0xFF562817),
-                              fontWeight: FontWeight.w900,
-                              fontSize: (width * .049).clamp(14.0, 23.0),
-                              shadows: const [
-                                Shadow(
-                                  color: Color(0xFFFFF8E7),
-                                  blurRadius: 6,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // The arrival panel is part of every completed
-                      // consultation, including repeat encounters. The
-                      // reunion badge is an additional overlay, not an
-                      // alternative to the arrival banner.
-                      Positioned(
-                        left: width * .08,
-                        top: height * .185,
-                        width: width * .84,
-                        height: height * .225,
-                        child: LayoutBuilder(
-                          builder: (context, bannerSize) {
-                            final bw = bannerSize.maxWidth;
-                            final bh = bannerSize.maxHeight;
-                            return Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: Image.asset(
-                                    'assets/gacya/resident_arrival_banner.png',
-                                    key: const ValueKey(
-                                      'resident-arrival-banner',
+                            if (t >= .30)
+                              Positioned.fromRect(
+                                rect: ConsultationComposition.resident,
+                                child: Opacity(
+                                  opacity: visible,
+                                  child: Transform.translate(
+                                    offset: Offset(0, (1 - entry) * 55),
+                                    child: Transform.scale(
+                                      scale: entry,
+                                      child: Image.asset(
+                                        _resident.idleAsset,
+                                        key: const ValueKey(
+                                          'gacha-stage-resident',
+                                        ),
+                                        fit: BoxFit.contain,
+                                        excludeFromSemantics: true,
+                                      ),
                                     ),
-                                    fit: BoxFit.contain,
-                                    excludeFromSemantics: true,
                                   ),
                                 ),
-                                // The source artwork already says
-                                // 'が 引っ越してきました'. Put the resident's
-                                // name in the open space immediately before
-                                // 'が' rather than covering its lettering.
+                              ),
+                            if (t >= .67) ...[
+                              Positioned.fromRect(
+                                rect: ConsultationComposition.banner,
+                                child: Semantics(
+                                  key: const ValueKey('gacha-result'),
+                                  liveRegion: true,
+                                  label: _isNew
+                                      ? '${_resident.label}が、まちにやってきました！'
+                                      : '${_resident.label}とまた出会いました！',
+                                  child: LayoutBuilder(
+                                    builder: (context, bannerSize) {
+                                      final bw = bannerSize.maxWidth;
+                                      final bh = bannerSize.maxHeight;
+                                      return Stack(
+                                        children: [
+                                          Positioned.fill(
+                                            child: Image.asset(
+                                              'assets/gacya/resident_arrival_banner.png',
+                                              key: const ValueKey(
+                                                'resident-arrival-banner',
+                                              ),
+                                              fit: BoxFit.contain,
+                                              excludeFromSemantics: true,
+                                            ),
+                                          ),
+                                          Positioned(
+                                            left: bw * .17,
+                                            top: bh * .555,
+                                            width: bw * .41,
+                                            height: bh * .16,
+                                            child: FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                _resident.label,
+                                                key: const ValueKey(
+                                                  'gacha-banner-resident-name',
+                                                ),
+                                                maxLines: 1,
+                                                style: const TextStyle(
+                                                  fontSize: 60,
+                                                  fontWeight: FontWeight.w900,
+                                                  color: Color(0xFF532812),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              if (!_isNew)
                                 Positioned(
-                                  left: bw * .17,
-                                  top: bh * .555,
-                                  width: bw * .41,
-                                  height: bh * .16,
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      _resident.label,
-                                      key: const ValueKey(
-                                        'gacha-banner-resident-name',
-                                      ),
-                                      maxLines: 1,
-                                      style: const TextStyle(
-                                        fontSize: 21,
-                                        fontWeight: FontWeight.w900,
-                                        color: Color(0xFF532812),
-                                      ),
-                                    ),
+                                  left: ConsultationComposition.banner.left - 30,
+                                  top: ConsultationComposition.banner.top - 35,
+                                  width: 190,
+                                  height: 190,
+                                  child: Image.asset(
+                                    'assets/gacya/parts/badge_reunion.png',
+                                    key: const ValueKey('gacha-reunion-badge'),
+                                    fit: BoxFit.contain,
+                                    semanticLabel: 'また会えた',
                                   ),
                                 ),
-                              ],
-                            );
-                          },
+                            ],
+                          ],
                         ),
                       ),
-                      if (!_isNew)
-                        Positioned(
-                          left: width * .72,
-                          // Keep the reunion stamp below the banner's edge.
-                          top: height * .425,
-                          width: width * .18,
-                          child: Image.asset(
-                            'assets/gacya/parts/badge_reunion.png',
-                            key: const ValueKey('gacha-reunion-badge'),
-                            fit: BoxFit.contain,
-                            semanticLabel: 'また会えた',
-                          ),
-                        ),
-                    ],
+                    ),
                     Positioned(
                       left: 10,
                       right: 10,
