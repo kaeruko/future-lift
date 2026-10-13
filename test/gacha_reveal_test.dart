@@ -136,6 +136,11 @@ void main() {
     expect(stageResident.bottom, lessThan(stage.bottom));
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
         findsOneWidget);
+    final bannerRect = tester.getRect(
+      find.byKey(const ValueKey('resident-arrival-banner')),
+    );
+    // The full arrival card stays above the resident's head.
+    expect(bannerRect.bottom, lessThan(stageResident.top - 10));
     final arrival = tester.widget<Image>(
       find.byKey(const ValueKey('resident-arrival-banner')),
     );
@@ -263,6 +268,9 @@ void main() {
       expect(banner, findsOneWidget);
       final b = tester.getRect(badge);
       final r = tester.getRect(resident);
+      final arrivalRect = tester.getRect(banner);
+      expect(arrivalRect.bottom, lessThan(r.top - 10),
+          reason: 'Arrival card must not cover resident at $viewport');
       expect(b.left, greaterThanOrEqualTo(0));
       expect(b.right, lessThanOrEqualTo(viewport.width));
       expect(b.top, greaterThanOrEqualTo(0));
