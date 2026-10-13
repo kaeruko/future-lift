@@ -351,28 +351,20 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                           setState(() => _missionPeriod = period),
                     )
                   : _page == 2
-                  ? Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/gacya/bg.png',
-                            key: const ValueKey('town-page-shrine-background'),
-                            fit: BoxFit.cover,
-                            excludeFromSemantics: true,
-                          ),
+                  ? PinnedGachaHud(
+                      points: progress.points,
+                      tickets: progress.residents.tickets(progress.points),
+                      ticketBadgeKey:
+                          const ValueKey('town-header-ticket-counter'),
+                      contentBehindHud: true,
+                      contentBuilder: (context, availableHeight) => ColoredBox(
+                        color: const Color(0xFFFFF3DC),
+                        child: ListView(
+                          key: ValueKey('page-$_page'),
+                          padding: EdgeInsets.zero,
+                          children: _town(progress, availableHeight),
                         ),
-                        PinnedGachaHud(
-                          points: progress.points,
-                          tickets: progress.residents.tickets(progress.points),
-                          ticketBadgeKey:
-                              const ValueKey('town-header-ticket-counter'),
-                          contentBuilder: (context, availableHeight) => ListView(
-                            key: ValueKey('page-$_page'),
-                            padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
-                            children: _town(progress),
-                          ),
-                        ),
-                      ],
+                      ),
                     )
                   : _page == 3
                   ? HistoryScreen(
@@ -430,109 +422,121 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     },
   );
 
-  List<Widget> _town(Progress progress) => [
-    Container(
-      key: const ValueKey('town-page-title-panel'),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: parchment(),
-      child: const Column(
-        mainAxisSize: MainAxisSize.min,
+  List<Widget> _town(Progress progress, double viewportHeight) => [
+    SizedBox(
+      key: const ValueKey('town-page-fullscreen'),
+      height: viewportHeight,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Text(
-            'みんなのまち',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-              color: wood,
-            ),
+          TownScene(
+            key: _townSceneKey,
+            level: progress.townLevel,
+            residents: progress.residents.owned,
+            onResident: _showTip,
+            fillViewport: true,
           ),
-          SizedBox(height: 4),
-          Text(
-            'あなたの行動が、まちの彩りに。',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF82583B),
-              fontWeight: FontWeight.w600,
+          // The navigation already names this page; only the changing level
+          // belongs over the illustration.
+          Positioned(
+            left: 14,
+            right: 14,
+            bottom: 16,
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Container(
+                key: const ValueKey('town-page-title-panel'),
+                decoration: BoxDecoration(
+                  color: const Color(0xEEFFF6DC),
+                  border: Border.all(color: gold, width: 2),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: teal,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'LEVEL ${progress.townLevel}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        townNames[progress.townLevel],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          color: wood,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
       ),
     ),
-    const SizedBox(height: 22),
-    Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: parchment(),
-      child: Row(
+    Padding(
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 24),
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: teal,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'LEVEL ${progress.townLevel}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          Text(
+            townDescriptions[progress.townLevel],
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              townNames[progress.townLevel],
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          const SizedBox(height: 24),
+          ResidentGacha(
+            controller: controller,
+            onTown: () {
+              final scene = _townSceneKey.currentContext;
+              if (scene != null) Scrollable.ensureVisible(scene);
+            },
+          ),
+          const SizedBox(height: 24),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.touch_app_outlined, color: teal),
+              SizedBox(width: 6),
+              Flexible(child: Text('住民をタップして、おしゃべりしよう。')),
+            ],
+          ),
+          const SizedBox(height: 22),
+          const Text(
+            'まちは、休んでもそのまま。\nまた来たい日に、会いにきてください。',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xFF627875), height: 1.8),
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'ことほぎは社会貢献をイメージしたゲーム内の値です。\n'
+            '実際の介護費削減額や個人の健康効果を示すものではありません。',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 11, color: Color(0xFF627875), height: 1.6),
           ),
         ],
       ),
-    ),
-    const SizedBox(height: 14),
-    TownScene(
-      key: _townSceneKey,
-      level: progress.townLevel,
-      residents: progress.residents.owned,
-      onResident: _showTip,
-    ),
-    const SizedBox(height: 14),
-    Text(
-      townDescriptions[progress.townLevel],
-      textAlign: TextAlign.center,
-      style: const TextStyle(fontWeight: FontWeight.w600),
-    ),
-    const SizedBox(height: 24),
-    ResidentGacha(
-      controller: controller,
-      onTown: () {
-        final scene = _townSceneKey.currentContext;
-        if (scene != null) Scrollable.ensureVisible(scene);
-      },
-    ),
-    const SizedBox(height: 24),
-    const Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.touch_app_outlined, color: teal),
-        SizedBox(width: 6),
-        Flexible(child: Text('住民をタップして、おしゃべりしよう。')),
-      ],
-    ),
-    const SizedBox(height: 22),
-    const Text(
-      'まちは、休んでもそのまま。\nまた来たい日に、会いにきてください。',
-      textAlign: TextAlign.center,
-      style: TextStyle(color: Color(0xFF627875), height: 1.8),
-    ),
-    const SizedBox(height: 18),
-    const Text(
-      'ことほぎは社会貢献をイメージしたゲーム内の値です。\n実際の介護費削減額や個人の健康効果を示すものではありません。',
-      textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 11, color: Color(0xFF627875), height: 1.6),
     ),
   ];
 }
