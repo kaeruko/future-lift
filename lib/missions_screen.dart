@@ -246,8 +246,8 @@ class _WalkingMissionKotohogisuState extends State<_WalkingMissionKotohogisu> {
           final direction = step < 8 ? 'right' : 'left';
           final frame = (step % 4 + 1).toString().padLeft(2, '0');
           final asset = animate
-              ? _spriteRoot + 'walk_' + direction + '_' + frame + '.png'
-              : _spriteRoot + 'idle_front_01.png';
+              ? '${_spriteRoot}walk_${direction}_$frame.png'
+              : '${_spriteRoot}idle_front_01.png';
           // Reverse after eight steps, with no drift toward the label.
           final position = step < 8 ? step : 15 - step;
           final dx = animate ? (position - 3.5) * 1.6 : 0.0;
