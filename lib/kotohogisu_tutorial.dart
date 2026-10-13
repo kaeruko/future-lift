@@ -59,7 +59,7 @@ class _KotohogisuTutorialState extends State<KotohogisuTutorial> {
                             duration: reducedMotion
                                 ? Duration.zero
                                 : const Duration(milliseconds: 850),
-                            curve: Curves.easeOutBack,
+                            curve: Curves.easeOutCubic,
                             builder: (context, distance, _) {
                               const base =
                                   'assets/characters/013_kotohogisu/';
