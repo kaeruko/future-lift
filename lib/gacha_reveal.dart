@@ -95,7 +95,6 @@ class _GachaRevealState extends State<GachaReveal>
             builder: (context, _) => LayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
-                final height = constraints.maxHeight;
                 final t = _animation.value;
                 final ready = _animation.isCompleted;
                 final entry = Curves.easeOutBack.transform(
