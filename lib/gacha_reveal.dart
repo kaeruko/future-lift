@@ -237,7 +237,7 @@ class _GachaRevealState extends State<GachaReveal>
                                 // which is cropped by BoxFit.cover on phones.
                                 Positioned(
                                   left: ConsultationComposition.resident.right - 35,
-                                  top: ConsultationComposition.resident.bottom - 205,
+                                  top: ConsultationComposition.resident.bottom - 170,
                                   width: 175,
                                   height: 175,
                                   child: Image.asset(
