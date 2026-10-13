@@ -1,6 +1,6 @@
 Kotohogu sprite package: 006_kuma
-Source: kuma.png
-Source size: 1254x1254
+Source: 006_kuma_sheet_4x4.png
+Source size: 1152x1152
 Output PNG: 288x288 pixels, transparent
 
 walk_front_01..04: front walk

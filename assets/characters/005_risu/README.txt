@@ -1,6 +1,6 @@
 Kotohogu sprite package: 005_risu
-Source: risu.png
-Source size: 1254x1254
+Source: 005_risu_sheet_4x4.png
+Source size: 1152x1152
 Output PNG: 288x288 pixels, transparent
 
 walk_front_01..04: front walk
