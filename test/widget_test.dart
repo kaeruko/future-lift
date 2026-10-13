@@ -486,7 +486,7 @@ void main() {
       find.byKey(const ValueKey('debug-replay-celebration')),
       findsOneWidget,
     );
-    expect(find.textContaining('現在のことほぎ：10'), findsOneWidget);
+    expect(find.textContaining('所持ことほぎ：10'), findsOneWidget);
     final saved = store.raw;
     final writes = store.writes;
 
