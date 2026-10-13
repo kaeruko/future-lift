@@ -269,7 +269,8 @@ class _GachaRevealState extends State<GachaReveal>
                       if (!_isNew)
                         Positioned(
                           left: width * .72,
-                          top: height * .35,
+                          // Keep the reunion stamp below the banner's edge.
+                          top: height * .425,
                           width: width * .18,
                           child: Image.asset(
                             'assets/gacya/parts/badge_reunion.png',
