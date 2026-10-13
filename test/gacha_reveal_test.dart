@@ -6,6 +6,7 @@ import 'package:future_lift/consultation_scene.dart';
 import 'package:future_lift/gacha_reveal.dart';
 import 'package:future_lift/gacha_screen.dart';
 import 'package:future_lift/progress.dart';
+import 'package:future_lift/resident_gacha.dart';
 
 import 'progress_test.dart' show MemoryStore;
 import 'resident_collection_test.dart' show funded, FixedRandom;
@@ -73,7 +74,15 @@ void main() {
         matching: find.byType(Image),
       ),
     );
-    expect((second.image as AssetImage).assetName, isNot(firstAsset));
+    final backSprite = (second.image as AssetImage).assetName;
+    expect(backSprite, isNot(firstAsset));
+    expect(backSprite, contains('/walk_back_'));
+    final walker = tester.getRect(
+      find.byKey(const ValueKey('consultation-walker-0')),
+    );
+    expect(walker.height, greaterThan(60));
+    expect(walker.top, lessThan(320));
+    expect(walker.bottom, lessThan(400));
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -89,6 +98,12 @@ void main() {
     expect(find.byKey(const ValueKey('gacha-reveal-glow')), findsOneWidget);
     expect(find.byKey(const ValueKey('gacha-stage-resident')),
         findsOneWidget);
+    final stageResident = tester.getRect(
+      find.byKey(const ValueKey('gacha-stage-resident')),
+    );
+    expect(stageResident.height, greaterThan(120));
+    // Feet remain on the blue stage instead of dropping below its front edge.
+    expect(stageResident.bottom, inInclusiveRange(360, 420));
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
         findsOneWidget);
     expect(find.text('ペンギンが、まちにやってきました！'),
@@ -138,6 +153,65 @@ void main() {
     store.gate!.complete();
     await tester.pumpAndSettle();
     expect(find.byType(GachaReveal), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('welcome button draws exactly once and starts the reveal',
+      (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final store = MemoryStore()..raw = funded(points: 60).encode();
+    final controller = ProgressController(
+      store,
+      clock: () => DateTime(2026, 10, 11),
+      random: FixedRandom(2),
+    );
+    await controller.initialize();
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: ResidentGacha(controller: controller),
+        ),
+      ),
+    ));
+    await tester.ensureVisible(find.byKey(const ValueKey('draw-resident')));
+    await tester.tap(find.byKey(const ValueKey('draw-resident')));
+    await tester.pumpAndSettle();
+    expect(find.byType(GachaReveal), findsOneWidget);
+    expect(find.byKey(const ValueKey('resident-arrival-banner')),
+        findsOneWidget);
+    expect(controller.progress!.residents.counts['03_penguin'], 1);
+    expect(store.writes, 1);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('welcome requires enough kotohogi before starting a draw',
+      (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final store = MemoryStore();
+    final controller = ProgressController(
+      store,
+      clock: () => DateTime(2026, 10, 11),
+      random: FixedRandom(2),
+    );
+    await controller.initialize();
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: ResidentGacha(controller: controller),
+        ),
+      ),
+    ));
+    final welcome = tester.widget<TextButton>(
+      find.byKey(const ValueKey('draw-resident')),
+    );
+    expect(welcome.onPressed, isNull);
+    expect(store.writes, 0);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
