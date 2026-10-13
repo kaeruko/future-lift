@@ -232,11 +232,14 @@ class _GachaRevealState extends State<GachaReveal>
                                 ),
                               ),
                               if (!_isNew)
+                                // Show reunions beside the resident's lower
+                                // right side instead of the banner's left edge,
+                                // which is cropped by BoxFit.cover on phones.
                                 Positioned(
-                                  left: ConsultationComposition.banner.left - 30,
-                                  top: ConsultationComposition.banner.top - 35,
-                                  width: 190,
-                                  height: 190,
+                                  left: ConsultationComposition.resident.right - 35,
+                                  top: ConsultationComposition.resident.bottom - 205,
+                                  width: 175,
+                                  height: 175,
                                   child: Image.asset(
                                     'assets/gacya/parts/badge_reunion.png',
                                     key: const ValueKey('gacha-reunion-badge'),

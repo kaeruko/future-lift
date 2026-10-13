@@ -7,6 +7,7 @@ import 'package:future_lift/gacha_reveal.dart';
 import 'package:future_lift/gacha_screen.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/resident_gacha.dart';
+import 'package:future_lift/resident_collection.dart';
 
 import 'progress_test.dart' show MemoryStore;
 import 'resident_collection_test.dart' show funded, FixedRandom;
@@ -173,13 +174,16 @@ void main() {
     final badge = tester.getRect(
       find.byKey(const ValueKey('gacha-reunion-badge')),
     );
-    final banner = tester.getRect(
-      find.byKey(const ValueKey('resident-arrival-banner')),
+    final returningResident = tester.getRect(
+      find.byKey(const ValueKey('gacha-stage-resident')),
     );
-    expect(badge.left, lessThan(banner.left));
-    expect(badge.top, lessThan(banner.top));
-    expect(badge.right, greaterThan(banner.left));
-    expect(badge.bottom, greaterThan(banner.top));
+    // The reunion badge belongs at the resident's lower right, not outside
+    // the viewport on the left edge of the arrival banner.
+    expect(badge.left, greaterThan(returningResident.center.dx));
+    expect(badge.top, greaterThan(returningResident.center.dy));
+    expect(badge.left, greaterThanOrEqualTo(0));
+    expect(badge.right, lessThanOrEqualTo(360));
+    expect(badge.bottom, lessThanOrEqualTo(640));
     // A returning resident still gets the arrival panel, with the reunion
     // badge added separately. Repeated draws must not silently omit it.
     expect(find.byKey(const ValueKey('resident-arrival-banner')),
@@ -201,6 +205,57 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
+
+  for (final viewport in <Size>[
+    const Size(320, 640),
+    const Size(360, 640),
+    const Size(402, 874),
+  ]) {
+    testWidgets('reunion badge stays on screen beside resident at $viewport',
+        (tester) async {
+      tester.view.physicalSize = viewport;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final controller = ProgressController(
+        MemoryStore()..raw = funded(points: 60).encode(),
+        clock: () => DateTime(2026, 10, 11),
+        random: FixedRandom(2),
+      );
+      await controller.initialize();
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: GachaReveal(
+            controller: controller,
+            resident: TownResident.penguin,
+            isNew: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final badge = find.byKey(const ValueKey('gacha-reunion-badge'));
+      final resident = find.byKey(const ValueKey('gacha-stage-resident'));
+      final banner = find.byKey(const ValueKey('resident-arrival-banner'));
+      expect(badge, findsOneWidget);
+      expect(resident, findsOneWidget);
+      expect(banner, findsOneWidget);
+      final b = tester.getRect(badge);
+      final r = tester.getRect(resident);
+      expect(b.left, greaterThanOrEqualTo(0));
+      expect(b.right, lessThanOrEqualTo(viewport.width));
+      expect(b.top, greaterThanOrEqualTo(0));
+      expect(b.bottom, lessThanOrEqualTo(viewport.height));
+      expect(b.left, greaterThan(r.center.dx));
+      expect(b.top, greaterThan(r.center.dy));
+      expect(find.bySemanticsLabel('また会えた'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
 
   testWidgets('saving blocks another draw until the first finishes',
       (tester) async {
