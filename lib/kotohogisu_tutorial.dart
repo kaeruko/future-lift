@@ -66,9 +66,9 @@ class _KotohogisuTutorialState extends State<KotohogisuTutorial> {
                                   child: child,
                                 ),
                             // Temporary glyph until Kotohogisu art is ready.
-                            child: const Semantics(
+                            child: Semantics(
                               label: 'コトホギスが飛んできました',
-                              child: Text('🐦', style: TextStyle(fontSize: 58)),
+                              child: const Text('🐦', style: TextStyle(fontSize: 58)),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -83,7 +83,7 @@ class _KotohogisuTutorialState extends State<KotohogisuTutorial> {
                             ),
                           ),
                           Text(
-                            (_step + 1).toString() + '/' + _lines.length.toString(),
+                            '${_step + 1}/${_lines.length}',
                             style: const TextStyle(
                               color: wood,
                               fontWeight: FontWeight.bold,
@@ -98,7 +98,7 @@ class _KotohogisuTutorialState extends State<KotohogisuTutorial> {
                             : const Duration(milliseconds: 180),
                         child: Text(
                           _lines[_step],
-                          key: ValueKey('kotohogisu-line-' + _step.toString()),
+                          key: ValueKey('kotohogisu-line-$_step'),
                           style: const TextStyle(
                             fontSize: 17,
                             height: 1.7,
