@@ -172,12 +172,17 @@ class PinnedGachaHud extends StatelessWidget {
     required this.tickets,
     required this.contentBuilder,
     this.ticketBadgeKey,
+    this.contentBehindHud = false,
   });
 
   final int points;
   final int tickets;
   final Key? ticketBadgeKey;
   final Widget Function(BuildContext, double) contentBuilder;
+
+  /// Allow a full-bleed scene to paint behind the pinned HUD.
+  /// The default retains the usual reserved top spacing for other pages.
+  final bool contentBehindHud;
 
   static const double edge = 12;
   static const double top = 12;
@@ -208,8 +213,11 @@ class PinnedGachaHud extends StatelessWidget {
         children: [
           const SizedBox.expand(),
           Positioned.fill(
-            top: reservedHeight,
-            child: contentBuilder(context, remainingHeight),
+            top: contentBehindHud ? 0 : reservedHeight,
+            child: contentBuilder(
+              context,
+              contentBehindHud ? constraints.maxHeight : remainingHeight,
+            ),
           ),
           if (width > 6)
             Positioned(
