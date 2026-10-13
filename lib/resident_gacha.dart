@@ -18,11 +18,20 @@ class _ResidentGachaState extends State<ResidentGacha> {
   bool _revealing = false;
 
   Future<void> _openShrine() async {
-    if (_revealing) return;
+    final progress = widget.controller.progress;
+    if (_revealing ||
+        widget.controller.busy ||
+        progress == null ||
+        progress.residents.tickets(progress.points) < 1) {
+      return;
+    }
     setState(() => _revealing = true);
     final town = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => GachaScreen(controller: widget.controller),
+        builder: (_) => GachaScreen(
+          controller: widget.controller,
+          autoStart: true,
+        ),
       ),
     );
     if (!mounted) return;
@@ -77,14 +86,14 @@ class _ResidentGachaState extends State<ResidentGacha> {
           Center(
             child: Semantics(
               button: true,
-              enabled: !_revealing && !widget.controller.busy,
+              enabled: !_revealing && !widget.controller.busy && balance >= 30,
               label: '移住相談会へ',
               child: Tooltip(
                 message: '移住相談会へ',
                 child: TextButton(
                   key: const ValueKey('draw-resident'),
                   onPressed:
-                      _revealing || widget.controller.busy
+                      _revealing || widget.controller.busy || balance < 30
                       ? null
                       : _openShrine,
                   style: TextButton.styleFrom(
