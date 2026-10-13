@@ -130,7 +130,13 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('resident-list-button')));
     await tester.pumpAndSettle();
     expect(find.text('住民一覧'), findsOneWidget);
-    expect(find.text('ペンギン'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('ペンギン'),
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.text('閉じる'));
     await tester.pumpAndSettle();
 
