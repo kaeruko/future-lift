@@ -95,8 +95,8 @@ class _GachaScreenState extends State<GachaScreen> {
               const Positioned.fill(child: ConsultationBackground()),
               Positioned(
                 top: safe.top + 10,
-                left: 12,
-                width: (width * .54).clamp(170.0, 300.0),
+                right: 12,
+                width: (width * .48).clamp(160.0, 270.0),
                 child: KotohogiBar(points: balance),
               ),
               Positioned(
