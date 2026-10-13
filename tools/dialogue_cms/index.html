@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>コトホグ｜セリフCMS</title>
+<title>コトホグ｜キャラクター・セリフCMS</title>
 <style>
 :root{font-family:system-ui,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#492b27;background:#faf6ee}
 *{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}
@@ -35,13 +35,21 @@ button:disabled{opacity:.5;cursor:not-allowed}
 #previewBox strong{color:#7c1c32}
 .controls{display:flex;align-items:center;gap:8px}
 .controls input[type=checkbox]{width:auto}
+nav{display:flex;gap:8px;padding:14px 18px 0;max-width:1380px;margin:auto}
+nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
+#characterMain{grid-template-columns:280px minmax(0,1fr)}
+#characterMain[hidden],#dialogueMain[hidden]{display:none}
 @media(max-width:1120px){main{grid-template-columns:250px minmax(0,1fr)}main>.panel:last-child{grid-column:1/-1}}
 @media(max-width:700px){main{display:block}main>.panel{margin-bottom:16px}#entries{max-height:230px}}
 </style>
 </head>
 <body>
-<header><h1>🌸 コトホグ セリフCMS</h1><p>ローカル専用｜キャラクター・ミッション累計・日付・AND/ORを編集してJSONに保存</p></header>
-<main>
+<header><h1>🌸 コトホグ 管理CMS</h1><p>ローカル専用｜キャラ登録・画像設定・セリフ条件を編集</p></header>
+<nav aria-label="管理画面">
+  <button id="showCharacters" aria-selected="true">🐾 キャラクター管理</button>
+  <button id="showDialogues" aria-selected="false">💬 セリフ管理</button>
+</nav>
+<main id="dialogueMain" hidden>
 <section class="panel">
   <h2>セリフ一覧 <span id="count"></span></h2>
   <label for="filter">キャラクターで絞る</label><select id="filter"></select>
@@ -68,13 +76,31 @@ button:disabled{opacity:.5;cursor:not-allowed}
   <p class="hint">優先順位の数値が大きいセリフを優先。同順位は実アプリでタップごとに順番が変わります。「1回のみ」は表示した記録が保存されます。</p>
 </section>
 </main>
+<main id="characterMain">
+  <section class="panel">
+    <h2>登録キャラクター</h2>
+    <div class="actions"><button id="addCharacter">＋ キャラ追加</button></div>
+    <div id="characterEntries"></div>
+    <p class="hint">登録済みキャラのID・画像フォルダは、セーブデータを守るため変更できません。</p>
+  </section>
+  <section class="panel">
+    <h2>キャラクター設定</h2>
+    <div id="characterEditor"></div>
+    <div class="actions">
+      <button id="saveCharacters">💾 キャラとセリフを保存</button>
+      <button id="cancelNewCharacter" class="secondary">追加を取り消す</button>
+    </div>
+    <p class="hint">画像は先に assets/characters/ のフォルダへ置いてね。保存時に全スプライトを検証し、Flutterの住民定義と画像登録を自動生成します。公開には Git コミットと再ビルドが必要です。</p>
+    <p class="status" id="characterStatus" role="status"></p>
+  </section>
+</main>
 <script>
 "use strict";
-const residents={"01_shiba":"しばいぬ","02_rabbit":"うさぎ","03_penguin":"ペンギン","04_cat":"ねこ","05_squirrel":"りす","06_bear":"くま"};
+let residents={};
 const missions={"all":"全ミッション合計","strength":"筋力を使った","outside":"外に出た・歩いた","conversation":"人と話した","movement":"身体を動かした","sittingBreak":"座りっぱなしを途中でやめた","food":"食事をひとつ整えた","hobby":"趣味や学びを楽しんだ","weeklyStrength":"筋トレをした","weeklyActive":"息が弾む運動を楽しんだ","weeklyTogether":"誰かと一緒に活動した","weeklyLearn":"新しいことを学んだ・試した","monthlyCommunity":"地域の活動に参加した","monthlyHabit":"健康習慣をひとつ工夫した","monthlyReview":"今月の言祝ぎを振り返った"};
 const modes={"exact":"指定日","range":"指定期間","annual":"毎年の指定日","annual_range":"毎年の期間","weekday":"毎週の曜日"};
 const byId=id=>document.getElementById(id);
-let data=null,selected=null,dirty=false;
+let data=null,selected=null,dirty=false,registry=null,characterSelected=null,savedCount=0;
 function node(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el}
 function append(parent,tag,text){const el=node(tag,text);parent.append(el);return el}
 function opts(element,values,value){for(const [key,label] of Object.entries(values)){const o=node("option",label);o.value=key;element.append(o)}element.value=value}
@@ -87,7 +113,7 @@ function labelControl(parent,title,tag,value,onChange,attributes={}){
   return control;
 }
 function setStatus(message,error=false){const e=byId("status");e.textContent=message;e.className="status"+(error?" error":"")}
-function fresh(){return{id:"line_"+Date.now(),residentId:"01_shiba",text:"新しいセリフ",priority:10,once:false,logic:"all",conditions:[]}}
+function fresh(){return{id:"line_"+Date.now(),residentId:registry.characters[0].id,text:"新しいセリフ",priority:10,once:false,logic:"all",conditions:[]}}
 function current(){if(selected===null)return null;return data.dialogues.find(e=>e.id===selected)||null}
 function refresh(){
   const filter=byId("filter").value;
@@ -107,7 +133,7 @@ function renderEditor(){
   const area=byId("editor");area.replaceChildren();const entry=current();
   if(!entry){append(area,"p","セリフを選択してください。");return}
   const idBox=labelControl(area,"セリフID（変更後も重複不可）","input",entry.id,v=>{
-    const old=entry.id;entry.id=v;selected=v;refresh();
+    entry.id=v;selected=v;refresh();
   });
   idBox.autocomplete="off";
   labelControl(area,"キャラクター","select",entry.residentId,v=>{entry.residentId=v;refresh()},{options:residents});
@@ -190,14 +216,129 @@ function runPreview(){
       "表示できるセリフがありません。条件と通常セリフを確認してください。";
   }catch(err){byId("previewBox").textContent="プレビューエラー: "+err.message}
 }
+function setCharacterStatus(message,error=false){
+  const el=byId("characterStatus");
+  el.textContent=message;el.className="status"+(error?" error":"");
+}
+function rebuildResidentOptions(){
+  residents=Object.fromEntries(registry.characters.map(row=>[row.id,row.label]));
+  for(const id of ["filter","previewResident"]){
+    const element=byId(id);
+    const previous=element.value;
+    element.replaceChildren();
+    opts(element,id==="filter"?{"all":"すべて",...residents}:residents,
+         previous==="all"&&id==="filter"?"all":residents[previous]?previous:(id==="filter"?"all":registry.characters[0].id));
+  }
+}
+function activeCharacter(){
+  return registry.characters.find(row=>row.id===characterSelected)||null;
+}
+function renderCharacterList(){
+  const box=byId("characterEntries");box.replaceChildren();
+  for(const row of registry.characters){
+    const btn=append(box,"button",row.label+"｜"+row.id);
+    btn.className="entry"+(row.id===characterSelected?" active":"");
+    btn.style.marginBottom="6px";
+    append(btn,"small",row.artFolder+(row.inGacha?" ｜ ガチャ":"")+(row.walkInTown?" ｜ まち":""));
+    btn.onclick=()=>{characterSelected=row.id;renderCharacterList();renderCharacterEditor()};
+  }
+}
+function renderCharacterEditor(){
+  const box=byId("characterEditor");box.replaceChildren();
+  const row=activeCharacter();
+  if(!row){append(box,"p","キャラクターを選んでください");return}
+  const index=registry.characters.indexOf(row), locked=index<savedCount;
+  const edit=(title,field,readonly=false)=>{
+    const element=labelControl(box,title,"input",row[field],value=>{
+      const oldId=row.id;
+      row[field]=value;
+      if(field==="id"){
+        for(const dialogue of data.dialogues)if(dialogue.residentId===oldId)dialogue.residentId=value;
+        characterSelected=value;
+      }
+      rebuildResidentOptions();renderCharacterList();
+    });
+    element.readOnly=readonly;
+    return element;
+  };
+  edit("キャラ名","label");
+  edit("キャラID（例: 07_owl）","id",locked);
+  edit("Dart識別子（例: owl）","key",locked);
+  edit("画像フォルダ名（例: 008_hukurou.png）","artFolder",locked);
+  labelControl(box,"Tipsの元キャラ","select",row.tipSource,value=>{row.tipSource=value},
+    {options:{child:"こども",student:"学生",adult:"大人",elder:"高齢者"}});
+  for(const [field,title] of [["inGacha","ガチャに登場する"],["walkInTown","まちを歩く"]]){
+    const label=append(box,"label");label.className="controls";
+    const input=append(label,"input");input.type="checkbox";input.checked=row[field];
+    append(label,"span",title);
+    input.onchange=()=>{row[field]=input.checked;dirty=true;renderCharacterList();setCharacterStatus("未保存の変更があります")};
+  }
+  if(!locked)append(box,"p","最初のセリフはセリフ管理タブで編集できます。通常セリフを1件以上残してください。").className="hint";
+  byId("cancelNewCharacter").disabled=locked;
+}
 async function load(){
   try{
-    const response=await fetch("/api/dialogues",{cache:"no-store"});
-    const body=await response.json();
-    if(!response.ok)throw Error(body.error||"読込失敗");
-    data=body;selected=data.dialogues[0].id;dirty=false;refresh();runPreview();setStatus("読込成功");
-  }catch(err){setStatus("読込エラー: "+err.message,true)}
+    const [dialogResponse,characterResponse]=await Promise.all([
+      fetch("/api/dialogues",{cache:"no-store"}),
+      fetch("/api/characters",{cache:"no-store"})
+    ]);
+    const [dialogBody,characterBody]=await Promise.all([dialogResponse.json(),characterResponse.json()]);
+    if(!characterResponse.ok)throw Error(characterBody.error||"キャラ読込失敗");
+    if(!dialogResponse.ok)throw Error(dialogBody.error||"セリフ読込失敗");
+    data=dialogBody;registry=characterBody;
+    savedCount=registry.characters.length;
+    characterSelected=registry.characters[0].id;
+    selected=data.dialogues[0].id;dirty=false;
+    rebuildResidentOptions();renderCharacterList();renderCharacterEditor();
+    refresh();runPreview();setStatus("読込成功");setCharacterStatus("読込成功");
+  }catch(err){setStatus("読込エラー: "+err.message,true);setCharacterStatus("読込エラー: "+err.message,true)}
 }
+function setTab(tab){
+  byId("characterMain").hidden=tab!=="characters";
+  byId("dialogueMain").hidden=tab!=="dialogues";
+  byId("showCharacters").setAttribute("aria-selected",tab==="characters");
+  byId("showDialogues").setAttribute("aria-selected",tab==="dialogues");
+}
+byId("showCharacters").onclick=()=>setTab("characters");
+byId("showDialogues").onclick=()=>setTab("dialogues");
+byId("addCharacter").onclick=()=>{
+  if(!registry)return;
+  const used=new Set(registry.characters.map(row=>row.id));
+  let number=registry.characters.length+1;
+  while(used.has(String(number).padStart(2,"0")+"_new"))number++;
+  const row={key:"new"+number,id:String(number).padStart(2,"0")+"_new",
+    label:"新しい住民",artFolder:String(number).padStart(3,"0")+"_new",
+    tipSource:"adult",inGacha:true,walkInTown:true};
+  registry.characters.push(row);
+  data.dialogues.push({id:"new"+number+"_default",residentId:row.id,
+    text:"こんにちは！よろしくね。",priority:0,once:false,logic:"all",conditions:[]});
+  characterSelected=row.id;dirty=true;
+  rebuildResidentOptions();renderCharacterList();renderCharacterEditor();
+  setCharacterStatus("新しい住民を追加しました。名前・ID・フォルダ・セリフを設定して保存してください。");
+};
+byId("cancelNewCharacter").onclick=()=>{
+  const row=activeCharacter();
+  if(!row||registry.characters.indexOf(row)<savedCount)return;
+  registry.characters=registry.characters.filter(item=>item!==row);
+  data.dialogues=data.dialogues.filter(item=>item.residentId!==row.id);
+  characterSelected=registry.characters[0].id;
+  dirty=true;rebuildResidentOptions();renderCharacterList();renderCharacterEditor();refresh();
+  setCharacterStatus("追加を取り消しました（保存前の変更です）");
+};
+async function saveAll(){
+  try{
+    if(!registry||!data)throw Error("データが読込まれていません");
+    const response=await fetch("/api/cms",{method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({characters:registry,dialogues:data})});
+    const payload=await response.json();
+    if(!response.ok)throw Error(payload.error||"保存失敗");
+    await load();
+    setStatus("保存成功：セリフ "+payload.dialogues+"件");
+    setCharacterStatus("保存成功：キャラ "+payload.characters+"匹。Gitにコミットして再ビルドしてください。");
+  }catch(err){setStatus("保存エラー: "+err.message,true);setCharacterStatus("保存エラー: "+err.message,true)}
+}
+byId("saveCharacters").onclick=saveAll;
 byId("add").onclick=()=>{
   const entry=fresh();data.dialogues.push(entry);selected=entry.id;
   byId("filter").value="all";dirty=true;refresh();setStatus("未保存の変更があります");
@@ -207,20 +348,12 @@ byId("delete").onclick=()=>{
   data.dialogues=data.dialogues.filter(e=>e!==entry);
   selected=data.dialogues[0]?.id||null;dirty=true;refresh();setStatus("未保存の変更があります");
 };
-byId("save").onclick=async()=>{
-  try{
-    const result=await fetch("/api/dialogues",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
-    const payload=await result.json();if(!result.ok)throw Error(payload.error||"保存に失敗しました");
-    dirty=false;setStatus("保存成功（"+payload.count+"件）。アプリに反映するには再ビルドが必要です。");
-    refresh();runPreview();
-  }catch(err){setStatus("保存エラー："+err.message,true)}
-};
+byId("save").onclick=saveAll;
 byId("reload").onclick=()=>{if(!dirty||confirm("未保存の変更を破棄しますか？"))load()};
 byId("filter").onchange=refresh;
 byId("runPreview").onclick=runPreview;
 for(const e of [byId("previewDay"),byId("previewResident"),byId("previewTotal"),byId("previewPoints")])e.addEventListener("change",runPreview);
-opts(byId("filter"),{"all":"すべて",...residents},"all");
-opts(byId("previewResident"),residents,"01_shiba");
+// Character options are loaded from the resident catalog at startup.
 for(const [key,title] of Object.entries(missions)){
   if(key==="all")continue;
   const input=labelControl(byId("previewMissions"),title,"input",0,runPreview,{type:"number",min:0});

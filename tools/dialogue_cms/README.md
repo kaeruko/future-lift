@@ -63,3 +63,37 @@ git push
 サーバーは `127.0.0.1` のみに待ち受け、PUTを同一オリジンに制限します。データはJSON検証後に一時ファイルへ書き、原子的に差し替えます。GitHubへの変更はCMSが自動では実行しません。
 
 検証: `python -m unittest discover -s tools/dialogue_cms -p 'test_*.py'`
+
+
+## キャラクター登録（CMS）
+
+管理画面の「キャラクター管理」で「＋ キャラ追加」を押します。先に
+`assets/characters/<画像フォルダ名>/` へスプライトを配置し、
+名前・安定したキャラID・Dart識別子・画像フォルダ・ガチャ登場・まちを歩くを指定します。
+セリフ管理タブには、そのキャラの通常セリフが自動追加されています。
+
+各フォルダには `idle_front_01.png`、`clap_front_01.png` と
+`clap_front_02.png`、上下左右それぞれ `walk_<方向>_01.png`〜
+`walk_<方向>_04.png` が必要です（元から存在するしばいぬのみ左向きを右画像反転で代用）。
+例: `assets/characters/008_hukurou.png/`。フォルダがない場合や画像不足は保存エラーとなります。
+
+保存は `assets/characters/characters.json` と
+`assets/dialogues/dialogues.json` に加えて、
+`lib/resident_collection.dart` のCMS生成領域と
+`pubspec.yaml` のキャラアセット登録領域を同期します。
+既存住民のID・内部識別子・画像フォルダは変更・削除できません。
+所持済み住民を安全に保持するため、ガチャ対象外やまち非表示にするフラグを使用してください。
+ガチャは「ガチャに登場」がONのキャラから等確率で選びます。
+まちで表示する住民は従来どおり最大8人までです。
+
+```powershell
+python -m unittest discover -s tools/dialogue_cms -p 'test_*.py'
+flutter analyze
+flutter test
+git status
+git add assets/characters/characters.json assets/dialogues/dialogues.json lib/resident_collection.dart pubspec.yaml
+git commit -m "Update residents with local CMS"
+git push
+```
+
+CMSはローカル専用です。セリフ編集もキャラクター追加も公開アプリへの即時反映はしません。

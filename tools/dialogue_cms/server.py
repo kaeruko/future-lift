@@ -9,11 +9,13 @@ from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
+from characters import load_catalog, validate_catalog, save_catalog_and_dialogues
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "assets" / "dialogues" / "dialogues.json"
 INDEX = Path(__file__).with_name("index.html")
-RESIDENTS = {"01_shiba", "02_rabbit", "03_penguin", "04_cat", "05_squirrel", "06_bear"}
+def resident_ids():
+    return {row["id"] for row in validate_catalog(load_catalog())["characters"]}
 MISSIONS = {
     "all", "strength", "outside", "conversation", "movement", "sittingBreak",
     "food", "hobby", "weeklyStrength", "weeklyActive", "weeklyTogether",
@@ -43,7 +45,9 @@ def month_day(value):
     date_full("2000-" + value)  # Leap day can be an annual event.
 
 
-def validate(doc):
+def validate(doc, residents=None):
+    if residents is None:
+        residents = resident_ids()
     require_keys(doc, {"version", "dialogues"}, "root")
     if doc["version"] != 1 or type(doc["version"]) is not int:
         raise ValueError("Unsupported dialogue version")
@@ -61,7 +65,7 @@ def validate(doc):
         if identifier in ids:
             raise ValueError(f"Duplicate dialogue id: {identifier}")
         ids.add(identifier)
-        if entry["residentId"] not in RESIDENTS:
+        if entry["residentId"] not in residents:
             raise ValueError(f"Unknown resident: {identifier}")
         if not isinstance(entry["text"], str) or not entry["text"].strip() or len(entry["text"]) > 500:
             raise ValueError(f"Invalid text: {identifier}")
@@ -114,8 +118,8 @@ def validate(doc):
                     raise ValueError(f"Invalid date mode: {loc}")
             else:
                 raise ValueError(f"Unknown condition type: {loc}")
-    if defaults != RESIDENTS:
-        raise ValueError(f"Every resident needs an unconditional non-once dialogue. Missing: {sorted(RESIDENTS - defaults)}")
+    if defaults != residents:
+        raise ValueError(f"Every resident needs an unconditional non-once dialogue. Missing: {sorted(residents - defaults)}")
     return doc
 
 
@@ -163,6 +167,12 @@ class Handler(BaseHTTPRequestHandler):
             raw = INDEX.read_bytes()
             self._headers(200, "text/html; charset=utf-8", len(raw))
             self.wfile.write(raw)
+        elif path == "/api/characters":
+            try:
+                document = validate_catalog(load_catalog())
+                self._send(200, document)
+            except (OSError, ValueError, TypeError) as exc:
+                self._send(500, {"error": str(exc)})
         elif path == "/api/dialogues":
             try:
                 document = json.loads(DATA.read_text(encoding="utf-8"))
@@ -174,7 +184,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, {"error": "Not found"})
 
     def do_PUT(self):
-        if urlsplit(self.path).path != "/api/dialogues":
+        endpoint = urlsplit(self.path).path
+        if endpoint not in {"/api/dialogues", "/api/cms"}:
             return self._send(404, {"error": "Not found"})
         # A cross-origin website must not be able to modify local files.
         expected = f"http://127.0.0.1:{self.server.server_port}"
@@ -188,8 +199,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(413, {"error": "Invalid document size"})
             raw = self.rfile.read(size)
             value = json.loads(raw.decode("utf-8"))
-            write_document(value)
-            self._send(200, {"ok": True, "count": len(value["dialogues"])})
+            if endpoint == "/api/cms":
+                result = save_catalog_and_dialogues(value, validate)
+                self._send(200, result)
+            else:
+                write_document(value)
+                self._send(200, {"ok": True, "count": len(value["dialogues"])})
         except (ValueError, TypeError, UnicodeDecodeError) as exc:
             self._send(400, {"error": str(exc)})
         except OSError as exc:
@@ -206,7 +221,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("Invalid port")
-    if not INDEX.exists() or not DATA.exists():
+    if not INDEX.exists() or not DATA.exists() or not (ROOT / "assets/characters/characters.json").exists():
         raise SystemExit("CMS HTML or dialogues.json not found")
     with ThreadingHTTPServer(("127.0.0.1", args.port), Handler) as server:
         print(f"Open http://127.0.0.1:{args.port} (Ctrl+C to stop)", flush=True)

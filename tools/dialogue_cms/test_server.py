@@ -7,6 +7,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from server import validate, write_document
+from characters import (load_catalog, validate_catalog, generate_dart, generate_pubspec,
+                        DART, PUBSPEC, save_catalog_and_dialogues)
 
 
 def sample():
@@ -16,6 +18,52 @@ def sample():
 
 
 class CmsTests(unittest.TestCase):
+    def test_character_registry_and_generated_files(self):
+        registry = validate_catalog(load_catalog())
+        self.assertEqual(len(registry["characters"]), 6)
+        self.assertEqual(generate_dart(DART.read_text("utf-8"), registry["characters"]),
+                         DART.read_text("utf-8"))
+        self.assertEqual(generate_pubspec(PUBSPEC.read_text("utf-8"), registry["characters"]),
+                         PUBSPEC.read_text("utf-8"))
+
+    def test_existing_character_ids_cannot_change(self):
+        original = load_catalog()
+        for change in ("remove", "id", "folder"):
+            modified = copy.deepcopy(original)
+            if change == "remove":
+                modified["characters"].pop(0)
+            elif change == "id":
+                modified["characters"][0]["id"] = "01_new"
+            else:
+                modified["characters"][0]["artFolder"] = "002_usagi"
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                validate_catalog(modified, previous=original)
+
+    def test_new_character_needs_sprite_and_unconditional_dialogue(self):
+        original = load_catalog()
+        modified = copy.deepcopy(original)
+        modified["characters"].append({
+            "key": "owl", "id": "07_owl", "label": "ふくろう",
+            "artFolder": "missing_sprite_folder", "tipSource": "adult",
+            "inGacha": True, "walkInTown": True
+        })
+        with self.assertRaisesRegex(ValueError, "Sprite folder"):
+            validate_catalog(modified, previous=original)
+        modified["characters"][-1]["artFolder"] = "013_kotohogisu"
+        validate_catalog(modified, previous=original)
+        with self.assertRaisesRegex(ValueError, "Missing"):
+            validate(sample(), residents={row["id"] for row in modified["characters"]})
+
+    def test_bad_catalog_keeps_files_intact(self):
+        original = load_catalog()
+        modified = copy.deepcopy(original)
+        modified["characters"][0]["key"] = "renamed"
+        prior = {path: path.read_bytes() for path in (DART, PUBSPEC)}
+        with self.assertRaises(ValueError):
+            save_catalog_and_dialogues({"characters": modified, "dialogues": sample()}, validate)
+        for path, raw in prior.items():
+            self.assertEqual(path.read_bytes(), raw)
+
     def test_valid_bundled_content(self):
         validate(sample())
 

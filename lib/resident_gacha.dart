@@ -119,7 +119,7 @@ class _ResidentGachaState extends State<ResidentGacha> {
           ),
           const SizedBox(height: 8),
           const Text(
-            '移住相談会では全6種類の住民と同じ確率（各1/6）で出会えます。\n同じ住民と再会することもあります。',
+            '住民との出会いは同じ確率です。\n同じ住民と再会することもあります。',
             style: TextStyle(fontSize: 12),
           ),
           const SizedBox(height: 12),

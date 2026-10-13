@@ -664,8 +664,9 @@ class ProgressController extends ChangeNotifier {
     busy = true;
     notifyListeners();
     try {
-      final resident =
-          TownResident.values[random.nextInt(TownResident.values.length)];
+      final pool = TownResident.gachaPool;
+      if (pool.isEmpty) throw StateError('Resident gacha pool is empty');
+      final resident = pool[random.nextInt(pool.length)];
       final next = progress!.onDay(clock()).acquireResident(resident);
       await store.save(next);
       progress = next;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'residents.dart';
 
-const ownedResidentLimit = 8;
+int get ownedResidentLimit => TownResident.values.length > 8 ? TownResident.values.length : 8;
 const townResidentLimit = 8;
 const applauseResidentLimit = 8;
 
@@ -12,18 +12,25 @@ const maxSpendableKotohogi = 999;
 enum WalkDirection { front, back, left, right }
 
 enum TownResident {
-  shiba('01_shiba', 'しばいぬ', '001_shiba', Resident.child),
-  rabbit('02_rabbit', 'うさぎ', '002_usagi', Resident.student),
-  penguin('03_penguin', 'ペンギン', '003_penguin', Resident.adult),
-  cat('04_cat', 'ねこ', '004_neko', Resident.adult),
-  squirrel('05_squirrel', 'りす', '005_risu', Resident.child),
-  bear('06_bear', 'くま', '006_kuma', Resident.elder);
+  // BEGIN CMS RESIDENTS
+  shiba("01_shiba", "しばいぬ", "001_shiba", Resident.child, true, true),
+  rabbit("02_rabbit", "うさぎ", "002_usagi", Resident.student, true, true),
+  penguin("03_penguin", "ペンギン", "003_penguin", Resident.adult, true, true),
+  cat("04_cat", "ねこ", "004_neko", Resident.adult, true, true),
+  squirrel("05_squirrel", "りす", "005_risu", Resident.child, true, true),
+  bear("06_bear", "くま", "006_kuma", Resident.elder, true, true)
+  // END CMS RESIDENTS
+  ;
 
-  const TownResident(this.id, this.label, this.artFolder, this.tipSource);
+  const TownResident(this.id, this.label, this.artFolder, this.tipSource, this.inGacha, this.walkInTown);
   final String id;
   final String label;
   final String artFolder;
   final Resident tipSource;
+  final bool inGacha;
+  final bool walkInTown;
+  static List<TownResident> get gachaPool =>
+      values.where((resident) => resident.inGacha).toList(growable: false);
   List<String> get tips => tipSource.tips;
   String get idleAsset => 'assets/characters/$artFolder/idle_front_01.png';
   List<String> get clapAssets => [
