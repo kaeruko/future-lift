@@ -59,7 +59,7 @@ class _ResidentGachaState extends State<ResidentGacha> {
                 ),
               ),
               Text(
-                '${balance}ことほぎ',
+                'ことほぎ $balance',
                 key: const ValueKey('consultation-balance'),
                 style: const TextStyle(
                   color: Color(0xFF63351F),
