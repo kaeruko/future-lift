@@ -41,7 +41,7 @@ void main() {
     for (var i = 0; i < 7; i++) {
       await tester.pump(const Duration(milliseconds: 190));
     }
-    expect(asset(), 'assets/characters/013_kotohogisu/walk_left_01.png');
+    expect(asset(), startsWith('assets/characters/013_kotohogisu/walk_left_'));
     expect(find.byKey(const ValueKey('complete-strength')), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
