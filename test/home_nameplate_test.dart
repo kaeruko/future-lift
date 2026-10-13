@@ -104,6 +104,65 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  // Regression: the home action cards and footer must be visible on the
+  // first frame, without scrolling, on standard phone viewports.
+  for (final screen in <Size>[
+    const Size(320, 720),
+    const Size(360, 720),
+    const Size(402, 874),
+  ]) {
+    testWidgets('home first viewport contains both signs at $screen',
+        (tester) async {
+      tester.view.physicalSize = screen;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: GameHome(
+                  progress: Progress.empty(DateTime(2026, 10, 12)),
+                  onMissions: () {},
+                  onTown: () {},
+                  onResident: (_) {},
+                ),
+              ),
+            ),
+          ),
+          bottomNavigationBar: const SizedBox(height: 104),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final viewport = tester.getRect(find.byType(ListView));
+      final mission = tester.getRect(
+        find.byKey(const ValueKey('open-missions')),
+      );
+      final town = tester.getRect(
+        find.byKey(const ValueKey('open-town')),
+      );
+      final footer = tester.getRect(
+        find.byKey(const ValueKey('home-footer-message')),
+      );
+      final resident = tester.getRect(
+        find.byKey(const ValueKey('home-resident-sprite-01_shiba')),
+      );
+
+      expect(mission.top, greaterThan(resident.bottom));
+      expect(town.top, greaterThan(resident.bottom));
+      expect(mission.bottom, lessThan(footer.top));
+      expect(town.bottom, lessThan(footer.top));
+      expect(footer.bottom, lessThanOrEqualTo(viewport.bottom));
+      expect(mission.top, greaterThanOrEqualTo(viewport.top));
+      expect(town.top, greaterThanOrEqualTo(viewport.top));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
+
   // The actual app wraps GameHome in SafeArea > Center > ConstrainedBox.
   // This supplies loose constraints, unlike a directly mounted Scaffold body.
   // Regression: without a non-positioned expanding child, both GameHome and
