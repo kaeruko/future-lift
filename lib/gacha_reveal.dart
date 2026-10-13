@@ -143,9 +143,9 @@ class _GachaRevealState extends State<GachaReveal>
                       Positioned(
                         key: const ValueKey('gacha-glow-layer'),
                         left: width * .17,
-                        top: height * .465,
+                        top: height * .35,
                         width: width * .66,
-                        height: height * .29,
+                        height: height * .30,
                         child: Opacity(
                           opacity: visible,
                           child: Transform.scale(
@@ -161,10 +161,10 @@ class _GachaRevealState extends State<GachaReveal>
                       ),
                     if (t >= .30)
                       Positioned(
-                        left: width * .34,
-                        top: height * .565,
-                        width: width * .32,
-                        height: height * .155,
+                        left: width * .28,
+                        top: height * .39,
+                        width: width * .44,
+                        height: height * .225,
                         child: Opacity(
                           opacity: visible,
                           child: Transform.translate(
@@ -183,7 +183,7 @@ class _GachaRevealState extends State<GachaReveal>
                       ),
                     if (t >= .67) ...[
                       Positioned(
-                        top: height * .35,
+                        top: height * .22,
                         left: width * .09,
                         right: width * .09,
                         child: Semantics(
@@ -212,9 +212,9 @@ class _GachaRevealState extends State<GachaReveal>
                       if (_isNew)
                         Positioned(
                           left: width * .17,
-                          top: height * .395,
+                          top: height * .255,
                           width: width * .66,
-                          height: height * .15,
+                          height: height * .13,
                           child: Image.asset(
                             'assets/gacya/resident_arrival_banner.png',
                             key: const ValueKey('resident-arrival-banner'),
@@ -225,7 +225,7 @@ class _GachaRevealState extends State<GachaReveal>
                       else
                         Positioned(
                           left: width * .42,
-                          top: height * .42,
+                          top: height * .30,
                           width: width * .16,
                           child: Image.asset(
                             'assets/gacya/parts/badge_reunion.png',
