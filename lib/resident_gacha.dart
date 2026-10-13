@@ -4,7 +4,6 @@ import 'progress.dart';
 import 'resident_collection.dart';
 import 'home_skin.dart';
 import 'gacha_screen.dart';
-import 'ticket_counter_badge.dart';
 
 /// Inline panel keeps save failures visible on the main diagnostic screen.
 class ResidentGacha extends StatefulWidget {
@@ -35,7 +34,7 @@ class _ResidentGachaState extends State<ResidentGacha> {
   Widget build(BuildContext context) {
     final progress = widget.controller.progress!;
     final collection = progress.residents;
-    final tickets = collection.tickets(progress.points);
+    final balance = collection.availableKotohogi(progress.points);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: parchment(),
@@ -51,7 +50,7 @@ class _ResidentGachaState extends State<ResidentGacha> {
             children: [
               const Expanded(
                 child: Text(
-                  '住民ガチャ券',
+                  '移住相談会の開催費',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -59,23 +58,29 @@ class _ResidentGachaState extends State<ResidentGacha> {
                   ),
                 ),
               ),
-              TicketCounterBadge(
-                key: const ValueKey('resident-tickets'),
-                tickets: tickets,
+              Text(
+                '${balance}ことほぎ',
+                key: const ValueKey('consultation-balance'),
+                style: const TextStyle(
+                  color: Color(0xFF63351F),
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ],
           ),
           Text(
-            'あと${collection.untilNextTicket(progress.points)}ことほぎで券を1枚もらえます。',
+            balance >= 30
+                ? '30ことほぎで移住相談会を1回開けます。'
+                : 'あと${30 - balance}ことほぎで移住相談会を開けます。',
           ),
           const SizedBox(height: 12),
           Center(
             child: Semantics(
               button: true,
               enabled: !_revealing && !widget.controller.busy,
-              label: '桜神社のガチャ会場へ',
+              label: '移住相談会へ',
               child: Tooltip(
-                message: '桜神社のガチャ会場へ',
+                message: '移住相談会へ',
                 child: TextButton(
                   key: const ValueKey('draw-resident'),
                   onPressed:
@@ -88,7 +93,7 @@ class _ResidentGachaState extends State<ResidentGacha> {
                   ),
                   child: Opacity(
                     opacity:
-                        _revealing || widget.controller.busy || tickets == 0
+                        _revealing || widget.controller.busy || balance < 30
                         ? .45
                         : 1,
                     child: Image.asset(
@@ -105,7 +110,7 @@ class _ResidentGachaState extends State<ResidentGacha> {
           ),
           const SizedBox(height: 8),
           const Text(
-            '全6種類が同じ確率（各1/6）で登場します。\n同じ住民と再会することもあります。',
+            '移住相談会では全6種類の住民と同じ確率（各1/6）で出会えます。\n同じ住民と再会することもあります。',
             style: TextStyle(fontSize: 12),
           ),
           const SizedBox(height: 12),
