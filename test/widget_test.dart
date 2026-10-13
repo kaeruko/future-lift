@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/celebration.dart';
 import 'package:future_lift/clap_characters.dart';
 import 'package:future_lift/main.dart';
+import 'package:future_lift/kotohogisu_tutorial.dart';
 import 'package:future_lift/dialogue_engine.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/residents.dart';
@@ -790,6 +791,82 @@ void main() {
     expect(controller.progress!.completed, initial.completed);
     expect(store.writes, 0);
     expect(store.raw, original);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Kotohogisu sprite walks in, faces forward, and waves', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: KotohogisuTutorial(
+            onSkip: () {},
+            onFinish: () {},
+          ),
+        ),
+      ),
+    );
+
+    String displayedAsset() {
+      final sprite = tester.widget<Image>(
+        find.byKey(const ValueKey('kotohogisu-sprite')),
+      );
+      return (sprite.image as AssetImage).assetName;
+    }
+
+    expect(
+      displayedAsset(),
+      'assets/characters/013_kotohogisu/walk_left_01.png',
+    );
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(displayedAsset(), startsWith('assets/characters/013_kotohogisu/walk_left_'));
+    await tester.pumpAndSettle();
+    expect(
+      displayedAsset(),
+      'assets/characters/013_kotohogisu/idle_front_01.png',
+    );
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+    await tester.pumpAndSettle();
+    expect(
+      displayedAsset(),
+      'assets/characters/013_kotohogisu/clap_front_01.png',
+    );
+    await tester.tap(find.byKey(const ValueKey('kotohogisu-next')));
+    await tester.pumpAndSettle();
+    expect(
+      displayedAsset(),
+      'assets/characters/013_kotohogisu/clap_front_02.png',
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Kotohogisu respects reduced motion with a still image', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: KotohogisuTutorial(onSkip: () {}, onFinish: () {}),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final image = tester.widget<Image>(
+      find.byKey(const ValueKey('kotohogisu-sprite')),
+    );
+    expect(
+      (image.image as AssetImage).assetName,
+      'assets/characters/013_kotohogisu/idle_front_01.png',
+    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

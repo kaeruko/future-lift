@@ -60,16 +60,43 @@ class _KotohogisuTutorialState extends State<KotohogisuTutorial> {
                                 ? Duration.zero
                                 : const Duration(milliseconds: 850),
                             curve: Curves.easeOutBack,
-                            builder: (context, distance, child) =>
-                                Transform.translate(
-                                  offset: Offset(distance * 220, -distance * 65),
-                                  child: child,
+                            builder: (context, distance, _) {
+                              const base =
+                                  'assets/characters/013_kotohogisu/';
+                              // Approaching from the right: face left while
+                              // moving, then turn toward the player to talk.
+                              final String sprite;
+                              if (!reducedMotion && distance > 0.01) {
+                                final frame = ((1 - distance) * 4)
+                                        .floor()
+                                        .clamp(0, 3) +
+                                    1;
+                                final suffix =
+                                    frame.toString().padLeft(2, '0');
+                                sprite = '${base}walk_left_$suffix.png';
+                              } else {
+                                sprite = switch (_step) {
+                                  0 => '${base}idle_front_01.png',
+                                  1 => '${base}clap_front_01.png',
+                                  _ => '${base}clap_front_02.png',
+                                };
+                              }
+                              return Transform.translate(
+                                offset: Offset(distance * 220, -distance * 65),
+                                child: Semantics(
+                                  label: 'コトホギスが飛んできました',
+                                  child: Image.asset(
+                                    sprite,
+                                    key: const ValueKey('kotohogisu-sprite'),
+                                    width: 84,
+                                    height: 84,
+                                    fit: BoxFit.contain,
+                                    gaplessPlayback: true,
+                                    excludeFromSemantics: true,
+                                  ),
                                 ),
-                            // Temporary glyph until Kotohogisu art is ready.
-                            child: Semantics(
-                              label: 'コトホギスが飛んできました',
-                              child: const Text('🐦', style: TextStyle(fontSize: 58)),
-                            ),
+                              );
+                            },
                           ),
                           const SizedBox(width: 8),
                           const Expanded(

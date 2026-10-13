@@ -75,6 +75,13 @@ flutter:
     - assets/gacya/summon_glow.png
     - assets/kotohogu/
     - assets/quests/
+    - assets/characters/013_kotohogisu/idle_front_01.png
+    - assets/characters/013_kotohogisu/walk_left_01.png
+    - assets/characters/013_kotohogisu/walk_left_02.png
+    - assets/characters/013_kotohogisu/walk_left_03.png
+    - assets/characters/013_kotohogisu/walk_left_04.png
+    - assets/characters/013_kotohogisu/clap_front_01.png
+    - assets/characters/013_kotohogisu/clap_front_02.png
     - assets/characters/001_shiba/idle_front_01.png
     - assets/characters/001_shiba/clap_front_01.png
     - assets/characters/001_shiba/clap_front_02.png
