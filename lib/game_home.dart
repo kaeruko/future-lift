@@ -90,80 +90,26 @@ class _GameHomeState extends State<GameHome> {
             child: Stack(
               fit: StackFit.expand,
               children: [
+                // The painted town itself is the entry point; no floating
+                // title or button should cover the cherry-blossom scenery.
+                // Limit the hotspot to the upper town so resident Tips and
+                // the mission/town signs remain independently tappable.
                 Positioned(
-                  // Keep the lobby title below the shared profile/nameplate.
-                  top: math.max(sceneHeight * .045, 16.0),
-                  left: 24,
-                  right: 24,
-                  child: Column(
-                    children: [
-                      Semantics(
-                        header: true,
-                        label: 'FutureLift',
-                        child: ExcludeSemantics(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Stack(
-                              children: [
-                                Text(
-                                  'FutureLift',
-                                  style: TextStyle(
-                                    fontSize: 61,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: -2,
-                                    foreground: Paint()
-                                      ..style = PaintingStyle.stroke
-                                      ..strokeWidth = 10
-                                      ..color = const Color(0xFFFFF6D6),
-                                  ),
-                                ),
-                                const Text(
-                                  'FutureLift',
-                                  style: TextStyle(
-                                    fontSize: 61,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: -2,
-                                    color: wood,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(top: 6),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 28,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFFBD3D20),
-                              Color(0xFFE6672B),
-                              Color(0xFFBD3D20),
-                            ],
-                          ),
-                          border: Border.all(
-                            color: const Color(0xFFFFD681),
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: const [
-                            BoxShadow(color: wood, offset: Offset(0, 3)),
-                          ],
-                        ),
-                        child: const Text(
-                          'みんなのまち',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 21,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ],
+                  top: sceneHeight * .05,
+                  left: 0,
+                  right: 0,
+                  height: sceneHeight * .33,
+                  child: Semantics(
+                    key: const ValueKey('open-town-scenery'),
+                    button: true,
+                    label: 'まちの景色をタップして、みんなのまちへ',
+                    onTap: widget.onTown,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      excludeFromSemantics: true,
+                      onTap: widget.onTown,
+                      child: const SizedBox.expand(),
+                    ),
                   ),
                 ),
                 Positioned(
