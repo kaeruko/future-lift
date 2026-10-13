@@ -4,7 +4,7 @@ import 'package:future_lift/gacha_hud.dart';
 import 'package:future_lift/ticket_counter_badge.dart';
 
 void main() {
-  for (final width in <double>[340, 550]) {
+  for (final width in <double>[296, 340, 550]) {
     testWidgets('gacha tickets sit below kotohogi on ${width.toInt()}px',
         (tester) async {
       tester.view.physicalSize = Size(width + 20, 800);
@@ -30,6 +30,17 @@ void main() {
       final tickets = find.byKey(const ValueKey('gacha-screen-tickets'));
       expect(kotohogi, findsOneWidget);
       expect(tickets, findsOneWidget);
+      final nameplate = find.byKey(const ValueKey('gacha-player-nameplate'));
+      final availableWidth = width - GachaHud.horizontalGap;
+      expect(tester.getSize(nameplate).width,
+          closeTo(availableWidth * GachaHud.nameplateShare, .02));
+      expect(tester.getSize(kotohogi).width,
+          closeTo(availableWidth * GachaHud.balanceShare, .02));
+      expect(tester.getRect(nameplate).right,
+          lessThan(tester.getRect(kotohogi).left));
+      expect(find.byKey(const ValueKey('total-points')), findsOneWidget);
+      expect(tester.getRect(find.byKey(const ValueKey('total-points'))).right,
+          lessThanOrEqualTo(tester.getRect(kotohogi).right + 1));
       expect(find.text('所持ガチャ券'), findsNothing);
       expect(tester.widget<TicketCounterBadge>(tickets).tickets, 7);
       expect(tester.getRect(tickets).top,

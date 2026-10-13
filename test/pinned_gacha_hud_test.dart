@@ -60,6 +60,13 @@ void main() {
       expect(bar, findsOneWidget);
       expect(tester.getSize(art).width, greaterThan(0));
       expect(tester.getSize(bar).width, greaterThan(0));
+      final contentWidth =
+          width - PinnedGachaHud.edge * 2 - GachaHud.horizontalGap;
+      expect(tester.getSize(bar).width,
+          closeTo(contentWidth * GachaHud.balanceShare, .02));
+      expect(tester.getSize(
+          find.byKey(const ValueKey('gacha-player-nameplate'))).width,
+          closeTo(contentWidth * GachaHud.nameplateShare, .02));
       expect(tester.getSize(art).width,
           closeTo(tester.getSize(bar).width, .01));
       expect(tester.getRect(bar).left,

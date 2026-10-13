@@ -19,6 +19,11 @@ class GachaHud extends StatelessWidget {
   final int tickets;
   final Key? ticketBadgeKey;
 
+  // Share available HUD width so currency values remain legible on phones.
+  static const double nameplateShare = .56;
+  static const double balanceShare = 1 - nameplateShare;
+  static const double horizontalGap = 6;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
@@ -28,8 +33,8 @@ class GachaHud extends StatelessWidget {
       if (!width.isFinite || width <= 6) {
         return const SizedBox.shrink();
       }
-      final leftWidth = (width - 6) * 7 / 11;
-      final rightWidth = (width - 6) * 4 / 11;
+      final leftWidth = (width - horizontalGap) * nameplateShare;
+      final rightWidth = (width - horizontalGap) * balanceShare;
       final badgeWidth = math.min(156.0, rightWidth * .90);
       return SizedBox(
         width: width,
@@ -40,7 +45,7 @@ class GachaHud extends StatelessWidget {
               width: leftWidth,
               child: const PlayerNameplate(),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: horizontalGap),
             SizedBox(
               width: rightWidth,
               child: Padding(
@@ -125,7 +130,7 @@ class PlayerNameplate extends StatelessWidget {
                       style: TextStyle(
                         color: const Color(0xFFFFEFCD),
                         fontWeight: FontWeight.w900,
-                        fontSize: c.maxHeight * .24,
+                        fontSize: c.maxHeight * .27,
                         shadows: const [
                           Shadow(color: Color(0xFF3F1D16), blurRadius: 2),
                         ],
@@ -145,7 +150,7 @@ class PlayerNameplate extends StatelessWidget {
                       style: TextStyle(
                         color: const Color(0xFFFFEFCD),
                         fontWeight: FontWeight.w700,
-                        fontSize: c.maxHeight * .18,
+                        fontSize: c.maxHeight * .20,
                       ),
                     ),
                   ),
@@ -183,8 +188,10 @@ class PinnedGachaHud extends StatelessWidget {
     builder: (context, constraints) {
       final width =
           math.min(maxHudWidth, math.max(0.0, constraints.maxWidth - edge * 2));
-      final leftWidth = (width - 6) * 7 / 11;
-      final rightWidth = (width - 6) * 4 / 11;
+      final leftWidth =
+          (width - GachaHud.horizontalGap) * GachaHud.nameplateShare;
+      final rightWidth =
+          (width - GachaHud.horizontalGap) * GachaHud.balanceShare;
       final badgeWidth = math.min(156, rightWidth * .90);
       final leftHeight = leftWidth * 209 / 788;
       final rightHeight = 4 + rightWidth * 211 / 982 + 4 +
