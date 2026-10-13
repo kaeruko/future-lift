@@ -20,11 +20,16 @@ class TownScene extends StatefulWidget {
     required this.level,
     required this.residents,
     this.onResident,
+    this.fillViewport = false,
   });
 
   final int level;
   final List<TownResident> residents;
   final Future<void> Function(TownResident)? onResident;
+
+  /// Fill the available phone viewport using the source image's own
+  /// 768x1376 coordinates; the walkers share the same scale and crop.
+  final bool fillViewport;
 
   @override
   State<TownScene> createState() => _TownSceneState();
@@ -85,43 +90,62 @@ class _TownSceneState extends State<TownScene> {
   }
 
   @override
-  Widget build(BuildContext context) => AspectRatio(
-    aspectRatio: 1.22,
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
-          final reduced = MediaQuery.disableAnimationsOf(context);
-          final count = widget.residents.length < townResidentLimit
-              ? widget.residents.length : townResidentLimit;
-          final size = (width * .14).clamp(40.0, 76.0);
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/kotohogu/town_background_001.jpg',
-                  key: const ValueKey('town-background'),
-                  fit: BoxFit.cover,
-                  excludeFromSemantics: true,
-                ),
-              ),
-              for (var index = 0; index < count; index++)
-                _resident(
-                  widget.residents[index],
-                  index,
-                  width,
-                  height,
-                  size,
-                  reduced,
-                ),
-            ],
-          );
-        },
+  Widget build(BuildContext context) {
+    if (widget.fillViewport) {
+      // The actual background is a portrait image (768x1376), not a
+      // landscape image. Scaling artwork and walkers together avoids the
+      // mismatched cropping that the former 1.22 aspect-ratio card caused.
+      return ClipRect(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: 768,
+            height: 1376,
+            child: _scene(context, 768, 1376),
+          ),
+        ),
+      );
+    }
+    return AspectRatio(
+      aspectRatio: 1.22,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: LayoutBuilder(
+          builder: (context, constraints) =>
+              _scene(context, constraints.maxWidth, constraints.maxHeight),
+        ),
       ),
-    ),
-  );
+    );
+  }
+
+  Widget _scene(BuildContext context, double width, double height) {
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    final count = widget.residents.length < townResidentLimit
+        ? widget.residents.length
+        : townResidentLimit;
+    final size = (width * .14).clamp(40.0, 76.0);
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/kotohogu/town_background_001.jpg',
+            key: const ValueKey('town-background'),
+            fit: BoxFit.cover,
+            excludeFromSemantics: true,
+          ),
+        ),
+        for (var index = 0; index < count; index++)
+          _resident(
+            widget.residents[index],
+            index,
+            width,
+            height,
+            size,
+            reduced,
+          ),
+      ],
+    );
+  }
 
   Widget _resident(
     TownResident resident,
