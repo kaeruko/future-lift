@@ -76,6 +76,10 @@ flutter:
     - assets/kotohogu/
     - assets/quests/
     - assets/characters/013_kotohogisu/idle_front_01.png
+    - assets/characters/013_kotohogisu/walk_right_01.png
+    - assets/characters/013_kotohogisu/walk_right_02.png
+    - assets/characters/013_kotohogisu/walk_right_03.png
+    - assets/characters/013_kotohogisu/walk_right_04.png
     - assets/characters/013_kotohogisu/walk_left_01.png
     - assets/characters/013_kotohogisu/walk_left_02.png
     - assets/characters/013_kotohogisu/walk_left_03.png

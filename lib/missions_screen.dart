@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'home_skin.dart';
 import 'progress.dart';
-import 'residents.dart';
 
 class MissionsScreen extends StatelessWidget {
   const MissionsScreen({
@@ -38,11 +39,7 @@ class MissionsScreen extends StatelessWidget {
           const SizedBox(height: 20),
           Row(
             children: [
-              const ResidentAvatar(
-                resident: Resident.child,
-                size: 68,
-                celebrating: true,
-              ),
+              const _WalkingMissionKotohogisu(),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -193,6 +190,82 @@ class MissionsScreen extends StatelessWidget {
         ],
       ),
     ],
+  );
+}
+
+/// A tiny back-and-forth walk confined to the mission title's avatar slot.
+/// Timer-driven frames let widget tests pumpAndSettle without hanging.
+class _WalkingMissionKotohogisu extends StatefulWidget {
+  const _WalkingMissionKotohogisu();
+
+  @override
+  State<_WalkingMissionKotohogisu> createState() =>
+      _WalkingMissionKotohogisuState();
+}
+
+class _WalkingMissionKotohogisuState extends State<_WalkingMissionKotohogisu> {
+  static const _stepInterval = Duration(milliseconds: 180);
+  static const _spriteRoot = 'assets/characters/013_kotohogisu/';
+  final ValueNotifier<int> _step = ValueNotifier<int>(0);
+  Timer? _walkTimer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final animate = !MediaQuery.disableAnimationsOf(context) &&
+        TickerMode.valuesOf(context).enabled;
+    if (animate && _walkTimer == null) {
+      _walkTimer = Timer.periodic(_stepInterval, (_) {
+        if (mounted) _step.value = (_step.value + 1) % 16;
+      });
+    } else if (!animate) {
+      _walkTimer?.cancel();
+      _walkTimer = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _walkTimer?.cancel();
+    _step.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: 'コトホギス',
+    child: SizedBox(
+      key: const ValueKey('mission-kotohogisu'),
+      width: 68,
+      height: 68,
+      child: ValueListenableBuilder<int>(
+        valueListenable: _step,
+        builder: (context, step, _) {
+          final animate = !MediaQuery.disableAnimationsOf(context) &&
+              TickerMode.valuesOf(context).enabled;
+          final direction = step < 8 ? 'right' : 'left';
+          final frame = (step % 4 + 1).toString().padLeft(2, '0');
+          final asset = animate
+              ? _spriteRoot + 'walk_' + direction + '_' + frame + '.png'
+              : _spriteRoot + 'idle_front_01.png';
+          // Reverse after eight steps, with no drift toward the label.
+          final position = step < 8 ? step : 15 - step;
+          final dx = animate ? (position - 3.5) * 1.6 : 0.0;
+          return Transform.translate(
+            offset: Offset(dx, 0),
+            child: Image.asset(
+              asset,
+              key: const ValueKey('mission-kotohogisu-sprite'),
+              width: 68,
+              height: 68,
+              fit: BoxFit.contain,
+              gaplessPlayback: true,
+              excludeFromSemantics: true,
+            ),
+          );
+        },
+      ),
+    ),
   );
 }
 
