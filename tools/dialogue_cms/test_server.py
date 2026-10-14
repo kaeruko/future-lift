@@ -49,16 +49,35 @@ class CmsTests(unittest.TestCase):
         original = load_catalog()
         modified = copy.deepcopy(original)
         modified["characters"].append({
-            "key": "owl", "id": "07_owl", "label": "ふくろう",
-            "artFolder": "missing_sprite_folder", "tipSource": "adult",
+            "key": "c999_owl", "id": "999_owl", "label": "ふくろう",
+            "artFolder": "999_owl", "tipSource": "adult",
             "inGacha": True, "walkInTown": True
         })
         with self.assertRaisesRegex(ValueError, "Sprite folder"):
             validate_catalog(modified, previous=original)
-        modified["characters"][-1]["artFolder"] = "013_kotohogisu"
+        modified["characters"][-1].update({
+            "key": "c009_chef", "id": "009_chef", "label": "シェフ", "artFolder": "009_chef"
+        })
         validate_catalog(modified, previous=original)
         with self.assertRaisesRegex(ValueError, "Missing"):
             validate(sample(), residents={row["id"] for row in modified["characters"]})
+
+    def test_three_digit_id_generates_dart_key_and_folder(self):
+        original = load_catalog()
+        modified = copy.deepcopy(original)
+        modified["characters"].append({
+            "key": "c009_chef", "id": "009_chef", "label": "シェフ",
+            "artFolder": "009_chef", "tipSource": "adult",
+            "inGacha": True, "walkInTown": True
+        })
+        validate_catalog(modified, previous=original)
+        dart = generate_dart(DART.read_text("utf-8"), modified["characters"])
+        self.assertIn('c009_chef("009_chef", "シェフ", "009_chef"', dart)
+        for field, value in (("key", "chef"), ("artFolder", "009_wrong")):
+            mismatched = copy.deepcopy(modified)
+            mismatched["characters"][-1][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, "derived from ID"):
+                validate_catalog(mismatched, previous=original)
 
     def test_bad_catalog_keeps_files_intact(self):
         original = load_catalog()

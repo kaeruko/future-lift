@@ -253,9 +253,15 @@ function renderCharacterEditor(){
       const oldId=row.id;
       row[field]=value;
       if(field==="id"){
+        if(locked)throw Error("登録済みキャラのIDは変更できません");
+        row.key="c"+value;
+        row.artFolder=value;
+        const folderHint=byId("characterArtFolderHint");
+        if(folderHint)folderHint.textContent=`画像フォルダ: assets/characters/${row.artFolder}/（IDから自動設定）`;
         for(const dialogue of data.dialogues)if(dialogue.residentId===oldId)dialogue.residentId=value;
         characterSelected=value;
       }
+      dirty=true;
       rebuildResidentOptions();renderCharacterList();
       setCharacterStatus("未保存の変更があります");
     });
@@ -263,9 +269,11 @@ function renderCharacterEditor(){
     return element;
   };
   edit("キャラ名","label");
-  edit("キャラID（例: 07_owl）","id",locked);
-  edit("Dart識別子（例: owl）","key",locked);
-  edit("画像フォルダ名（例: 008_hukurou.png）","artFolder",locked);
+  edit("キャラID（例: 009_chef）","id",locked);
+  const folderHint=append(box,"p",locked
+    ? `画像フォルダ: assets/characters/${row.artFolder}/（登録済みの設定を維持）`
+    : `画像フォルダ: assets/characters/${row.artFolder}/（IDから自動設定）`);
+  folderHint.id="characterArtFolderHint";folderHint.className="hint";
   labelControl(box,"Tipsの元キャラ","select",row.tipSource,value=>{row.tipSource=value;setCharacterStatus("未保存の変更があります")},
     {options:{child:"こども",student:"学生",adult:"大人",elder:"高齢者"}});
   for(const [field,title] of [["inGacha","ガチャに登場する"],["walkInTown","まちを歩く"]]){
@@ -304,18 +312,18 @@ byId("showCharacters").onclick=()=>setTab("characters");
 byId("showDialogues").onclick=()=>setTab("dialogues");
 byId("addCharacter").onclick=()=>{
   if(!registry)return;
-  const used=new Set(registry.characters.map(row=>row.id));
+  const used=new Set(registry.characters.flatMap(row=>[row.id,row.artFolder]));
   let number=registry.characters.length+1;
-  while(used.has(String(number).padStart(2,"0")+"_new"))number++;
-  const row={key:"new"+number,id:String(number).padStart(2,"0")+"_new",
-    label:"新しい住民",artFolder:String(number).padStart(3,"0")+"_new",
+  let id=String(number).padStart(3,"0")+"_new";
+  while(used.has(id)){number++;id=String(number).padStart(3,"0")+"_new"}
+  const row={key:"c"+id,id,label:"新しい住民",artFolder:id,
     tipSource:"adult",inGacha:true,walkInTown:true};
   registry.characters.push(row);
-  data.dialogues.push({id:"new"+number+"_default",residentId:row.id,
+  data.dialogues.push({id:id+"_default",residentId:row.id,
     text:"こんにちは！よろしくね。",priority:0,once:false,logic:"all",conditions:[]});
   characterSelected=row.id;dirty=true;
   rebuildResidentOptions();renderCharacterList();renderCharacterEditor();
-  setCharacterStatus("新しい住民を追加しました。名前・ID・フォルダ・セリフを設定して保存してください。");
+  setCharacterStatus("新しい住民を追加しました。名前・ID・セリフを設定してください。画像フォルダ名とDart識別子は自動設定されます。");
 };
 byId("cancelNewCharacter").onclick=()=>{
   const row=activeCharacter();

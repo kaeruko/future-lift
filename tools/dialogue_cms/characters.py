@@ -58,10 +58,13 @@ def validate_catalog(document, previous=None, *, characters_root=None):
                    "sync", "this", "throw", "true", "try", "typedef", "var",
                    "void", "when", "while", "with", "yield"}:
             raise ValueError(f"Reserved character key: {key}")
-        if not isinstance(identifier, str) or not re.fullmatch(r"[0-9]{2}_[a-z][a-z0-9_]*", identifier):
+        if not isinstance(identifier, str) or not re.fullmatch(r"[0-9]{2,}_[a-z][a-z0-9_]*", identifier):
             raise ValueError(f"Invalid resident ID at row {index}")
         if not isinstance(folder, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", folder) or ".." in folder:
             raise ValueError(f"Invalid sprite folder at row {index}")
+        if previous is not None and index >= len(previous["characters"]):
+            if key != f"c{identifier}" or folder != identifier:
+                raise ValueError(f"New resident key and art folder must be derived from ID: {identifier}")
         if not isinstance(row["label"], str) or not 1 <= len(row["label"].strip()) <= 40:
             raise ValueError(f"Invalid resident name at row {index}")
         if row["tipSource"] not in {"child", "student", "adult", "elder"}:
