@@ -211,6 +211,34 @@ class CmsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "invalid fields"):
             validate(invalid_reply)
 
+    def test_cross_character_seen_dialogue_reference(self):
+        data = sample()
+        prerequisite = data["dialogues"][5]["id"]
+        dependent = data["dialogues"][0]
+        self.assertNotEqual(data["dialogues"][5]["residentId"],
+                            dependent["residentId"])
+        dependent["conditions"] = [
+            {"type": "seenDialogue", "dialogueId": prerequisite}]
+        validate(data)
+
+        removed = copy.deepcopy(data)
+        removed["dialogues"] = [
+            row for row in removed["dialogues"] if row["id"] != prerequisite]
+        with self.assertRaisesRegex(ValueError, "Invalid prerequisite dialogue"):
+            validate(removed)
+
+        for bad in (dependent["id"], "missing", "", 42, None):
+            invalid = copy.deepcopy(data)
+            invalid["dialogues"][0]["conditions"] = [
+                {"type": "seenDialogue", "dialogueId": bad}]
+            with self.subTest(id=bad), self.assertRaises(ValueError):
+                validate(invalid)
+
+        missing_field = copy.deepcopy(data)
+        missing_field["dialogues"][0]["conditions"] = [{"type": "seenDialogue"}]
+        with self.assertRaises(ValueError):
+            validate(missing_field)
+
     def test_save_is_atomic_and_invalid_changes_leave_old_file(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "dialogues.json"

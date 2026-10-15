@@ -274,6 +274,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('resident-0')));
     await tester.pumpAndSettle();
     expect(find.text(Resident.child.tips.first), findsOneWidget);
+    // Ordinary repeatable dialogue IDs are now saved for global prerequisites.
+    expect(controller.progress!.seenDialogues, contains('shiba_default_1'));
     await tester.tap(find.text('また話そう'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('resident-0')));

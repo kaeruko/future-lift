@@ -24,6 +24,18 @@ class DialogueCatalog {
       if (!ids.add(entry.id)) throw FormatException('Duplicate dialogue id: ${entry.id}');
       entries.add(entry);
     }
+    // Dialogue IDs are global, regardless of who speaks them.
+    for (final entry in entries) {
+      for (final condition in entry.conditions) {
+        if (condition.fields['type'] == 'seenDialogue') {
+          final prerequisite = condition.fields['dialogueId'] as String;
+          if (!ids.contains(prerequisite) || prerequisite == entry.id) {
+            throw FormatException(
+              'Invalid prerequisite dialogue for ${entry.id}: $prerequisite');
+          }
+        }
+      }
+    }
     for (final resident in TownResident.values) {
       if (!entries.any((e) => e.residentId == resident.id &&
           e.conditions.isEmpty && !e.once)) {
@@ -150,6 +162,13 @@ class DialogueCondition {
           threshold is! int || threshold < 1 || threshold > 1000000) {
         throw const FormatException('Invalid mission condition');
       }
+    } else if (data['type'] == 'seenDialogue') {
+      _keys(data, {'type', 'dialogueId'}, 'seen dialogue condition');
+      final prerequisite = data['dialogueId'];
+      if (prerequisite is! String ||
+          !RegExp(r'^[A-Za-z0-9_-]{1,80}$').hasMatch(prerequisite)) {
+        throw const FormatException('Invalid prerequisite dialogue ID');
+      }
     } else if (data['type'] == 'townTogether') {
       _keys(data, {'type', 'otherResidentId'}, 'town companion');
       final companion = data['otherResidentId'];
@@ -200,6 +219,9 @@ class DialogueCondition {
   bool matches(Progress progress, DateTime now,
       Set<String> townResidentIds, String speakerId) {
     final kind = fields['type'];
+    if (kind == 'seenDialogue') {
+      return progress.seenDialogues.contains(fields['dialogueId']);
+    }
     if (kind == 'townTogether') {
       return townResidentIds.contains(speakerId) &&
           townResidentIds.contains(fields['otherResidentId']);

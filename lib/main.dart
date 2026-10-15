@@ -259,7 +259,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       townResidentIds: visibleIds,
       rotation: index,
     );
-    if (line.once) {
+    // Record every first-time conversation in the shared durable history.
+    if (!controller.progress!.seenDialogues.contains(line.id)) {
       final persisted = await controller.recordDialogueSeen(line.id);
       if (!persisted || !mounted) return;
     }

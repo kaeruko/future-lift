@@ -166,6 +166,51 @@ void main() {
     }
   });
 
+  test('a seen dialogue from a different character unlocks a two-person conversation', () {
+    final c = catalog([
+      row('01_shiba_997', '01_shiba', '前のお話', priority: 10),
+      row('03_penguin_998', '03_penguin', '続きのお話', priority: 20,
+        conditions: [
+          {'type': 'seenDialogue', 'dialogueId': '01_shiba_997'},
+          {'type': 'townTogether', 'otherResidentId': '04_cat'},
+        ], reply: {'residentId': '04_cat', 'text': '聞かせて！'}),
+    ]);
+    final now = DateTime.utc(2026, 10, 15, 0);
+    final before = completed([]);
+    final visible = <String>{'03_penguin', '04_cat'};
+    expect(c.select(resident: TownResident.penguin,
+      progress: before, now: now, townResidentIds: visible).text, '通常の雑談');
+
+    // The trigger is not an "only once" dialogue; its read state is durable.
+    final restored = Progress.decode(
+      before.markDialogueSeen('01_shiba_997').encode(), expectedVersion: 5);
+    expect(restored.seenDialogues, contains('01_shiba_997'));
+    final followup = c.select(resident: TownResident.penguin,
+      progress: restored, now: now, townResidentIds: visible);
+    expect(followup.id, '03_penguin_998');
+    expect(followup.reply?.text, '聞かせて！');
+    expect(c.select(resident: TownResident.penguin,
+      progress: restored, now: now, townResidentIds: {'03_penguin'}).text,
+      '通常の雑談');
+  });
+
+  test('invalid global seen-dialogue references fail fast', () {
+    final before = row('01_shiba_997', '01_shiba', '前のお話');
+    for (final reference in ['missing', '03_penguin_998', 10, '']) {
+      expect(() => catalog([
+        before,
+        row('03_penguin_998', '03_penguin', '次の話', conditions: [
+          {'type': 'seenDialogue', 'dialogueId': reference},
+        ]),
+      ]), throwsFormatException, reason: reference.toString());
+    }
+    expect(() => catalog([
+      row('bad', '01_shiba', '参照先がない', conditions: [
+        {'type': 'seenDialogue'},
+      ]),
+    ]), throwsFormatException);
+  });
+
   test('mission counters survive journal deletion, rollovers and debug resets', () {
     var p=completed([Mission.outside, Mission.hobby]);
     p=p.clearHistory().onDay(DateTime(2026,10,14)).complete(Mission.outside);

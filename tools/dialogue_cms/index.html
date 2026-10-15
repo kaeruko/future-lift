@@ -76,9 +76,13 @@ nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
   <label>累計ミッション総数</label><input id="previewTotal" type="number" value="0" min="0">
   <label>ことほぎ</label><input id="previewPoints" type="number" value="0" min="0">
   <details><summary>種類別の累計回数を設定</summary><div id="previewMissions"></div></details>
+  <details><summary>見たことがあるセリフ（仮設定）</summary>
+    <p class="hint">全キャラ共通の既読記録です。チェックしたIDを閲覧済みとして条件を確認します。</p>
+    <div id="previewSeen" style="max-height:260px;overflow-y:auto"></div>
+  </details>
   <div class="actions"><button id="runPreview" class="secondary">条件を確認</button></div>
   <div id="previewBox" aria-live="polite"></div>
-  <p class="hint">優先順位の数値が大きいセリフを優先。同順位は実アプリでタップごとに順番が変わります。「1回のみ」は表示した記録が保存されます。</p>
+  <p class="hint">優先順位の数値が大きいセリフを優先。同順位はタップごとに切り替わります。全セリフの既読IDが保存され、「1回のみ」のセリフは閲覧済みなら候補から外れます。</p>
 </section>
 </main>
 <main id="characterMain">
@@ -107,6 +111,7 @@ const modes={"exact":"指定日","range":"指定期間","annual":"毎年の指�
 const byId=id=>document.getElementById(id);
 let data=null,selected=null,dirty=false,registry=null,characterSelected=null,savedCount=0;
 let previewTownIds=new Set();
+let previewSeenIds=new Set();
 function node(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el}
 function append(parent,tag,text){const el=node(tag,text);parent.append(el);return el}
 function opts(element,values,value){for(const [key,label] of Object.entries(values)){const o=node("option",label);o.value=key;element.append(o)}element.value=value}
@@ -149,6 +154,7 @@ function refresh(){
     btn.onclick=()=>{selected=entry.id;renderEditor();refresh()};
   }
   renderEditor();
+  renderPreviewSeen();
 }
 function renderEditor(){
   const area=byId("editor");area.replaceChildren();const entry=current();
@@ -195,12 +201,16 @@ function renderCondition(area,entry,condition,index){
   const top=append(box,"div");top.className="top";
   const kind=append(top,"select");
   opts(kind,{"mission":"ミッション累計","date":"日付","kotohogi":"ことほぎ累計",
-    "townTogether":"まちで2人そろう"},condition.type);
+    "townTogether":"まちで2人そろう","seenDialogue":"指定セリフを見たことがある"},condition.type);
   kind.onchange=()=>{
     if(kind.value==="townTogether"){
       const other=registry.characters.find(row=>row.id!==entry.residentId);
       if(!other){kind.value=condition.type;setStatus("相手キャラを先に登録してください",true);return}
       entry.conditions[index]={type:"townTogether",otherResidentId:other.id};
+    }else if(kind.value==="seenDialogue"){
+      const target=data.dialogues.find(row=>row.id!==entry.id);
+      if(!target){kind.value=condition.type;setStatus("参照できる他のセリフがありません",true);return}
+      entry.conditions[index]={type:"seenDialogue",dialogueId:target.id};
     }else{
       entry.conditions[index]=kind.value==="mission"?{type:"mission",missionId:"all",minCount:1}:
         kind.value==="date"?{type:"date",mode:"exact",date:"2026-12-25"}:{type:"kotohogi",min:50};
@@ -210,7 +220,15 @@ function renderCondition(area,entry,condition,index){
   const remove=append(top,"button","削除");remove.className="danger";
   remove.onclick=()=>{entry.conditions.splice(index,1);dirty=true;refresh()};
   const change=(field,convert)=>(v)=>{condition[field]=convert?convert(v):v};
-  if(condition.type==="townTogether"){
+  if(condition.type==="seenDialogue"){
+    const options=Object.fromEntries(data.dialogues
+      .filter(row=>row.id!==entry.id)
+      .map(row=>[row.id,(residents[row.residentId]||row.residentId)+"｜"+row.id+"｜"+row.text.slice(0,35)]));
+    if(!options[condition.dialogueId])options[condition.dialogueId]="参照できないセリフ: "+condition.dialogueId;
+    labelControl(box,"見たことがあるセリフID（全キャラから選択）",
+      "select",condition.dialogueId,v=>{condition.dialogueId=v;runPreview()},{options});
+    append(box,"p","別キャラのセリフも指定できます。対象のセリフは削除しないでください。").className="hint";
+  }else if(condition.type==="townTogether"){
     const others=Object.fromEntries(registry.characters
       .filter(row=>row.id!==entry.residentId).map(row=>[row.id,row.label+(row.walkInTown?"":"（まち非表示）")]));
     labelControl(box,"一緒にいる相手","select",condition.otherResidentId,v=>{
@@ -242,6 +260,7 @@ function renderCondition(area,entry,condition,index){
   }
 }
 function match(condition,context){
+  if(condition.type==="seenDialogue")return context.seenIds.has(condition.dialogueId);
   if(condition.type==="townTogether")return context.townIds.has(context.speakerId)&&context.townIds.has(condition.otherResidentId);
   if(condition.type==="mission")return (condition.missionId==="all"?context.total:(context.missions[condition.missionId]||0))>=condition.minCount;
   if(condition.type==="kotohogi")return context.points>=condition.min;
@@ -260,22 +279,40 @@ function runPreview(){
     for(const k of Object.keys(missions))if(k!=="all")missionsValues[k]=Number(byId("m_"+k).value);
     const context={day:byId("previewDay").value,total:Number(byId("previewTotal").value),
       points:Number(byId("previewPoints").value),missions:missionsValues,
-      townIds:previewTownIds,speakerId:byId("previewResident").value};
+      townIds:previewTownIds,seenIds:previewSeenIds,speakerId:byId("previewResident").value};
     if(!context.day)throw Error("日付を入力してください");
     const candidates=data.dialogues.filter(entry=>entry.residentId===byId("previewResident").value&&
+      (!entry.once||!previewSeenIds.has(entry.id))&&
       (entry.conditions.length===0||(entry.logic==="all"?entry.conditions.every(c=>match(c,context)):entry.conditions.some(c=>match(c,context)))));
     candidates.sort((a,b)=>b.priority-a.priority);
     byId("previewBox").textContent=candidates.length?
       "選ばれるセリフ｜"+residents[candidates[0].residentId]+"\n"+candidates[0].text+
       (candidates[0].reply?"\n"+(residents[candidates[0].reply.residentId]||candidates[0].reply.residentId)+"「"+candidates[0].reply.text+"」":"")+
       "\nID: "+candidates[0].id+"\n候補: "+candidates.length+"件"+
-      (candidates[0].once?"\n※初回のみ。実際には表示済みなら除外。":""):
+      (candidates[0].once?"\n※初回のみ。表示すると閲覧済みになります。":""):
       "表示できるセリフがありません。条件と通常セリフを確認してください。";
   }catch(err){byId("previewBox").textContent="プレビューエラー: "+err.message}
 }
 function setCharacterStatus(message,error=false){
   const el=byId("characterStatus");
   el.textContent=message;el.className="status"+(error?" error":"");
+}
+function renderPreviewSeen(){
+  const area=byId("previewSeen");area.replaceChildren();
+  const known=new Set(data.dialogues.map(entry=>entry.id));
+  previewSeenIds=new Set([...previewSeenIds].filter(id=>known.has(id)));
+  for(const entry of data.dialogues){
+    const label=append(area,"label");label.className="controls";
+    const checkbox=append(label,"input");checkbox.type="checkbox";
+    checkbox.checked=previewSeenIds.has(entry.id);
+    append(label,"span",(residents[entry.residentId]||entry.residentId)+"｜"+
+      entry.id+"｜"+entry.text.slice(0,28));
+    checkbox.onchange=()=>{
+      if(checkbox.checked)previewSeenIds.add(entry.id);
+      else previewSeenIds.delete(entry.id);
+      runPreview();
+    };
+  }
 }
 function renderPreviewTown(){
   const area=byId("previewTown");area.replaceChildren();
@@ -341,23 +378,30 @@ function renderCharacterEditor(){
         const folderHint=byId("characterArtFolderHint");
         if(folderHint)folderHint.textContent=`画像フォルダ: assets/characters/${row.artFolder}/（IDから自動設定）`;
         const attached=data.dialogues.filter(dialogue=>dialogue.residentId===oldId);
+        const renamedDialogueIds=new Map();
         for(const dialogue of attached){
           const prefix=oldId+"_";
           if(!dialogue.id.startsWith(prefix)||
               !/^[0-9]{3,}$/.test(dialogue.id.slice(prefix.length)))
             throw Error("新規キャラのセリフIDを自動更新できません: "+dialogue.id);
           const changed=value+"_"+dialogue.id.slice(prefix.length);
+          renamedDialogueIds.set(dialogue.id,changed);
           if(selected===dialogue.id)selected=changed;
           dialogue.id=changed;
           dialogue.residentId=value;
         }
         for(const dialogue of data.dialogues){
-          for(const condition of dialogue.conditions)if(
-            condition.type==="townTogether"&&condition.otherResidentId===oldId)
-            condition.otherResidentId=value;
+          for(const condition of dialogue.conditions){
+            if(condition.type==="townTogether"&&condition.otherResidentId===oldId)
+              condition.otherResidentId=value;
+            if(condition.type==="seenDialogue"&&renamedDialogueIds.has(condition.dialogueId))
+              condition.dialogueId=renamedDialogueIds.get(condition.dialogueId);
+          }
           if(dialogue.reply?.residentId===oldId)dialogue.reply.residentId=value;
         }
         if(previewTownIds.delete(oldId))previewTownIds.add(value);
+        previewSeenIds=new Set([...previewSeenIds].map(
+          id=>renamedDialogueIds.get(id)||id));
         characterSelected=value;
       }
       dirty=true;
@@ -396,6 +440,7 @@ async function load(){
     if(!dialogResponse.ok)throw Error(dialogBody.error||"セリフ読込失敗");
     data=dialogBody;registry=characterBody;
     savedCount=registry.characters.length;
+    previewSeenIds=new Set();
     previewTownIds=new Set(registry.characters
       .filter(row=>row.walkInTown).slice(0,8).map(row=>row.id));
     characterSelected=registry.characters[0].id;
@@ -472,7 +517,14 @@ byId("add").onclick=()=>{
   }catch(err){setStatus("追加エラー: "+err.message,true)}
 };
 byId("delete").onclick=()=>{
-  const entry=current();if(!entry||!confirm("削除しますか？ "+entry.id))return;
+  const entry=current();if(!entry)return;
+  const dependent=data.dialogues.find(e=>e.id!==entry.id&&
+    e.conditions.some(c=>c.type==="seenDialogue"&&c.dialogueId===entry.id));
+  if(dependent){
+    setStatus("削除できません: "+dependent.id+" がこのセリフを表示条件に使っています。先に条件を外してください。",true);
+    return;
+  }
+  if(!confirm("削除しますか？ "+entry.id))return;
   data.dialogues=data.dialogues.filter(e=>e!==entry);
   selected=data.dialogues[0]?.id||null;dirty=true;refresh();setStatus("未保存の変更があります");
 };

@@ -86,7 +86,13 @@ def validate(doc, residents=None):
             if not isinstance(condition, dict):
                 raise ValueError(f"Invalid condition: {loc}")
             kind = condition.get("type")
-            if kind == "townTogether":
+            if kind == "seenDialogue":
+                require_keys(condition, {"type", "dialogueId"}, loc)
+                prerequisite = condition["dialogueId"]
+                if not isinstance(prerequisite, str) or not re.fullmatch(
+                        r"[A-Za-z0-9_-]{1,80}", prerequisite):
+                    raise ValueError(f"Invalid prerequisite dialogue ID: {loc}")
+            elif kind == "townTogether":
                 require_keys(condition, {"type", "otherResidentId"}, loc)
                 other = condition["otherResidentId"]
                 if other not in residents or other == entry["residentId"]:
@@ -137,6 +143,13 @@ def validate(doc, residents=None):
                     not any(c["type"] == "townTogether" and
                             c["otherResidentId"] == other for c in conditions)):
                 raise ValueError(f"Reply requires matching AND town companion: {identifier}")
+    for entry in rows:
+        for condition in entry["conditions"]:
+            if condition["type"] == "seenDialogue":
+                prerequisite = condition["dialogueId"]
+                if prerequisite not in ids or prerequisite == entry["id"]:
+                    raise ValueError(
+                        f"Invalid prerequisite dialogue for {entry['id']}: {prerequisite}")
     if defaults != residents:
         raise ValueError(f"Every resident needs an unconditional non-once dialogue. Missing: {sorted(residents - defaults)}")
     return doc
