@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 
 int get ownedResidentLimit => TownResident.values.length > 8 ? TownResident.values.length : 8;
 const townResidentLimit = 8;
+
+/// The same first eight enabled residents are drawn on the home and town scenes.
+List<TownResident> visibleTownResidents(Iterable<TownResident> residents) =>
+    residents.where((resident) => resident.walkInTown)
+        .take(townResidentLimit).toList(growable: false);
 const applauseResidentLimit = 8;
 
 /// Maximum spendable kotohogi; contribution totals keep growing.

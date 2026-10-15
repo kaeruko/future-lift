@@ -250,10 +250,13 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     final catalog = await _dialoguesFuture;
     if (!mounted || controller.failure != null) return;
     final index = _dialogueIndex[resident] ?? 0;
+    final visibleIds = visibleTownResidents(
+      controller.progress!.residents.owned).map((r) => r.id).toSet();
     final line = catalog.select(
       resident: resident,
       progress: controller.progress!,
       now: controller.clock(),
+      townResidentIds: visibleIds,
       rotation: index,
     );
     if (line.once) {
@@ -272,7 +275,32 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
             Expanded(child: Text(resident.label)),
           ],
         ),
-        content: Text(line.text, style: const TextStyle(fontSize: 19, height: 1.8)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(line.text,
+                style: const TextStyle(fontSize: 19, height: 1.8)),
+              if (line.reply case final reply?) ...[
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    TownResidentAvatar(
+                      resident: TownResident.fromId(reply.residentId), size: 44),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(
+                      TownResident.fromId(reply.residentId).label,
+                      style: const TextStyle(fontWeight: FontWeight.bold))),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(reply.text,
+                  style: const TextStyle(fontSize: 19, height: 1.8)),
+              ],
+            ],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

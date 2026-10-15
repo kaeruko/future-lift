@@ -150,10 +150,8 @@ class _GameHomeState extends State<GameHome> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             for (final (index, resident)
-                                in widget.progress.residents.owned
-                                    .where((resident) => resident.walkInTown)
-                                    .take(townResidentLimit)
-                                    .indexed)
+                                in visibleTownResidents(
+                                    widget.progress.residents.owned).indexed)
                               Flexible(
                                 child: Semantics(
                                   button: true,

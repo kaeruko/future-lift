@@ -120,10 +120,8 @@ class _TownSceneState extends State<TownScene> {
 
   Widget _scene(BuildContext context, double width, double height) {
     final reduced = MediaQuery.disableAnimationsOf(context);
-    final visibleResidents = widget.residents.where((resident) => resident.walkInTown).toList();
-    final count = visibleResidents.length < townResidentLimit
-        ? visibleResidents.length
-        : townResidentLimit;
+    final visibleResidents = visibleTownResidents(widget.residents);
+    final count = visibleResidents.length;
     final size = (width * .14).clamp(40.0, 76.0);
     return Stack(
       children: [

@@ -23,8 +23,10 @@ MISSIONS = {
 }
 
 
-def require_keys(obj, keys, location):
-    if not isinstance(obj, dict) or set(obj) != set(keys):
+def require_keys(obj, keys, location, optional=frozenset()):
+    if (not isinstance(obj, dict) or
+            set(obj).difference(set(keys) | set(optional)) or
+            set(keys).difference(obj)):
         raise ValueError(f"{location}: invalid fields")
 
 
@@ -58,7 +60,8 @@ def validate(doc, residents=None):
     defaults = set()
     for i, entry in enumerate(rows):
         require_keys(entry, {"id", "residentId", "text", "priority",
-                              "once", "logic", "conditions"}, f"dialogues[{i}]")
+                              "once", "logic", "conditions"}, f"dialogues[{i}]",
+                     optional={"reply"})
         identifier = entry["id"]
         if not isinstance(identifier, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", identifier):
             raise ValueError(f"Invalid id at row {i}")
@@ -83,7 +86,12 @@ def validate(doc, residents=None):
             if not isinstance(condition, dict):
                 raise ValueError(f"Invalid condition: {loc}")
             kind = condition.get("type")
-            if kind == "mission":
+            if kind == "townTogether":
+                require_keys(condition, {"type", "otherResidentId"}, loc)
+                other = condition["otherResidentId"]
+                if other not in residents or other == entry["residentId"]:
+                    raise ValueError(f"Invalid town companion: {loc}")
+            elif kind == "mission":
                 require_keys(condition, {"type", "missionId", "minCount"}, loc)
                 if condition["missionId"] not in MISSIONS or not whole_number(condition["minCount"], 1, 1000000):
                     raise ValueError(f"Invalid mission count: {loc}")
@@ -118,6 +126,17 @@ def validate(doc, residents=None):
                     raise ValueError(f"Invalid date mode: {loc}")
             else:
                 raise ValueError(f"Unknown condition type: {loc}")
+        if "reply" in entry:
+            reply = entry["reply"]
+            require_keys(reply, {"residentId", "text"}, f"{identifier}.reply")
+            other = reply["residentId"]
+            if (other not in residents or
+                    not isinstance(reply["text"], str) or
+                    not reply["text"].strip() or len(reply["text"]) > 500 or
+                    entry["logic"] != "all" or
+                    not any(c["type"] == "townTogether" and
+                            c["otherResidentId"] == other for c in conditions)):
+                raise ValueError(f"Reply requires matching AND town companion: {identifier}")
     if defaults != residents:
         raise ValueError(f"Every resident needs an unconditional non-once dialogue. Missing: {sorted(residents - defaults)}")
     return doc
