@@ -5,7 +5,7 @@ import 'package:future_lift/home_skin.dart';
 
 void main() {
   for (final width in <double>[320, 402, 570]) {
-    testWidgets('pinned HUD has a single large currency bar at $width px',
+    testWidgets('pinned HUD has a single compact currency bar at $width px',
         (tester) async {
       tester.view.physicalSize = Size(width, 720);
       tester.view.devicePixelRatio = 1;
@@ -46,7 +46,8 @@ void main() {
       final contentWidth = width - PinnedGachaHud.edge * 2 -
           GachaHud.horizontalGap;
       expect(tester.getSize(bar).width,
-          closeTo(contentWidth * GachaHud.balanceShare, .02));
+          closeTo(contentWidth * GachaHud.balanceShare *
+              GachaHud.kotohogiBarScale, .02));
       expect(tester.getSize(name).width,
           closeTo(contentWidth * GachaHud.nameplateShare, .02));
       expect(tester.getRect(name).right, lessThan(tester.getRect(bar).left));

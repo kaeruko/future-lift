@@ -209,8 +209,7 @@ void main() {
       expect(tester.getSize(nameplate).width, greaterThan(0));
       expect(tester.getSize(points).width,
           greaterThan(tester.getSize(nameplate).width));
-      expect(find.byKey(const ValueKey('kotohogi-bar-label')),
-          findsOneWidget);
+      expect(find.byKey(const ValueKey('kotohogi-bar-label')), findsNothing);
       expect(find.byKey(const ValueKey('open-missions')), findsOneWidget);
       final leftRect = tester.getRect(find.byKey(const ValueKey('open-missions')));
       final rightRect = tester.getRect(find.byKey(const ValueKey('open-town')));

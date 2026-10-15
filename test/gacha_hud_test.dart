@@ -29,14 +29,15 @@ void main() {
       expect(art, findsOneWidget);
       expect(name, findsOneWidget);
       expect(tester.widget<Text>(value).data, '999');
-      expect(find.byKey(const ValueKey('kotohogi-bar-label')), findsOneWidget);
+      expect(find.byKey(const ValueKey('kotohogi-bar-label')), findsNothing);
       expect(find.byTooltip('ガチャ券'), findsNothing);
       expect(find.textContaining('ガチャ券'), findsNothing);
       final available = width - GachaHud.horizontalGap;
       expect(tester.getSize(name).width,
           closeTo(available * GachaHud.nameplateShare, .02));
       expect(tester.getSize(bar).width,
-          closeTo(available * GachaHud.balanceShare, .02));
+          closeTo(available * GachaHud.balanceShare *
+              GachaHud.kotohogiBarScale, .02));
       expect(tester.getSize(bar).width, greaterThan(tester.getSize(name).width));
       expect(tester.getRect(name).right, lessThan(tester.getRect(bar).left));
       expect(tester.getSize(bar).height,
