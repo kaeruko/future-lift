@@ -4,6 +4,7 @@
 
 - `09_nav_home.png`: ホームのナビゲーション
 - `11_nav_town.png`: まちのナビゲーションとリンク
+- `12_nav_history.png`: 履歴のナビゲーション
 - `24_badge_clear.png`: 達成済みバッジ
 - `31_dialogue_box.png`: ハルのホームメッセージ枠
 - `32_heart_red_1.png`: 社会貢献ポイントのアイコン

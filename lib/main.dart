@@ -537,9 +537,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
               icon: uiPart('11_nav_town', width: 54, height: 58),
               label: 'みんなのまち',
             ),
-            const NavigationDestination(
-              key: ValueKey('footer-history'),
-              icon: Icon(Icons.auto_stories_outlined, size: 35),
+            NavigationDestination(
+              key: const ValueKey('footer-history'),
+              icon: uiPart('12_nav_history', width: 54, height: 58),
               label: '履歴',
             ),
             if (kDebugMode)
