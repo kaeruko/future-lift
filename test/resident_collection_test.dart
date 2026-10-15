@@ -438,7 +438,7 @@ void main() {
         enableTutorial: false,
       ));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('みんなのまち').last);
+      await tester.tap(find.byKey(const ValueKey('footer-town')));
       await tester.pumpAndSettle();
       expect(
         tester.widget<TownScene>(find.byType(TownScene)).residents.length,
@@ -473,7 +473,7 @@ void main() {
         tester.widget<TownScene>(find.byType(TownScene)).residents.length,
         3,
       );
-      await tester.tap(find.text('ミッション').last);
+      await tester.tap(find.byKey(const ValueKey('footer-missions')));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('complete-strength')),
