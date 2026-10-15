@@ -327,6 +327,83 @@
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "026_farmer_002",
+      "residentId": "026_farmer",
+      "text": "おやすみくん。農業をやらんかね。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "townTogether",
+          "otherResidentId": "027_daydreamer"
+        }
+      ],
+      "reply": {
+        "residentId": "027_daydreamer",
+        "text": "もふ？おひるねできる？"
+      }
+    },
+    {
+      "id": "027_daydreamer_002",
+      "residentId": "027_daydreamer",
+      "text": "ぼくはおやすみくん。おやすみをしてるんだ。前は工事現場で働いてたんだよ。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "032_miner_001",
+      "residentId": "032_miner",
+      "text": "今日もまちをつくってきたもぐ！完成するのが楽しみだもぐ〜！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "032_miner_002",
+      "residentId": "032_miner",
+      "text": "重たいものを持つときは、腰だけで持ち上げないように気をつけてるもぐ！",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "032_miner_003",
+      "residentId": "032_miner",
+      "text": "暑い日は、のどが渇く前に水分補給！休憩も忘れちゃだめだもぐ！",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "032_miner_004",
+      "residentId": "032_miner",
+      "text": "大きな建物だって、一日じゃできないもぐ。今日の一歩も、立派な積み重ねだもぐ！",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "032_miner_005",
+      "residentId": "032_miner",
+      "text": "おやすみくんとは一緒にはたらいてたんだよ。あの公園、ぼくたちがつくったんだ。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "townTogether",
+          "otherResidentId": "027_daydreamer"
+        }
+      ]
     }
   ]
 }

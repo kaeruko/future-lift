@@ -77,7 +77,7 @@
       "label": "やすぞう",
       "profile": "本名：多賀　康三。健康を意識している中年男性。",
       "artFolder": "026_farmer",
-      "nextDialogueNumber": 2,
+      "nextDialogueNumber": 3,
       "inGacha": true,
       "walkInTown": true
     },
@@ -87,7 +87,17 @@
       "label": "おやすみくん",
       "profile": "おしごともべんきょうもおやすみ中の子。ぼくはまだまだこれからなんだ～",
       "artFolder": "027_daydreamer",
-      "nextDialogueNumber": 2,
+      "nextDialogueNumber": 3,
+      "inGacha": true,
+      "walkInTown": true
+    },
+    {
+      "key": "c032_miner",
+      "id": "032_miner",
+      "label": "もぐた",
+      "profile": "工事現場ではたらく子",
+      "artFolder": "032_miner",
+      "nextDialogueNumber": 6,
       "inGacha": true,
       "walkInTown": true
     }

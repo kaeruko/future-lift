@@ -86,6 +86,7 @@ flutter:
     - assets/characters/009_chef/
     - assets/characters/026_farmer/
     - assets/characters/027_daydreamer/
+    - assets/characters/032_miner/
     # END CMS CHARACTER ASSETS
     - assets/clap/
     - assets/celebration/
