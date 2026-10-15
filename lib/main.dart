@@ -474,7 +474,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           ),
         ),
         bottomNavigationBar: NavigationBar(
-          height: 104,
+          height: 80,
+          // Keep labels for accessibility, but display just the icons.
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
           selectedIndex: _page,
           onDestinationSelected: (index) {
             if (_tutorialSaving ||
@@ -490,23 +492,28 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           },
           destinations: [
             NavigationDestination(
+              key: const ValueKey('footer-home'),
               icon: uiPart('09_nav_home', width: 54, height: 58),
               label: 'ホーム',
             ),
             NavigationDestination(
+              key: const ValueKey('footer-missions'),
               icon: uiPart('10_nav_quest', width: 54, height: 58),
               label: 'ミッション',
             ),
             NavigationDestination(
+              key: const ValueKey('footer-town'),
               icon: uiPart('11_nav_town', width: 54, height: 58),
               label: 'みんなのまち',
             ),
             const NavigationDestination(
+              key: ValueKey('footer-history'),
               icon: Icon(Icons.auto_stories_outlined, size: 35),
               label: '履歴',
             ),
             if (kDebugMode)
               NavigationDestination(
+                key: const ValueKey('footer-menu'),
                 icon: uiPart('21_nav_menu', width: 54, height: 58),
                 label: 'メニュー',
               ),

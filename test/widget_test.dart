@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/celebration.dart';
 import 'package:future_lift/clap_characters.dart';
 import 'package:future_lift/main.dart';
+import 'package:future_lift/missions_screen.dart';
 import 'package:future_lift/kotohogisu_tutorial.dart';
 import 'package:future_lift/dialogue_engine.dart';
 import 'package:future_lift/progress.dart';
@@ -140,6 +141,40 @@ void main() {
     return controller;
   }
 
+  testWidgets('bottom navigation shows icons without visible labels',
+      (tester) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await launch(tester, MemoryStore());
+    final nav = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    expect(nav.labelBehavior, NavigationDestinationLabelBehavior.alwaysHide);
+    expect(tester.getSize(find.byType(NavigationBar)).height, 80);
+    expect(
+      nav.destinations.map((destination) =>
+          (destination as NavigationDestination).label).toList(),
+      ['ホーム', 'ミッション', 'みんなのまち', '履歴', 'メニュー'],
+    );
+    for (final id in [
+      'footer-home', 'footer-missions', 'footer-town',
+      'footer-history', 'footer-menu',
+    ]) {
+      expect(find.byKey(ValueKey(id)), findsOneWidget);
+    }
+
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<NavigationBar>(find.byType(NavigationBar))
+        .selectedIndex, 1);
+    expect(find.byType(MissionsScreen), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('footer-home')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<NavigationBar>(find.byType(NavigationBar))
+        .selectedIndex, 0);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('home, missions and town show one spendable balance',
       (tester) async {
     tester.view.physicalSize = const Size(430, 1000);
@@ -172,13 +207,13 @@ void main() {
     }
 
     expectBalance(); // Home
-    await tester.tap(find.text('ミッション').last);
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
     await tester.pumpAndSettle();
     expectBalance(); // Mission header
-    await tester.tap(find.text('みんなのまち').last);
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
     expectBalance(); // Town
-    await tester.tap(find.text('ホーム').last);
+    await tester.tap(find.byKey(const ValueKey('footer-home')));
     await tester.pumpAndSettle();
     expectBalance(); // Return home
 
@@ -209,7 +244,7 @@ void main() {
     final controller = await launch(tester, store);
     expect(controller.progress!.residents.availableKotohogi(170), 110);
 
-    await tester.tap(find.text('ミッション').last);
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('complete-strength')));
     await tester.pump();
@@ -280,7 +315,7 @@ void main() {
       enableTutorial: false,
     ));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('みんなのまち').last);
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('resident-0')));
     await tester.pumpAndSettle();
@@ -311,7 +346,7 @@ void main() {
     addTearDown(() => tester.view.reset());
     final store = MemoryStore();
     final controller = await launch(tester, store);
-    await tester.tap(find.text('ミッション').last);
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
     await tester.pumpAndSettle();
     for (final mission in Mission.forPeriod(MissionPeriod.daily)) {
       await tester.scrollUntilVisible(find.text(mission.title), 200);
@@ -358,7 +393,7 @@ void main() {
     );
     expect(button.onPressed, isNull);
     expect(find.text('できた！  達成済み'), findsOneWidget);
-    await tester.tap(find.text('ホーム').last);
+    await tester.tap(find.byKey(const ValueKey('footer-home')));
     await tester.pumpAndSettle();
     // On shorter screens, the larger currency/ticket HUD reserves more
     // vertical space. The bottom home action remains reachable by scrolling.
@@ -368,7 +403,7 @@ void main() {
       find.byKey(const ValueKey('open-missions')).hitTestable(),
       findsOneWidget,
     );
-    await tester.tap(find.text('みんなのまち').last);
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
     expect(tester.widget<TownScene>(find.byType(TownScene)).level, 0);
     final background = tester.widget<Image>(
@@ -414,10 +449,13 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       await launch(tester, MemoryStore());
-      await tester.tap(find.text('みんなのまち').last);
+      await tester.tap(find.byKey(const ValueKey('footer-town')));
       await tester.pumpAndSettle();
 
-      expect(find.text('みんなのまち'), findsOneWidget);
+      // The footer is icon-only; selected destinations still have a label
+      // for semantics and identification.
+      expect(tester.widget<NavigationBar>(find.byType(NavigationBar))
+          .selectedIndex, 2);
       expect(find.text(townNames.first), findsOneWidget);
       expect(find.text('LEVEL 0'), findsOneWidget);
       expect(find.byKey(const ValueKey('town-page-shrine-background')),
@@ -495,7 +533,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('ミッション').last);
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('complete-strength')),
@@ -510,7 +548,7 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.tap(find.byKey(const ValueKey('close-celebration')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('みんなのまち').last);
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('resident-0')),
@@ -549,7 +587,7 @@ void main() {
       );
       final store = MemoryStore()..raw = saved.encode();
       final controller = await launch(tester, store);
-      await tester.tap(find.text('履歴').last);
+      await tester.tap(find.byKey(const ValueKey('footer-history')));
       await tester.pumpAndSettle();
       expect(find.text('これまで言祝がれた日々'), findsOneWidget);
       expect(find.text('直近30日は 2日、2個の行動を言祝ぎました。'), findsOneWidget);
@@ -605,7 +643,7 @@ void main() {
     addTearDown(tester.view.reset);
     final store = MemoryStore();
     final controller = await launch(tester, store);
-    await tester.tap(find.text('ミッション').last);
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
     await tester.pumpAndSettle();
     expect(find.text(Mission.movement.title), findsOneWidget);
     expect(find.text('いつもより身体を動かした'), findsNothing);
@@ -660,7 +698,7 @@ void main() {
     final store = MemoryStore()..raw = original.encode();
     final controller = await launch(tester, store);
 
-    await tester.tap(find.text('メニュー').last);
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('debug-replay-celebration')),
@@ -722,7 +760,7 @@ void main() {
     addTearDown(tester.view.reset);
     final store = MemoryStore();
     final controller = await launch(tester, store);
-    await tester.tap(find.text('みんなのまち').last);
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
 
     final nameplate = find.byKey(const ValueKey('gacha-player-nameplate'));
@@ -739,7 +777,7 @@ void main() {
         lessThan(tester.getRect(art).left));
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.text('メニュー').last);
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
     await tester.pumpAndSettle();
     final addCurrency = find.byKey(const ValueKey('debug-add-ticket-10'));
     await tester.ensureVisible(addCurrency);
@@ -747,7 +785,7 @@ void main() {
     await tester.tap(addCurrency);
     await tester.pumpAndSettle();
     expect(controller.progress!.residents.availableKotohogi(0), 300);
-    await tester.tap(find.text('みんなのまち').last);
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
     expect(tester.widget<Text>(amount).data, '300');
     expect(find.textContaining('ガチャ券'), findsNothing);
@@ -763,7 +801,7 @@ void main() {
     addTearDown(tester.view.reset);
     final store = MemoryStore();
     final controller = await launch(tester, store);
-    await tester.tap(find.text('メニュー').last);
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
     await tester.pumpAndSettle();
 
     final plusOne = find.byKey(const ValueKey('debug-add-ticket-1'));
@@ -786,7 +824,7 @@ void main() {
     expect(Progress.decode(store.raw!).residents.tickets(0), 11);
     expect(Progress.decode(store.raw!).residents.availableKotohogi(0), 330);
 
-    await tester.tap(find.text('みんなのまち').last);
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
     expect(
       controller.progress!.residents.tickets(controller.progress!.points),
@@ -808,7 +846,7 @@ void main() {
         .complete(Mission.monthlyReview);
     final store = MemoryStore()..raw = original.encode();
     final controller = await launch(tester, store);
-    await tester.tap(find.text('メニュー').last);
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
     await tester.pumpAndSettle();
     final reset = find.byKey(const ValueKey('debug-reset-all-missions'));
     await tester.ensureVisible(reset);
@@ -843,7 +881,7 @@ void main() {
     expect(restored.monthlyCompleted, isEmpty);
     expect(restored.history, original.history);
 
-    await tester.tap(find.text('ミッション').last);
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('complete-strength')),
@@ -918,7 +956,7 @@ void main() {
     final controller = await launch(tester, store, showTutorial: true);
     expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsNothing);
 
-    await tester.tap(find.text('メニュー').last);
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
     await tester.pumpAndSettle();
     final replay = find.byKey(const ValueKey('debug-replay-tutorial'));
     await tester.ensureVisible(replay);
@@ -929,7 +967,7 @@ void main() {
     expect(find.textContaining('ぼくはコトホギス'), findsOneWidget);
 
     // Navigation cannot leave the replay before the user finishes or skips.
-    await tester.tap(find.text('ミッション').last);
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('kotohogisu-tutorial')), findsOneWidget);
 
@@ -940,7 +978,7 @@ void main() {
     expect(store.writes, 0);
     expect(store.raw, original);
 
-    await tester.tap(find.text('メニュー').last);
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(replay);
     await tester.pumpAndSettle();

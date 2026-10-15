@@ -79,7 +79,7 @@ void main() {
     final originalSave = store.raw;
     final originalWrites = store.writes;
 
-    await tester.tap(find.text('メニュー').last);
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
     await tester.pumpAndSettle();
     final toggle = find.byKey(const ValueKey('debug-town-enable'));
     await tester.scrollUntilVisible(toggle, 200);
@@ -105,7 +105,7 @@ void main() {
       [TownResident.shiba, TownResident.rabbit, TownResident.c027_daydreamer],
     );
 
-    await tester.tap(find.text('ホーム').last);
+    await tester.tap(find.byKey(const ValueKey('footer-home')));
     await tester.pumpAndSettle();
     expect(
       tester.widget<GameHome>(find.byType(GameHome)).debugTownResidents,
@@ -116,7 +116,7 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('みんなのまち').last);
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
     final town = tester.widget<TownScene>(find.byType(TownScene));
     expect(town.debugTownResidents,
@@ -136,7 +136,7 @@ void main() {
     expect(controller.progress!.residents.owned,
         [TownResident.shiba, TownResident.rabbit]);
 
-    await tester.tap(find.text('メニュー').last);
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
     await tester.pumpAndSettle();
     final restore = find.byKey(const ValueKey('debug-town-enable'));
     await tester.scrollUntilVisible(restore, 200);
@@ -148,7 +148,7 @@ void main() {
           .debugTownResidents,
       isNull,
     );
-    await tester.tap(find.text('みんなのまち').last);
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
     expect(tester.widget<TownScene>(find.byType(TownScene)).debugTownResidents,
         isNull);
