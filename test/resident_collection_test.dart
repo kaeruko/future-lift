@@ -421,6 +421,12 @@ void main() {
   testWidgets(
     'new resident appears in town, applause and restored collection',
     (tester) async {
+      final priorErrorHandler = FlutterError.onError;
+      FlutterError.onError = (details) {
+        debugPrint('TOWN_GACHA_STACK: ${details.exception}\n${details.stack}');
+        priorErrorHandler?.call(details);
+      };
+      addTearDown(() => FlutterError.onError = priorErrorHandler);
       tester.view.physicalSize = const Size(430, 1000);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
