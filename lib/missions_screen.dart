@@ -35,7 +35,9 @@ class MissionsScreen extends StatelessWidget {
       ListView(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
         children: [
-          ContributionPanel(points: progress.points),
+          ContributionPanel(
+            points: progress.residents.availableKotohogi(progress.points),
+          ),
           const SizedBox(height: 20),
           Row(
             children: [

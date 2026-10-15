@@ -140,6 +140,54 @@ void main() {
     return controller;
   }
 
+  testWidgets('home, missions and town show one spendable balance',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    // 190 points earned, 60 spent on two draws, 130 available.
+    final seed = Progress(
+      day: '2026-10-09',
+      lastCompletedDay: '2026-10-08',
+      points: 190,
+      residents: ResidentCollection(
+        baselinePoints: 0,
+        counts: const {'01_shiba': 2, '02_rabbit': 2},
+      ),
+      completed: const {},
+    );
+    final store = MemoryStore()..raw = seed.encode();
+    final controller = await launch(tester, store);
+    final originalSave = store.raw;
+    final originalWrites = store.writes;
+    expect(controller.progress!.points, 190);
+    expect(controller.progress!.residents.availableKotohogi(190), 130);
+
+    void expectBalance() {
+      expect(
+        tester.widget<Text>(find.byKey(const ValueKey('total-points'))).data,
+        '130',
+      );
+    }
+
+    expectBalance(); // Home
+    await tester.tap(find.text('ミッション').last);
+    await tester.pumpAndSettle();
+    expectBalance(); // Mission header
+    await tester.tap(find.text('みんなのまち').last);
+    await tester.pumpAndSettle();
+    expectBalance(); // Town
+    await tester.tap(find.text('ホーム').last);
+    await tester.pumpAndSettle();
+    expectBalance(); // Return home
+
+    expect(store.raw, originalSave);
+    expect(store.writes, originalWrites);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('celebration displays spendable 120, not lifetime 180',
       (tester) async {
     tester.view.physicalSize = const Size(430, 1000);
