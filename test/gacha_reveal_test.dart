@@ -161,7 +161,7 @@ void main() {
       tester.widget<Semantics>(
         find.byKey(const ValueKey('gacha-result')),
       ).properties.label,
-      'ペンギンが、まちにやってきました！',
+      '${TownResident.penguin.label}が、まちにやってきました！',
     );
     expect(
       find.byKey(const ValueKey('gacha-banner-resident-name')),

@@ -81,7 +81,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('six sprites clap in sequence and respect reduced motion', (
+  testWidgets('up to eight sprites clap in sequence and respect reduced motion', (
     tester,
   ) async {
     Future<void> show(double phase, {bool reduced = false}) async {
@@ -102,7 +102,7 @@ void main() {
         .index!;
 
     await show(0);
-    expect(find.byType(IndexedStack), findsNWidgets(6));
+    expect(find.byType(IndexedStack), findsNWidgets(applauseResidentLimit));
     expect(frame(), 0);
     await show(.25);
     expect(frame(), 1);
@@ -183,6 +183,8 @@ void main() {
       dialogueCatalog: catalogue,
       enableTutorial: false,
     ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('みんなのまち').last);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('resident-0')));
     await tester.pumpAndSettle();
