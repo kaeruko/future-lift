@@ -70,6 +70,26 @@
       "inGacha": true,
       "walkInTown": true,
       "profile": ""
+    },
+    {
+      "key": "c026_farmer",
+      "id": "026_farmer",
+      "label": "やすぞう",
+      "profile": "本名：多賀　康三。健康を意識している中年男性。",
+      "artFolder": "026_farmer",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true
+    },
+    {
+      "key": "c027_daydreamer",
+      "id": "027_daydreamer",
+      "label": "おやすみくん",
+      "profile": "おしごともべんきょうもおやすみ中の子。ぼくはまだまだこれからなんだ～",
+      "artFolder": "027_daydreamer",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true
     }
   ]
 }

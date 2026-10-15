@@ -309,6 +309,24 @@
           "minCount": 5
         }
       ]
+    },
+    {
+      "id": "026_farmer_001",
+      "residentId": "026_farmer",
+      "text": "畑仕事もいい運動になるんじゃよ。",
+      "priority": 50,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "027_daydreamer_001",
+      "residentId": "027_daydreamer",
+      "text": "ぼく？なんにもしないをしてるんだよ。",
+      "priority": 40,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }
