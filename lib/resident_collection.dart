@@ -33,17 +33,24 @@ enum WalkDirection { front, back, left, right }
 
 enum TownResident {
   // BEGIN CMS RESIDENTS
-  shiba("01_shiba", "しばいぬ", "001_shiba", true, true, ""),
-  rabbit("02_rabbit", "うさぎ", "002_usagi", true, true, ""),
-  penguin("03_penguin", "まちの案内係", "003_penguin", true, true, ""),
-  cat("04_cat", "ねこ", "004_neko", true, true, ""),
-  squirrel("05_squirrel", "りす", "005_risu", true, true, ""),
-  bear("06_bear", "くま", "006_kuma", true, true, ""),
-  c009_chef("009_chef", "シェフ", "009_chef", true, true, ""),
-  c026_farmer("026_farmer", "やすぞう", "026_farmer", true, true, "本名：多賀　康三。健康を意識している中年男性。"),
-  c027_daydreamer("027_daydreamer", "おやすみくん", "027_daydreamer", true, true, "おしごともべんきょうもおやすみ中の子。ぼくはまだまだこれからなんだ～"),
-  c032_miner("032_miner", "もぐた", "032_miner", true, true, "工事現場ではたらく子"),
-  c036_mosa("036_mosa", "モサエド", "036_mosa", true, true, "拙者、猛者江戸（モサエド）と申す！")
+  shiba("01_shiba", "しばいぬ", "001_shiba", true, true, "", "plaza"),
+  rabbit("02_rabbit", "うさぎ", "002_usagi", true, true, "", "park"),
+  penguin("03_penguin", "まちの案内係", "003_penguin", true, true, "", "plaza"),
+  cat("04_cat", "ねこ", "004_neko", true, true, "", "shopping"),
+  squirrel("05_squirrel", "りす", "005_risu", true, true, "", "park"),
+  bear("06_bear", "くま", "006_kuma", true, true, "", "village"),
+  // ignore: constant_identifier_names
+  c009_chef("009_chef", "シェフ", "009_chef", true, true, "", "shopping"),
+  // ignore: constant_identifier_names
+  c026_farmer("026_farmer", "やすぞう", "026_farmer", true, true, "本名：多賀　康三。健康を意識している中年男性。", "village"),
+  // ignore: constant_identifier_names
+  c027_daydreamer("027_daydreamer", "おやすみくん", "027_daydreamer", true, true, "おしごともべんきょうもおやすみ中の子。ぼくはまだまだこれからなんだ～", "village"),
+  // ignore: constant_identifier_names
+  c032_miner("032_miner", "もぐた", "032_miner", true, true, "工事現場ではたらく子", "shopping"),
+  // ignore: constant_identifier_names
+  c036_mosa("036_mosa", "モサエド", "036_mosa", true, true, "拙者、猛者江戸（モサエド）と申す！", "plaza"),
+  // ignore: constant_identifier_names
+  c035_beaty("035_beaty", "つやこ", "035_beaty", true, true, "美容家", "shopping")
   // END CMS RESIDENTS
   ;
 

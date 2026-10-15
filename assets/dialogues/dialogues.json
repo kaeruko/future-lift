@@ -602,6 +602,15 @@
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "035_beaty_001",
+      "residentId": "035_beaty",
+      "text": "うふふ、今日もごきげん麗しくね♡",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }
