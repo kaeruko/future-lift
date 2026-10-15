@@ -41,13 +41,15 @@ void main() {
     expect(TownResident.c009_chef.homeAreaId, 'shopping');
     final all = TownResident.values.toList();
     expect(areaResidents(all, TownArea.plaza),
-        [TownResident.shiba, TownResident.rabbit, TownResident.penguin]);
+        [TownResident.shiba, TownResident.penguin, TownResident.c036_mosa]);
     expect(areaResidents(all, TownArea.park),
-        [TownResident.squirrel, TownResident.bear]);
+        [TownResident.rabbit, TownResident.squirrel]);
     expect(areaResidents(all, TownArea.shopping),
-        [TownResident.cat, TownResident.c009_chef, TownResident.c032_miner]);
+        [TownResident.cat, TownResident.c009_chef, TownResident.c032_miner,
+         TownResident.c035_beaty]);
     expect(areaResidents(all, TownArea.village),
-        [TownResident.c026_farmer, TownResident.c027_daydreamer]);
+        [TownResident.bear, TownResident.c026_farmer,
+         TownResident.c027_daydreamer]);
     expect(areaResidents(all, TownArea.village,
         debugOverride: [TownResident.shiba, TownResident.c027_daydreamer]),
         [TownResident.c027_daydreamer]);
