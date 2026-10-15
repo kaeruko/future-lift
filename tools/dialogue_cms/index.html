@@ -106,6 +106,7 @@ nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
 <script>
 "use strict";
 let residents={};
+const areaLabels={"plaza":"⛩️ 中央ひろば","park":"🌳 ふれあい公園","shopping":"🏮 ことほぎ商店街","village":"🌱 のんびり里"};
 const missions={"all":"全ミッション合計","strength":"筋力を使った","outside":"外に出た・歩いた","conversation":"人と話した","movement":"身体を動かした","sittingBreak":"座りっぱなしを途中でやめた","food":"食事をひとつ整えた","hobby":"趣味や学びを楽しんだ","weeklyStrength":"筋トレをした","weeklyActive":"息が弾む運動を楽しんだ","weeklyTogether":"誰かと一緒に活動した","weeklyLearn":"新しいことを学んだ・試した","monthlyCommunity":"地域の活動に参加した","monthlyHabit":"健康習慣をひとつ工夫した","monthlyReview":"今月の言祝ぎを振り返った"};
 const modes={"exact":"指定日","range":"指定期間","annual":"毎年の指定日","annual_range":"毎年の期間","weekday":"毎週の曜日"};
 const byId=id=>document.getElementById(id);
@@ -358,7 +359,7 @@ function renderCharacterList(){
     const btn=append(box,"button",row.label+"｜"+row.id);
     btn.className="entry"+(row.id===characterSelected?" active":"");
     btn.style.marginBottom="6px";
-    append(btn,"small",row.artFolder+(row.inGacha?" ｜ ガチャ":"")+(row.walkInTown?" ｜ まち":""));
+    append(btn,"small",row.artFolder+" ｜ "+areaLabels[row.homeAreaId]+(row.inGacha?" ｜ ガチャ":"")+(row.walkInTown?" ｜ まち":""));
     btn.onclick=()=>{characterSelected=row.id;renderCharacterList();renderCharacterEditor()};
   }
 }
@@ -419,6 +420,10 @@ function renderCharacterEditor(){
   profileInput.rows=5;
   profileInput.maxLength=1000;
   append(box,"p","自由文・改行OK。1000文字以内、空欄でも保存できます。").className="hint";
+  labelControl(box,"住むエリア","select",row.homeAreaId,value=>{
+    row.homeAreaId=value;
+    renderCharacterList();setCharacterStatus("未保存の変更があります");
+  },{options:areaLabels});
   edit("キャラID（例: 009_chef）","id",locked);
   const folderHint=append(box,"p",locked
     ? `画像フォルダ: assets/characters/${row.artFolder}/（登録済みの設定を維持）`
@@ -477,7 +482,7 @@ byId("addCharacter").onclick=()=>{
   let id=String(number).padStart(3,"0")+"_new";
   while(used.has(id)){number++;id=String(number).padStart(3,"0")+"_new"}
   const row={key:"c"+id,id,label:"新しい住民",profile:"",artFolder:id,
-    nextDialogueNumber:1,inGacha:true,walkInTown:true};
+    nextDialogueNumber:1,inGacha:true,walkInTown:true,homeAreaId:"plaza"};
   const firstLine=fresh(row);
   firstLine.text="こんにちは！よろしくね。";
   firstLine.priority=0;

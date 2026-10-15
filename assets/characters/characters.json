@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "characters": [
     {
       "key": "shiba",
@@ -9,7 +9,8 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": ""
+      "profile": "",
+      "homeAreaId": "plaza"
     },
     {
       "key": "rabbit",
@@ -19,7 +20,8 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": ""
+      "profile": "",
+      "homeAreaId": "plaza"
     },
     {
       "key": "penguin",
@@ -29,7 +31,8 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": ""
+      "profile": "",
+      "homeAreaId": "plaza"
     },
     {
       "key": "cat",
@@ -39,7 +42,8 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": ""
+      "profile": "",
+      "homeAreaId": "shopping"
     },
     {
       "key": "squirrel",
@@ -49,7 +53,8 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": ""
+      "profile": "",
+      "homeAreaId": "park"
     },
     {
       "key": "bear",
@@ -59,7 +64,8 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": ""
+      "profile": "",
+      "homeAreaId": "park"
     },
     {
       "key": "c009_chef",
@@ -69,7 +75,8 @@
       "nextDialogueNumber": 5,
       "inGacha": true,
       "walkInTown": true,
-      "profile": ""
+      "profile": "",
+      "homeAreaId": "shopping"
     },
     {
       "key": "c026_farmer",
@@ -79,7 +86,8 @@
       "artFolder": "026_farmer",
       "nextDialogueNumber": 3,
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "homeAreaId": "village"
     },
     {
       "key": "c027_daydreamer",
@@ -89,7 +97,8 @@
       "artFolder": "027_daydreamer",
       "nextDialogueNumber": 3,
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "homeAreaId": "village"
     },
     {
       "key": "c032_miner",
@@ -99,7 +108,8 @@
       "artFolder": "032_miner",
       "nextDialogueNumber": 6,
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "homeAreaId": "shopping"
     }
   ]
 }
