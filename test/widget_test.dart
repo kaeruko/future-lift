@@ -140,7 +140,7 @@ void main() {
     return controller;
   }
 
-  testWidgets('town companions show both speaker and reply', (tester) async {
+  testWidgets('town companions speak one at a time', (tester) async {
     tester.view.physicalSize = const Size(430, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -188,8 +188,22 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('resident-0')));
     await tester.pumpAndSettle();
+    final dialogue = find.byType(AlertDialog);
+    expect(find.descendant(of: dialogue, matching: find.text('しばいぬ')),
+        findsOneWidget);
     expect(find.text('今日は雲を眺めようよ'), findsOneWidget);
+    expect(find.text('あの雲、描いてみたい！'), findsNothing);
+    expect(find.text('1 / 2'), findsOneWidget);
+    await tester.tap(find.text('つづきへ'));
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: dialogue, matching: find.text('うさぎ')),
+        findsOneWidget);
+    expect(find.text('今日は雲を眺めようよ'), findsNothing);
     expect(find.text('あの雲、描いてみたい！'), findsOneWidget);
+    expect(find.text('2 / 2'), findsOneWidget);
+    await tester.tap(find.text('また話そう'));
+    await tester.pumpAndSettle();
+    expect(dialogue, findsNothing);
     expect(tester.takeException(), isNull);
   });
 

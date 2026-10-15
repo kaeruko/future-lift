@@ -13,6 +13,7 @@ import 'missions_screen.dart';
 import 'history_screen.dart';
 import 'debug_menu_screen.dart';
 import 'resident_collection.dart';
+import 'resident_conversation_dialog.dart';
 import 'resident_gacha.dart';
 import 'gacha_hud.dart';
 import 'kotohogisu_tutorial.dart';
@@ -303,47 +304,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     _dialogueIndex[resident] = index + 1;
     await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: Row(
-          children: [
-            TownResidentAvatar(resident: resident, size: 48),
-            const SizedBox(width: 12),
-            Expanded(child: Text(resident.label)),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(line.text,
-                style: const TextStyle(fontSize: 19, height: 1.8)),
-              if (line.reply case final reply?) ...[
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    TownResidentAvatar(
-                      resident: TownResident.fromId(reply.residentId), size: 44),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(
-                      TownResident.fromId(reply.residentId).label,
-                      style: const TextStyle(fontWeight: FontWeight.bold))),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(reply.text,
-                  style: const TextStyle(fontSize: 19, height: 1.8)),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('また話そう'),
-          ),
-        ],
+      builder: (context) => ResidentConversationDialog(
+        speaker: resident,
+        dialogue: line,
       ),
     );
   }
