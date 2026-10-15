@@ -9,6 +9,7 @@ class TownAreaNavigator extends StatefulWidget {
   const TownAreaNavigator({
     super.key,
     required this.area,
+    this.sceneKey,
     required this.onAreaChanged,
     required this.level,
     required this.lifetimePoints,
@@ -18,6 +19,8 @@ class TownAreaNavigator extends StatefulWidget {
   });
 
   final TownArea area;
+  /// Preserve the painted scene and its semantics when the long town page scrolls.
+  final GlobalKey? sceneKey;
   final ValueChanged<TownArea> onAreaChanged;
   final int level;
   final int lifetimePoints;
@@ -77,6 +80,7 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
         children: [
           if (accessible && area.backgroundAsset != null)
             TownScene(
+              key: widget.sceneKey,
               level: widget.level,
               area: area,
               residents: widget.residents,

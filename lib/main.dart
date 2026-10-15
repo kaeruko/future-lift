@@ -99,6 +99,7 @@ class FutureLiftHome extends StatefulWidget {
 
 class _FutureLiftHomeState extends State<FutureLiftHome>
     with WidgetsBindingObserver {
+  final _townSceneKey = GlobalKey();
   final ScrollController _townScrollController = ScrollController();
   int _page = 0;
   MissionPeriod _missionPeriod = MissionPeriod.daily;
@@ -570,6 +571,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       key: const ValueKey('town-page-fullscreen'),
       height: viewportHeight,
       child: TownAreaNavigator(
+        sceneKey: _townSceneKey,
         area: _townArea,
         onAreaChanged: (area) => setState(() => _townArea = area),
         level: progress.townLevel,
