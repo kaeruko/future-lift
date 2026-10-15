@@ -1,4 +1,7 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/resident_collection.dart';
 import 'package:future_lift/town_area_navigator.dart';
@@ -14,6 +17,36 @@ void main() {
     expect(TownArea.park.isUnlocked(90), true);
     expect(TownArea.village.isUnlocked(299), false);
     expect(TownArea.village.isUnlocked(300), true);
+  });
+
+  testWidgets('source dimensions match bundled backgrounds exactly',
+      (tester) async {
+    for (final area in TownArea.values) {
+      if (area.backgroundAsset == null) {
+        expect(area.sourceWidth, isNull);
+        expect(area.sourceHeight, isNull);
+        continue;
+      }
+      expect(area.sourceWidth, greaterThan(0));
+      expect(area.sourceHeight, greaterThan(0));
+      final data = await rootBundle.load(area.backgroundAsset!);
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes, data.lengthInBytes);
+      final codec = await ui.instantiateImageCodec(bytes);
+      try {
+        final frame = await codec.getNextFrame();
+        try {
+          expect(frame.image.width, area.sourceWidth,
+              reason: '${area.id} background width');
+          expect(frame.image.height, area.sourceHeight,
+              reason: '${area.id} background height');
+        } finally {
+          frame.image.dispose();
+        }
+      } finally {
+        codec.dispose();
+      }
+    }
   });
 
   test('residents are sorted into homes without a global eight-person cap', () {

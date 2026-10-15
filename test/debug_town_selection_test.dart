@@ -131,10 +131,11 @@ void main() {
     }
     expect(tester.widget<TownAreaNavigator>(find.byType(TownAreaNavigator)).area,
         TownArea.village);
-    expect(find.byKey(const ValueKey('area-resident-027_daydreamer')),
-        findsOneWidget);
+    expect(tester.widget<TownScene>(find.byType(TownScene)).area,
+        TownArea.village);
+    expect(find.byKey(const ValueKey('resident-0')), findsOneWidget);
     // A debug-only dialogue must not modify seen IDs or ownership.
-    await tester.tap(find.byKey(const ValueKey('area-resident-027_daydreamer')));
+    await tester.tap(find.byKey(const ValueKey('resident-0')));
     await tester.pumpAndSettle();
     expect(find.text('こんにちは、おやすみくんです。'), findsOneWidget);
     await tester.tap(find.text('また話そう'));
@@ -161,8 +162,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.widget<TownAreaNavigator>(find.byType(TownAreaNavigator))
         .debugTownResidents, isNull);
-    expect(find.byKey(const ValueKey('area-resident-027_daydreamer')),
-        findsNothing);
+    expect(find.byKey(const ValueKey('resident-0')), findsNothing);
+    expect(find.text('まだ行けないエリアだよ'), findsOneWidget);
     expect(store.raw, originalSave);
     expect(store.writes, originalWrites);
     expect(tester.takeException(), isNull);

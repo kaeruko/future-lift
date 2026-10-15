@@ -33,8 +33,8 @@ class TownScene extends StatefulWidget {
   final List<TownResident>? debugTownResidents;
   final Future<void> Function(TownResident)? onResident;
 
-  /// Fill the available phone viewport using the source image's own
-  /// 768x1376 coordinates; the walkers share the same scale and crop.
+  /// Fit the *selected area's* own source dimensions to the phone.
+  /// Walkers and background share a transform, without image distortion.
   final bool fillViewport;
 
   @override
@@ -98,16 +98,22 @@ class _TownSceneState extends State<TownScene> {
   @override
   Widget build(BuildContext context) {
     if (widget.fillViewport) {
-      // The actual background is a portrait image (768x1376), not a
-      // landscape image. Scaling artwork and walkers together avoids the
-      // mismatched cropping that the former 1.22 aspect-ratio card caused.
+      final sourceWidth = widget.area.sourceWidth;
+      final sourceHeight = widget.area.sourceHeight;
+      if (sourceWidth == null || sourceHeight == null ||
+          sourceWidth <= 0 || sourceHeight <= 0) {
+        throw StateError('No source image dimensions for ${widget.area.id}');
+      }
+      // Canvas dimensions match this area's actual image. The background and
+      // walking sprites scale/crop together at any device aspect ratio.
       return ClipRect(
         child: FittedBox(
           fit: BoxFit.cover,
           child: SizedBox(
-            width: 768,
-            height: 1376,
-            child: _scene(context, 768, 1376),
+            width: sourceWidth.toDouble(),
+            height: sourceHeight.toDouble(),
+            child: _scene(
+              context, sourceWidth.toDouble(), sourceHeight.toDouble()),
           ),
         ),
       );

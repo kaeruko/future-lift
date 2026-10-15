@@ -4,13 +4,16 @@ import 'resident_collection.dart';
 /// The user's selected area is UI-only; no progress save migration is required.
 enum TownArea {
   plaza('plaza', '中央ひろば', 'みんなが集まるまちの中心。', 0,
-      'assets/kotohogu/town_background_001.jpg'),
-  park('park', 'ふれあい公園', 'お散歩やおしゃべりを楽しむ場所。', 90, null),
-  shopping('shopping', 'ことほぎ商店街', 'お店と仕事の話が聞こえてくる通り。', 180, null),
-  village('village', 'のんびり里', '畑とおうちで、それぞれのペースで暮らす場所。', 300, null);
+      'assets/kotohogu/town_background_001.jpg', 768, 1376),
+  park('park', 'ふれあい公園', 'お散歩やおしゃべりを楽しむ場所。', 90,
+      null, null, null),
+  shopping('shopping', 'ことほぎ商店街', 'お店と仕事の話が聞こえてくる通り。', 180,
+      'assets/kotohogu/ChatGPT 画像 2026年10月15日 21_10_28-1.png', 937, 1679),
+  village('village', 'のんびり里', '畑とおうちで、それぞれのペースで暮らす場所。', 300,
+      'assets/kotohogu/桜舞う日本の里山広場.png', 941, 1672);
 
   const TownArea(this.id, this.label, this.description, this.unlockAt,
-      this.backgroundAsset);
+      this.backgroundAsset, this.sourceWidth, this.sourceHeight);
 
   final String id;
   final String label;
@@ -19,6 +22,10 @@ enum TownArea {
   final int unlockAt;
   /// No fallback to another area's artwork when this is null.
   final String? backgroundAsset;
+  /// Intrinsic pixels for the matching background asset, not a shared canvas.
+  /// The artwork and its walkers must share this source coordinate system.
+  final int? sourceWidth;
+  final int? sourceHeight;
 
   bool isUnlocked(int lifetimePoints) => lifetimePoints >= unlockAt;
 
