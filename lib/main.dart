@@ -475,11 +475,16 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                       contentBehindHud: true,
                       contentBuilder: (context, availableHeight) => ColoredBox(
                         color: const Color(0xFFFFF3DC),
-                        child: ListView(
+                        // Keep the scene alive while scrolling to the gacha
+                        // panel: lazily disposing its transformed semantics
+                        // during route pop can leave a detached semantics node.
+                        child: SingleChildScrollView(
                           key: ValueKey('page-$_page'),
                           controller: _townScrollController,
                           padding: EdgeInsets.zero,
-                          children: _town(progress, availableHeight),
+                          child: Column(
+                            children: _town(progress, availableHeight),
+                          ),
                         ),
                       ),
                     )
