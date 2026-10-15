@@ -1,12 +1,11 @@
 {
-  "version": 1,
+  "version": 2,
   "characters": [
     {
       "key": "shiba",
       "id": "01_shiba",
       "label": "しばいぬ",
       "artFolder": "001_shiba",
-      "tipSource": "child",
       "inGacha": true,
       "walkInTown": true
     },
@@ -15,7 +14,6 @@
       "id": "02_rabbit",
       "label": "うさぎ",
       "artFolder": "002_usagi",
-      "tipSource": "student",
       "inGacha": true,
       "walkInTown": true
     },
@@ -24,7 +22,6 @@
       "id": "03_penguin",
       "label": "ペンギン",
       "artFolder": "003_penguin",
-      "tipSource": "adult",
       "inGacha": true,
       "walkInTown": true
     },
@@ -33,7 +30,6 @@
       "id": "04_cat",
       "label": "ねこ",
       "artFolder": "004_neko",
-      "tipSource": "adult",
       "inGacha": true,
       "walkInTown": true
     },
@@ -42,7 +38,6 @@
       "id": "05_squirrel",
       "label": "りす",
       "artFolder": "005_risu",
-      "tipSource": "child",
       "inGacha": true,
       "walkInTown": true
     },
@@ -51,7 +46,6 @@
       "id": "06_bear",
       "label": "くま",
       "artFolder": "006_kuma",
-      "tipSource": "elder",
       "inGacha": true,
       "walkInTown": true
     }

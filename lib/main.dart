@@ -107,7 +107,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   bool _tutorialReplay = false;
   static const _tutorialSeenId = 'tutorial_kotohogisu_v1';
   Timer? _midnight;
-  final _tipIndex = <TownResident, int>{};
+  final _dialogueIndex = <TownResident, int>{};
   static Future<DialogueCatalog>? _cachedDialogueCatalog;
   late final Future<DialogueCatalog> _dialoguesFuture;
   ProgressController get controller => widget.controller;
@@ -242,14 +242,14 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     }
   }
 
-  Future<void> _showTip(TownResident resident) async {
+  Future<void> _showDialogue(TownResident resident) async {
     if (controller.busy || controller.failure != null ||
         controller.progress == null) {
       return;
     }
     final catalog = await _dialoguesFuture;
     if (!mounted || controller.failure != null) return;
-    final index = _tipIndex[resident] ?? 0;
+    final index = _dialogueIndex[resident] ?? 0;
     final line = catalog.select(
       resident: resident,
       progress: controller.progress!,
@@ -260,8 +260,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       final persisted = await controller.recordDialogueSeen(line.id);
       if (!persisted || !mounted) return;
     }
-    _tipIndex[resident] = index + 1;
-    final tip = line.text;
+    _dialogueIndex[resident] = index + 1;
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -273,7 +272,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
             Expanded(child: Text(resident.label)),
           ],
         ),
-        content: Text(tip, style: const TextStyle(fontSize: 19, height: 1.8)),
+        content: Text(line.text, style: const TextStyle(fontSize: 19, height: 1.8)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -384,7 +383,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                           progress: progress,
                           onMissions: () => setState(() => _page = 1),
                           onTown: () => setState(() => _page = 2),
-                          onResident: _showTip,
+                          onResident: _showDialogue,
                         ),
                         if (_tutorialReplay ||
                             (widget.enableTutorial &&
@@ -496,7 +495,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
             key: _townSceneKey,
             level: progress.townLevel,
             residents: progress.residents.owned,
-            onResident: _showTip,
+            onResident: _showDialogue,
             fillViewport: true,
           ),
           // The navigation already names this page; only the changing level

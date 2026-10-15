@@ -20,7 +20,7 @@ DART_START = "  // BEGIN CMS RESIDENTS"
 DART_END = "  // END CMS RESIDENTS"
 ASSETS_START = "    # BEGIN CMS CHARACTER ASSETS"
 ASSETS_END = "    # END CMS CHARACTER ASSETS"
-FIELDS = {"key", "id", "label", "artFolder", "tipSource", "inGacha", "walkInTown"}
+FIELDS = {"key", "id", "label", "artFolder", "inGacha", "walkInTown"}
 DIRECTIONS = ("front", "back", "left", "right")
 
 
@@ -31,7 +31,7 @@ def load_catalog():
 def validate_catalog(document, previous=None, *, characters_root=None):
     if not isinstance(document, dict) or set(document) != {"version", "characters"}:
         raise ValueError("Invalid character catalog root")
-    if type(document["version"]) is not int or document["version"] != 1:
+    if type(document["version"]) is not int or document["version"] != 2:
         raise ValueError("Unsupported character catalog version")
     characters = document["characters"]
     if not isinstance(characters, list) or not 1 <= len(characters) <= 64:
@@ -45,7 +45,7 @@ def validate_catalog(document, previous=None, *, characters_root=None):
         if not isinstance(key, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", key):
             raise ValueError(f"Invalid character key at row {index}")
         if key in {"values", "index", "name", "byName", "id", "label", "artFolder",
-                   "tipSource", "inGacha", "walkInTown", "gachaPool",
+                   "inGacha", "walkInTown", "gachaPool",
                    "abstract", "as", "assert", "async", "await", "base", "break",
                    "case", "catch", "class", "const", "continue", "covariant",
                    "default", "deferred", "do", "dynamic", "else", "enum",
@@ -67,8 +67,6 @@ def validate_catalog(document, previous=None, *, characters_root=None):
                 raise ValueError(f"New resident key and art folder must be derived from ID: {identifier}")
         if not isinstance(row["label"], str) or not 1 <= len(row["label"].strip()) <= 40:
             raise ValueError(f"Invalid resident name at row {index}")
-        if row["tipSource"] not in {"child", "student", "adult", "elder"}:
-            raise ValueError(f"Invalid tip source at row {index}")
         if type(row["inGacha"]) is not bool or type(row["walkInTown"]) is not bool:
             raise ValueError(f"Invalid resident flags at row {index}")
         if identifier in ids or key in keys or folder in folders:
@@ -117,7 +115,6 @@ def generate_dart(source, characters):
         label = json.dumps(row["label"], ensure_ascii=False).replace("$", r"\$")
         declarations.append(
             f'  {row["key"]}("{row["id"]}", {label}, "{row["artFolder"]}", '
-            f'Resident.{row["tipSource"]}, '
             f'{"true" if row["inGacha"] else "false"}, '
             f'{"true" if row["walkInTown"] else "false"})'
         )

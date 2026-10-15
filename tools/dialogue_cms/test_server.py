@@ -50,7 +50,7 @@ class CmsTests(unittest.TestCase):
         modified = copy.deepcopy(original)
         modified["characters"].append({
             "key": "c999_owl", "id": "999_owl", "label": "ふくろう",
-            "artFolder": "999_owl", "tipSource": "adult",
+            "artFolder": "999_owl",
             "inGacha": True, "walkInTown": True
         })
         with self.assertRaisesRegex(ValueError, "Sprite folder"):
@@ -67,7 +67,7 @@ class CmsTests(unittest.TestCase):
         modified = copy.deepcopy(original)
         modified["characters"].append({
             "key": "c009_chef", "id": "009_chef", "label": "シェフ",
-            "artFolder": "009_chef", "tipSource": "adult",
+            "artFolder": "009_chef",
             "inGacha": True, "walkInTown": True
         })
         validate_catalog(modified, previous=original)
@@ -88,6 +88,22 @@ class CmsTests(unittest.TestCase):
             save_catalog_and_dialogues({"characters": modified, "dialogues": sample()}, validate)
         for path, raw in prior.items():
             self.assertEqual(path.read_bytes(), raw)
+
+    def test_character_catalog_has_no_tip_source_or_dialogue_kinds(self):
+        registry = validate_catalog(load_catalog())
+        self.assertEqual(registry["version"], 2)
+        for resident in registry["characters"]:
+            self.assertNotIn("tipSource", resident)
+        invalid = copy.deepcopy(registry)
+        invalid["characters"][0]["tipSource"] = "adult"
+        with self.assertRaisesRegex(ValueError, "Invalid character fields"):
+            validate_catalog(invalid, previous=registry)
+        dialogues = sample()
+        self.assertEqual(dialogues["version"], 1)
+        for entry in dialogues["dialogues"]:
+            self.assertNotIn("kind", entry)
+            self.assertIn("conditions", entry)
+        validate(dialogues)
 
     def test_valid_bundled_content(self):
         validate(sample())

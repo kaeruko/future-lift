@@ -157,7 +157,7 @@ class _GameHomeState extends State<GameHome> {
                               Flexible(
                                 child: Semantics(
                                   button: true,
-                                  label: '${resident.label}のTips',
+                                  label: '${resident.label}のおはなし',
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(30),
                                     onTap: () => widget.onResident(resident),

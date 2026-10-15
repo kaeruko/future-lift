@@ -274,8 +274,6 @@ function renderCharacterEditor(){
     ? `画像フォルダ: assets/characters/${row.artFolder}/（登録済みの設定を維持）`
     : `画像フォルダ: assets/characters/${row.artFolder}/（IDから自動設定）`);
   folderHint.id="characterArtFolderHint";folderHint.className="hint";
-  labelControl(box,"Tipsの元キャラ","select",row.tipSource,value=>{row.tipSource=value;setCharacterStatus("未保存の変更があります")},
-    {options:{child:"こども",student:"学生",adult:"大人",elder:"高齢者"}});
   for(const [field,title] of [["inGacha","ガチャに登場する"],["walkInTown","まちを歩く"]]){
     const label=append(box,"label");label.className="controls";
     const input=append(label,"input");input.type="checkbox";input.checked=row[field];
@@ -317,7 +315,7 @@ byId("addCharacter").onclick=()=>{
   let id=String(number).padStart(3,"0")+"_new";
   while(used.has(id)){number++;id=String(number).padStart(3,"0")+"_new"}
   const row={key:"c"+id,id,label:"新しい住民",artFolder:id,
-    tipSource:"adult",inGacha:true,walkInTown:true};
+    inGacha:true,walkInTown:true};
   registry.characters.push(row);
   data.dialogues.push({id:id+"_default",residentId:row.id,
     text:"こんにちは！よろしくね。",priority:0,once:false,logic:"all",conditions:[]});

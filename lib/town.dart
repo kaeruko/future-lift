@@ -187,7 +187,7 @@ class _TownSceneState extends State<TownScene> {
       top: height * pose.y,
       child: Semantics(
         button: widget.onResident != null,
-        label: '${resident.label}のTips',
+        label: '${resident.label}のおはなし',
         child: Tooltip(
           message: resident.label,
           child: InkWell(
