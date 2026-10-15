@@ -30,7 +30,8 @@ class TownAreaNavigator extends StatefulWidget {
 }
 
 class _TownAreaNavigatorState extends State<TownAreaNavigator> {
-  double _dragDistance = 0;
+  int? _activePointer;
+  Offset? _swipeStart;
 
   void _move(int direction) {
     final next = widget.area.index + direction;
@@ -44,14 +45,32 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
     final debugPreview = widget.debugTownResidents != null;
     final unlocked = area.isUnlocked(widget.lifetimePoints);
     final accessible = unlocked || debugPreview;
-    return GestureDetector(
+    return Listener(
       behavior: HitTestBehavior.translucent,
-      onHorizontalDragStart: (_) => _dragDistance = 0,
-      onHorizontalDragUpdate: (event) => _dragDistance += event.primaryDelta ?? 0,
-      onHorizontalDragEnd: (_) {
-        if (_dragDistance <= -45) _move(1);
-        if (_dragDistance >= 45) _move(-1);
-        _dragDistance = 0;
+      // A passive pointer listener keeps taps and semantics with the resident
+      // buttons and avoids an extra competing horizontal drag recognizer.
+      onPointerDown: (event) {
+        if (_activePointer != null) return;
+        _activePointer = event.pointer;
+        _swipeStart = event.position;
+      },
+      onPointerCancel: (event) {
+        if (event.pointer != _activePointer) return;
+        _activePointer = null;
+        _swipeStart = null;
+      },
+      onPointerUp: (event) {
+        if (event.pointer != _activePointer) return;
+        final start = _swipeStart;
+        _activePointer = null;
+        _swipeStart = null;
+        if (start == null) return;
+        final distance = event.position - start;
+        if (distance.dx.abs() < 65 ||
+            distance.dx.abs() <= distance.dy.abs() * 1.3) {
+          return;
+        }
+        _move(distance.dx < 0 ? 1 : -1);
       },
       child: Stack(
         fit: StackFit.expand,

@@ -64,7 +64,8 @@ void main() {
     expect(find.byKey(const ValueKey('town-background')), findsNothing);
     expect(find.byKey(const ValueKey('area-resident-05_squirrel')),
         findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('town-area-next')));
+    await tester.drag(
+      find.byType(TownAreaNavigator), const Offset(-170, 0));
     await tester.pumpAndSettle();
     expect(area, TownArea.shopping);
     expect(find.text('まだ行けないエリアだよ'), findsOneWidget);
