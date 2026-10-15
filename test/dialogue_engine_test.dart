@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/dialogue_engine.dart';
 import 'package:future_lift/progress.dart';
@@ -123,10 +124,12 @@ void main() {
     expect(selected.reply?.text, 'あの雲、描いてみたい！');
   });
 
-  testWidgets('bundled farmer and daydreamer conversation wins when together',
-      (tester) async {
-    final live = await tester.runAsync(DialogueCatalog.load);
-    if (live == null) throw StateError('Bundled dialogue catalog did not load');
+  test('bundled farmer and daydreamer conversation wins when together', () {
+    // Inspect the actual checked-in fixture directly, without widget clock
+    // or asynchronous bundle loading.
+    final live = DialogueCatalog.fromJson(
+      File('assets/dialogues/dialogues.json').readAsStringSync(),
+    );
     final progress = Progress.empty(DateTime(2026, 10, 15));
     final now = DateTime.utc(2026, 10, 15, 0);
     DialogueEntry pick(Set<String> town) => live.select(

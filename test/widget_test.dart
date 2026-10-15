@@ -216,7 +216,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 700));
     expect(controller.progress!.points, 180);
     expect(controller.progress!.residents.availableKotohogi(180), 120);
-    expect(find.text('ことほぎ +10'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(Celebration),
+        matching: find.text('ことほぎ +10'),
+      ),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('celebration-spendable-balance')),
         findsOneWidget);
     expect(find.text('所持ことほぎ  120'), findsOneWidget);
