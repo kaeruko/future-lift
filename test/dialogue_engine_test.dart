@@ -18,7 +18,7 @@ Map<String, Object> row(String id, String resident, String text, {
   'once': once,
   'logic': logic,
   'conditions': conditions,
-  if (reply != null) 'reply': reply,
+  'reply': ?reply,
 };
 
 DialogueCatalog catalog(List<Map<String, Object>> additions) {

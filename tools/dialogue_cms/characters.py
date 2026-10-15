@@ -144,8 +144,10 @@ def generate_dart(source, characters):
         # Dart interpolates dollar signs inside quoted strings; preserve literal labels.
         label = json.dumps(row["label"], ensure_ascii=False).replace("$", r"\$")
         profile = json.dumps(row["profile"], ensure_ascii=False).replace("$", r"\$")
+        # Keep persisted enum keys unchanged, including legacy underscored keys.
+        ignore_lint = "  // ignore: constant_identifier_names\n" if "_" in row["key"] else ""
         declarations.append(
-            f'  {row["key"]}("{row["id"]}", {label}, "{row["artFolder"]}", '
+            f'{ignore_lint}  {row["key"]}("{row["id"]}", {label}, "{row["artFolder"]}", '
             f'{"true" if row["inGacha"] else "false"}, '
             f'{"true" if row["walkInTown"] else "false"}, {profile})'
         )
