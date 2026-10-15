@@ -20,7 +20,8 @@ DART_START = "  // BEGIN CMS RESIDENTS"
 DART_END = "  // END CMS RESIDENTS"
 ASSETS_START = "    # BEGIN CMS CHARACTER ASSETS"
 ASSETS_END = "    # END CMS CHARACTER ASSETS"
-FIELDS = {"key", "id", "label", "profile", "artFolder", "inGacha", "walkInTown", "nextDialogueNumber"}
+FIELDS = {"key", "id", "label", "profile", "artFolder", "inGacha", "walkInTown", "nextDialogueNumber", "homeAreaId"}
+AREA_IDS = {"plaza", "park", "shopping", "village"}
 DIRECTIONS = ("front", "back", "left", "right")
 
 
@@ -31,7 +32,7 @@ def load_catalog():
 def validate_catalog(document, previous=None, *, characters_root=None):
     if not isinstance(document, dict) or set(document) != {"version", "characters"}:
         raise ValueError("Invalid character catalog root")
-    if type(document["version"]) is not int or document["version"] != 4:
+    if type(document["version"]) is not int or document["version"] != 5:
         raise ValueError("Unsupported character catalog version")
     characters = document["characters"]
     if not isinstance(characters, list) or not 1 <= len(characters) <= 64:
@@ -45,7 +46,7 @@ def validate_catalog(document, previous=None, *, characters_root=None):
         if not isinstance(key, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", key):
             raise ValueError(f"Invalid character key at row {index}")
         if key in {"values", "index", "name", "byName", "id", "label", "artFolder",
-                   "inGacha", "walkInTown", "nextDialogueNumber", "gachaPool",
+                   "inGacha", "walkInTown", "homeAreaId", "nextDialogueNumber", "gachaPool",
                    "abstract", "as", "assert", "async", "await", "base", "break",
                    "case", "catch", "class", "const", "continue", "covariant",
                    "default", "deferred", "do", "dynamic", "else", "enum",
@@ -71,6 +72,8 @@ def validate_catalog(document, previous=None, *, characters_root=None):
             raise ValueError(f"Invalid profile for {identifier}: expected string of at most 1000 characters")
         if type(row["inGacha"]) is not bool or type(row["walkInTown"]) is not bool:
             raise ValueError(f"Invalid resident flags at row {index}")
+        if type(row["homeAreaId"]) is not str or row["homeAreaId"] not in AREA_IDS:
+            raise ValueError(f"Invalid home area for {identifier}: {row['homeAreaId']!r}")
         if type(row["nextDialogueNumber"]) is not int or not 1 <= row["nextDialogueNumber"] <= 1000000000:
             raise ValueError(f"Invalid next dialogue number for {identifier}")
         if identifier in ids or key in keys or folder in folders:
@@ -149,7 +152,7 @@ def generate_dart(source, characters):
         declarations.append(
             f'{ignore_lint}  {row["key"]}("{row["id"]}", {label}, "{row["artFolder"]}", '
             f'{"true" if row["inGacha"] else "false"}, '
-            f'{"true" if row["walkInTown"] else "false"}, {profile})'
+            f'{"true" if row["walkInTown"] else "false"}, {profile}, "{row["homeAreaId"]}")'
         )
     return replace_section(source, DART_START, DART_END, ",\n".join(declarations))
 

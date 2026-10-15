@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'resident_collection.dart';
 import 'town_walk.dart';
+import 'town_areas.dart';
 
 const townNames = ['穏やかなまち', '花のあるまち', '笑顔が集まるまち', 'にぎやかなまち'];
 const townDescriptions = [
@@ -19,6 +20,7 @@ class TownScene extends StatefulWidget {
     super.key,
     required this.level,
     required this.residents,
+    this.area = TownArea.plaza,
     this.debugTownResidents,
     this.onResident,
     this.fillViewport = false,
@@ -26,6 +28,7 @@ class TownScene extends StatefulWidget {
 
   final int level;
   final List<TownResident> residents;
+  final TownArea area;
   /// A temporary debug-only cast; null uses the owned residents.
   final List<TownResident>? debugTownResidents;
   final Future<void> Function(TownResident)? onResident;
@@ -123,8 +126,9 @@ class _TownSceneState extends State<TownScene> {
 
   Widget _scene(BuildContext context, double width, double height) {
     final reduced = MediaQuery.disableAnimationsOf(context);
-    final visibleResidents = visibleTownResidents(
+    final visibleResidents = areaResidents(
       widget.residents,
+      widget.area,
       debugOverride: widget.debugTownResidents,
     );
     final count = visibleResidents.length;
@@ -133,7 +137,8 @@ class _TownSceneState extends State<TownScene> {
       children: [
         Positioned.fill(
           child: Image.asset(
-            'assets/kotohogu/town_background_001.jpg',
+            widget.area.backgroundAsset ??
+                (throw StateError('Missing background for ${widget.area.id}')),
             key: const ValueKey('town-background'),
             fit: BoxFit.cover,
             excludeFromSemantics: true,

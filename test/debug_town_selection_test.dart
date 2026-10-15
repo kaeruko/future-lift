@@ -9,6 +9,8 @@ import 'package:future_lift/main.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/resident_collection.dart';
 import 'package:future_lift/town.dart';
+import 'package:future_lift/town_area_navigator.dart';
+import 'package:future_lift/town_areas.dart';
 
 import 'progress_test.dart' show MemoryStore;
 
@@ -121,15 +123,22 @@ void main() {
     final town = tester.widget<TownScene>(find.byType(TownScene));
     expect(town.debugTownResidents,
         [TownResident.shiba, TownResident.rabbit, TownResident.c027_daydreamer]);
-    expect(find.byKey(const ValueKey('resident-2')), findsOneWidget);
-
-    // A preview dialogue must not record seen IDs or change the owned set.
-    final dialogue = town.onResident!(TownResident.c027_daydreamer);
+    expect(find.byKey(const ValueKey('resident-2')), findsNothing);
+    // A resident stays in the assigned home area even in debug preview.
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byKey(const ValueKey('town-area-next')));
+      await tester.pumpAndSettle();
+    }
+    expect(tester.widget<TownAreaNavigator>(find.byType(TownAreaNavigator)).area,
+        TownArea.village);
+    expect(find.byKey(const ValueKey('area-resident-027_daydreamer')),
+        findsOneWidget);
+    // A debug-only dialogue must not modify seen IDs or ownership.
+    await tester.tap(find.byKey(const ValueKey('area-resident-027_daydreamer')));
     await tester.pumpAndSettle();
     expect(find.text('こんにちは、おやすみくんです。'), findsOneWidget);
     await tester.tap(find.text('また話そう'));
     await tester.pumpAndSettle();
-    await dialogue;
     expect(store.raw, originalSave);
     expect(store.writes, originalWrites);
     expect(controller.progress!.seenDialogues, isEmpty);
@@ -150,9 +159,10 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
-    expect(tester.widget<TownScene>(find.byType(TownScene)).debugTownResidents,
-        isNull);
-    expect(find.byKey(const ValueKey('resident-2')), findsNothing);
+    expect(tester.widget<TownAreaNavigator>(find.byType(TownAreaNavigator))
+        .debugTownResidents, isNull);
+    expect(find.byKey(const ValueKey('area-resident-027_daydreamer')),
+        findsNothing);
     expect(store.raw, originalSave);
     expect(store.writes, originalWrites);
     expect(tester.takeException(), isNull);

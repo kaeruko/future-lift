@@ -18,6 +18,8 @@ import 'resident_gacha.dart';
 import 'gacha_hud.dart';
 import 'kotohogisu_tutorial.dart';
 import 'town.dart';
+import 'town_areas.dart';
+import 'town_area_navigator.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,6 +104,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   MissionPeriod _missionPeriod = MissionPeriod.daily;
   Mission _previewMission = Mission.strength;
   int _homeVisit = 0;
+  TownArea _townArea = TownArea.plaza;
   bool _celebrating = false;
   bool _tutorialSaving = false;
   // Replaying is UI-only; it must not modify persisted tutorial or mission state.
@@ -284,10 +287,16 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     final catalog = await _dialoguesFuture;
     if (!mounted || controller.failure != null) return;
     final index = _dialogueIndex[resident] ?? 0;
-    final visibleIds = visibleTownResidents(
-      controller.progress!.residents.owned,
-      debugOverride: _debugTownResidents,
-    ).map((r) => r.id).toSet();
+    final visibleIds = (_page == 2
+        ? areaResidents(
+            controller.progress!.residents.owned,
+            _townArea,
+            debugOverride: _debugTownResidents,
+          )
+        : visibleTownResidents(
+            controller.progress!.residents.owned,
+            debugOverride: _debugTownResidents,
+          )).map((r) => r.id).toSet();
     final line = catalog.select(
       resident: resident,
       progress: controller.progress!,
@@ -558,75 +567,15 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     SizedBox(
       key: const ValueKey('town-page-fullscreen'),
       height: viewportHeight,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          TownScene(
-            key: _townSceneKey,
-            level: progress.townLevel,
-            residents: progress.residents.owned,
-            debugTownResidents: _debugTownResidents,
-            onResident: _showDialogue,
-            fillViewport: true,
-          ),
-          // The navigation already names this page; only the changing level
-          // belongs over the illustration.
-          Positioned(
-            left: 14,
-            right: 14,
-            bottom: 16,
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Container(
-                key: const ValueKey('town-page-title-panel'),
-                decoration: BoxDecoration(
-                  color: const Color(0xEEFFF6DC),
-                  border: Border.all(color: gold, width: 2),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: teal,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'LEVEL ${progress.townLevel}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Flexible(
-                      child: Text(
-                        townNames[progress.townLevel],
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          color: wood,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+      child: TownAreaNavigator(
+        key: _townSceneKey,
+        area: _townArea,
+        onAreaChanged: (area) => setState(() => _townArea = area),
+        level: progress.townLevel,
+        lifetimePoints: progress.points,
+        residents: progress.residents.owned,
+        debugTownResidents: _debugTownResidents,
+        onResident: _showDialogue,
       ),
     ),
     Padding(
@@ -634,7 +583,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       child: Column(
         children: [
           Text(
-            townDescriptions[progress.townLevel],
+            _townArea == TownArea.plaza
+                ? townDescriptions[progress.townLevel]
+                : _townArea.description,
             textAlign: TextAlign.center,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),

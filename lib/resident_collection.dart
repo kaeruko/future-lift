@@ -33,30 +33,32 @@ enum WalkDirection { front, back, left, right }
 
 enum TownResident {
   // BEGIN CMS RESIDENTS
-  shiba("01_shiba", "しばいぬ", "001_shiba", true, true, ""),
-  rabbit("02_rabbit", "うさぎ", "002_usagi", true, true, ""),
-  penguin("03_penguin", "まちの案内係", "003_penguin", true, true, ""),
-  cat("04_cat", "ねこ", "004_neko", true, true, ""),
-  squirrel("05_squirrel", "りす", "005_risu", true, true, ""),
-  bear("06_bear", "くま", "006_kuma", true, true, ""),
+  shiba("01_shiba", "しばいぬ", "001_shiba", true, true, "", "plaza"),
+  rabbit("02_rabbit", "うさぎ", "002_usagi", true, true, "", "plaza"),
+  penguin("03_penguin", "まちの案内係", "003_penguin", true, true, "", "plaza"),
+  cat("04_cat", "ねこ", "004_neko", true, true, "", "shopping"),
+  squirrel("05_squirrel", "りす", "005_risu", true, true, "", "park"),
+  bear("06_bear", "くま", "006_kuma", true, true, "", "park"),
   // ignore: constant_identifier_names
-  c009_chef("009_chef", "シェフ", "009_chef", true, true, ""),
+  c009_chef("009_chef", "シェフ", "009_chef", true, true, "", "shopping"),
   // ignore: constant_identifier_names
-  c026_farmer("026_farmer", "やすぞう", "026_farmer", true, true, "本名：多賀　康三。健康を意識している中年男性。"),
+  c026_farmer("026_farmer", "やすぞう", "026_farmer", true, true, "本名：多賀　康三。健康を意識している中年男性。", "village"),
   // ignore: constant_identifier_names
-  c027_daydreamer("027_daydreamer", "おやすみくん", "027_daydreamer", true, true, "おしごともべんきょうもおやすみ中の子。ぼくはまだまだこれからなんだ～"),
+  c027_daydreamer("027_daydreamer", "おやすみくん", "027_daydreamer", true, true, "おしごともべんきょうもおやすみ中の子。ぼくはまだまだこれからなんだ～", "village"),
   // ignore: constant_identifier_names
-  c032_miner("032_miner", "もぐた", "032_miner", true, true, "工事現場ではたらく子")
+  c032_miner("032_miner", "もぐた", "032_miner", true, true, "工事現場ではたらく子", "shopping")
   // END CMS RESIDENTS
   ;
 
-  const TownResident(this.id, this.label, this.artFolder, this.inGacha, this.walkInTown, this.profile);
+  const TownResident(this.id, this.label, this.artFolder, this.inGacha, this.walkInTown, this.profile, this.homeAreaId);
   final String id;
   final String label;
   final String artFolder;
   final bool inGacha;
   final bool walkInTown;
   final String profile;
+  /// Assigned by the local character CMS, not the save file.
+  final String homeAreaId;
   static List<TownResident> get gachaPool =>
       values.where((resident) => resident.inGacha).toList(growable: false);
   String get idleAsset => 'assets/characters/$artFolder/idle_front_01.png';

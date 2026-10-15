@@ -63,6 +63,18 @@ class CmsTests(unittest.TestCase):
         allowed["characters"][0]["profile"] = "あ" * 1000
         validate_catalog(allowed, previous=original)
 
+    def test_home_area_validation_and_generator(self):
+        original = load_catalog()
+        moved = copy.deepcopy(original)
+        moved["characters"][0]["homeAreaId"] = "park"
+        validate_catalog(moved, previous=original)
+        self.assertIn('"park")', generate_dart(DART.read_text("utf-8"), moved["characters"]))
+        for invalid_area in ("unknown", "", None, 9):
+            bad = copy.deepcopy(original)
+            bad["characters"][0]["homeAreaId"] = invalid_area
+            with self.assertRaisesRegex(ValueError, "Invalid home area"):
+                validate_catalog(bad, previous=original)
+
     def test_profile_dart_escapes_interpolation_and_quotes(self):
         characters = copy.deepcopy(load_catalog()["characters"])
         characters[0]["profile"] = '価格$100と"お話"'
@@ -89,7 +101,7 @@ class CmsTests(unittest.TestCase):
             "key": "c999_owl", "id": "999_owl", "label": "ふくろう",
             "artFolder": "999_owl", "nextDialogueNumber": 2,
             "profile": "",
-            "inGacha": True, "walkInTown": True
+            "inGacha": True, "walkInTown": True, "homeAreaId": "plaza"
         })
         with self.assertRaisesRegex(ValueError, "Sprite folder"):
             validate_catalog(modified, previous=original)
@@ -108,7 +120,7 @@ class CmsTests(unittest.TestCase):
             "key": "c007_hitsuji", "id": "007_hitsuji", "label": "ひつじ",
             "artFolder": "007_hitsuji", "nextDialogueNumber": 2,
             "profile": "",
-            "inGacha": True, "walkInTown": True
+            "inGacha": True, "walkInTown": True, "homeAreaId": "plaza"
         })
         validate_catalog(modified, previous=original)
         dart = generate_dart(DART.read_text("utf-8"), modified["characters"])
@@ -183,7 +195,7 @@ class CmsTests(unittest.TestCase):
 
     def test_character_catalog_has_no_tip_source_or_dialogue_kinds(self):
         registry = validate_catalog(load_catalog())
-        self.assertEqual(registry["version"], 4)
+        self.assertEqual(registry["version"], 5)
         for resident in registry["characters"]:
             self.assertNotIn("tipSource", resident)
         invalid = copy.deepcopy(registry)
