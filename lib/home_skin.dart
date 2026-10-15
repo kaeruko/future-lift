@@ -118,42 +118,24 @@ class KotohogiBar extends StatelessWidget {
                     excludeFromSemantics: true,
                   ),
                 ),
-                // The new artwork has a dark inset without printed text.
+                // Keep the decoration intact; only the numeric balance is
+                // printed on the dark inset.
                 Positioned(
-                  left: width * .408,
-                  width: width * .205,
-                  top: height * .32,
-                  bottom: height * .31,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      'ことほぎ',
-                      key: const ValueKey('kotohogi-bar-label'),
-                      maxLines: 1,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFFFFE9B4),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: width * .606,
+                  left: width * .435,
                   right: width * .105,
                   top: height * .28,
                   bottom: height * .27,
                   child: SizedBox(
                     key: const ValueKey('kotohogi-number-zone'),
                     child: FittedBox(
-                      alignment: Alignment.centerRight,
+                      alignment: Alignment.center,
                       fit: BoxFit.scaleDown,
                       child: Text(
                         '$points',
                         key: const ValueKey('total-points'),
                         maxLines: 1,
                         softWrap: false,
-                        textAlign: TextAlign.right,
+                        textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 41,
                           fontWeight: FontWeight.w900,
@@ -188,7 +170,10 @@ class ContributionPanel extends StatelessWidget {
   Widget build(BuildContext context) => Center(
     child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 360),
-      child: KotohogiBar(points: points),
+      child: FractionallySizedBox(
+        widthFactor: .88,
+        child: KotohogiBar(points: points),
+      ),
     ),
   );
 }

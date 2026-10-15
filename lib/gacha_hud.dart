@@ -19,6 +19,8 @@ class GachaHud extends StatelessWidget {
   static const double nameplateShare = .38;
   static const double balanceShare = 1 - nameplateShare;
   static const double horizontalGap = 6;
+  /// Slightly smaller currency frame; the player nameplate keeps its size.
+  static const double kotohogiBarScale = .88;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -43,7 +45,13 @@ class GachaHud extends StatelessWidget {
             const SizedBox(width: horizontalGap),
             SizedBox(
               width: rightWidth,
-              child: KotohogiBar(points: points),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: FractionallySizedBox(
+                  widthFactor: kotohogiBarScale,
+                  child: KotohogiBar(points: points),
+                ),
+              ),
             ),
           ],
         ),
@@ -158,7 +166,8 @@ class PinnedGachaHud extends StatelessWidget {
       final rightWidth =
           (width - GachaHud.horizontalGap) * GachaHud.balanceShare;
       final leftHeight = leftWidth * 209 / 788;
-      final rightHeight = rightWidth * 314 / 982;
+      final rightHeight =
+          rightWidth * GachaHud.kotohogiBarScale * 314 / 982;
       final reservedHeight =
           top + math.max(leftHeight, rightHeight) + bottomGap;
       final remainingHeight = math.max(0.0, constraints.maxHeight - reservedHeight);

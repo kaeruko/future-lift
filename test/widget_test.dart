@@ -732,7 +732,7 @@ void main() {
     expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
     expect(nameplate, findsOneWidget);
     expect(art, findsOneWidget);
-    expect(find.byKey(const ValueKey('kotohogi-bar-label')), findsOneWidget);
+    expect(find.byKey(const ValueKey('kotohogi-bar-label')), findsNothing);
     expect(tester.widget<Text>(amount).data, '0');
     expect(find.textContaining('ガチャ券'), findsNothing);
     expect(tester.getRect(nameplate).right,
