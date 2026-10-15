@@ -123,6 +123,28 @@ void main() {
     expect(selected.reply?.text, 'あの雲、描いてみたい！');
   });
 
+  testWidgets('bundled farmer and daydreamer conversation wins when together',
+      (tester) async {
+    final live = await DialogueCatalog.load();
+    final progress = Progress.empty(DateTime(2026, 10, 15));
+    final now = DateTime.utc(2026, 10, 15, 0);
+    DialogueEntry pick(Set<String> town) => live.select(
+      resident: TownResident.c026_farmer,
+      progress: progress,
+      now: now,
+      townResidentIds: town,
+    );
+
+    expect(pick({'026_farmer'}).id, '026_farmer_001');
+    expect(pick({'027_daydreamer'}).id, '026_farmer_001');
+
+    final together = pick({'026_farmer', '027_daydreamer'});
+    expect(together.id, '026_farmer_002');
+    expect(together.text, 'おやすみくん。農業をやらんかね。');
+    expect(together.reply?.residentId, '027_daydreamer');
+    expect(together.reply?.text, 'もふ？おひるねできる？');
+  });
+
   test('town companion works with AND/OR and enforces speaker presence', () {
     final c = catalog([
       row('pair_or_date', '01_shiba', '特別な会話', priority: 20,
