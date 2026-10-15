@@ -9,6 +9,7 @@ Map<String, Object> row(String id, String resident, String text, {
   bool once = false,
   String logic = 'all',
   List<Map<String, Object>> conditions = const [],
+  Map<String, Object>? reply,
 }) => {
   'id': id,
   'residentId': resident,
@@ -17,6 +18,7 @@ Map<String, Object> row(String id, String resident, String text, {
   'once': once,
   'logic': logic,
   'conditions': conditions,
+  if (reply != null) 'reply': reply,
 };
 
 DialogueCatalog catalog(List<Map<String, Object>> additions) {
@@ -97,6 +99,71 @@ void main() {
     final restored=Progress.decode(p.encode(), expectedVersion:5);
     expect(restored.seenDialogues,contains('and'));
     expect(restored.countFor('outside'),1);
+  });
+
+  test('two residents visible in town unlock a paired conversation', () {
+    final c = catalog([
+      row('friends', '01_shiba', '雲を見てみようよ', priority: 20,
+        conditions: [
+          {'type':'townTogether', 'otherResidentId':'02_rabbit'},
+        ],
+        reply: {'residentId':'02_rabbit', 'text':'あの雲、描いてみたい！'}),
+    ]);
+    final now = DateTime.utc(2026, 10, 15, 0);
+    final progress = completed([]);
+    DialogueEntry pick(Set<String> town) =>
+        c.select(resident: TownResident.shiba, progress: progress,
+          now: now, townResidentIds: town);
+    expect(pick({}).text, '通常の雑談');
+    expect(pick({'01_shiba'}).text, '通常の雑談');
+    expect(pick({'02_rabbit'}).text, '通常の雑談');
+    final selected = pick({'01_shiba', '02_rabbit'});
+    expect(selected.id, 'friends');
+    expect(selected.reply?.residentId, '02_rabbit');
+    expect(selected.reply?.text, 'あの雲、描いてみたい！');
+  });
+
+  test('town companion works with AND/OR and enforces speaker presence', () {
+    final c = catalog([
+      row('pair_or_date', '01_shiba', '特別な会話', priority: 20,
+        logic: 'any', conditions: [
+          {'type':'townTogether','otherResidentId':'02_rabbit'},
+          {'type':'date','mode':'exact','date':'2026-12-25'},
+        ]),
+    ]);
+    final progress = completed([]);
+    final jstChristmas = DateTime.utc(2026, 12, 24, 15);
+    expect(c.select(resident: TownResident.shiba, progress: progress,
+      now: DateTime.utc(2026, 10, 15), townResidentIds: {'01_shiba'}).text,
+      '通常の雑談');
+    expect(c.select(resident: TownResident.shiba, progress: progress,
+      now: jstChristmas, townResidentIds: {}).id, 'pair_or_date');
+  });
+
+  test('invalid town pair and reply definitions fail fast', () {
+    final valid = {'type':'townTogether','otherResidentId':'02_rabbit'};
+    for (final invalid in [
+      {'type':'townTogether','otherResidentId':'unknown'},
+      {'type':'townTogether','otherResidentId':'01_shiba'},
+      {'type':'townTogether','otherResidentId':42},
+    ]) {
+      expect(() => catalog([
+        row('bad_pair','01_shiba','無効',conditions:[invalid]),
+      ]), throwsFormatException, reason: invalid.toString());
+    }
+    for (final entry in [
+      row('bad_reply','01_shiba','無効',
+        reply: {'residentId':'02_rabbit','text':'こんにちは'}),
+      row('bad_or','01_shiba','無効',logic:'any',
+        conditions:[valid], reply:{'residentId':'02_rabbit','text':'こんにちは'}),
+      row('wrong_partner','01_shiba','無効',
+        conditions:[valid], reply:{'residentId':'03_penguin','text':'こんにちは'}),
+      row('blank_reply','01_shiba','無効',
+        conditions:[valid], reply:{'residentId':'02_rabbit','text':' '}),
+    ]) {
+      expect(() => catalog([entry]), throwsFormatException,
+        reason: entry.toString());
+    }
   });
 
   test('mission counters survive journal deletion, rollovers and debug resets', () {

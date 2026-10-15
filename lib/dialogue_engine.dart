@@ -37,12 +37,13 @@ class DialogueCatalog {
     required TownResident resident,
     required Progress progress,
     required DateTime now,
+    Set<String> townResidentIds = const {},
     int rotation = 0,
   }) {
     final available = entries.where((entry) =>
       entry.residentId == resident.id &&
       (!entry.once || !progress.seenDialogues.contains(entry.id)) &&
-      entry.matches(progress, now)).toList();
+      entry.matches(progress, now, townResidentIds)).toList();
     if (available.isEmpty) throw StateError('No dialogue: ${resident.id}');
     available.sort((a, b) => b.priority.compareTo(a.priority));
     final top = available.where((e) => e.priority == available.first.priority).toList();
@@ -52,7 +53,7 @@ class DialogueCatalog {
 
 class DialogueEntry {
   DialogueEntry._(this.id, this.residentId, this.text, this.priority,
-      this.once, this.logic, this.conditions);
+      this.once, this.logic, this.conditions, this.reply);
   final String id;
   final String residentId;
   final String text;
@@ -60,11 +61,12 @@ class DialogueEntry {
   final bool once;
   final String logic;
   final List<DialogueCondition> conditions;
+  final DialogueReply? reply;
 
   factory DialogueEntry.parse(Object? source) {
     final data = _object(source, 'dialogue');
     _keys(data, {'id', 'residentId', 'text', 'priority', 'once', 'logic',
-      'conditions'}, 'dialogue');
+      'conditions'}, 'dialogue', optional: {'reply'});
     final id = data['id'];
     final resident = data['residentId'];
     final message = data['text'];
@@ -81,15 +83,55 @@ class DialogueEntry {
         conditions is! List || conditions.length > 8) {
       throw const FormatException('Invalid dialogue entry');
     }
+    final parsedConditions = List<DialogueCondition>.unmodifiable(
+      conditions.map(DialogueCondition.parse));
+    for (final condition in parsedConditions) {
+      if (condition.fields['type'] == 'townTogether' &&
+          condition.fields['otherResidentId'] == resident) {
+        throw FormatException('Town companion cannot be the speaker: $id');
+      }
+    }
+    DialogueReply? reply;
+    if (data.containsKey('reply')) {
+      reply = DialogueReply.parse(data['reply']);
+      if (reply.residentId == resident ||
+          logic != 'all' ||
+          !parsedConditions.any((condition) =>
+              condition.fields['type'] == 'townTogether' &&
+              condition.fields['otherResidentId'] == reply!.residentId)) {
+        throw FormatException('Dialogue reply needs a matching AND town companion: $id');
+      }
+    }
     return DialogueEntry._(id, resident, message, priority, once, logic,
-      List.unmodifiable(conditions.map(DialogueCondition.parse)));
+      parsedConditions, reply);
   }
 
-  bool matches(Progress progress, DateTime now) {
+  bool matches(Progress progress, DateTime now, Set<String> townResidentIds) {
     if (conditions.isEmpty) return true;
     return logic == 'all'
-        ? conditions.every((c) => c.matches(progress, now))
-        : conditions.any((c) => c.matches(progress, now));
+        ? conditions.every((c) => c.matches(
+            progress, now, townResidentIds, residentId))
+        : conditions.any((c) => c.matches(
+            progress, now, townResidentIds, residentId));
+  }
+}
+
+class DialogueReply {
+  DialogueReply._(this.residentId, this.text);
+  final String residentId;
+  final String text;
+
+  factory DialogueReply.parse(Object? source) {
+    final data = _object(source, 'dialogue reply');
+    _keys(data, {'residentId', 'text'}, 'dialogue reply');
+    final speaker = data['residentId'];
+    final message = data['text'];
+    if (speaker is! String ||
+        !TownResident.values.any((r) => r.id == speaker) ||
+        message is! String || message.trim().isEmpty || message.length > 500) {
+      throw const FormatException('Invalid dialogue reply');
+    }
+    return DialogueReply._(speaker, message);
   }
 }
 
@@ -107,6 +149,13 @@ class DialogueCondition {
           !Mission.values.any((m) => m.name == id)) ||
           threshold is! int || threshold < 1 || threshold > 1000000) {
         throw const FormatException('Invalid mission condition');
+      }
+    } else if (data['type'] == 'townTogether') {
+      _keys(data, {'type', 'otherResidentId'}, 'town companion');
+      final companion = data['otherResidentId'];
+      if (companion is! String ||
+          !TownResident.values.any((resident) => resident.id == companion)) {
+        throw const FormatException('Invalid town companion');
       }
     } else if (data['type'] == 'kotohogi') {
       _keys(data, {'type', 'min'}, 'kotohogi condition');
@@ -148,8 +197,13 @@ class DialogueCondition {
     return DialogueCondition._(Map.unmodifiable(data));
   }
 
-  bool matches(Progress progress, DateTime now) {
+  bool matches(Progress progress, DateTime now,
+      Set<String> townResidentIds, String speakerId) {
     final kind = fields['type'];
+    if (kind == 'townTogether') {
+      return townResidentIds.contains(speakerId) &&
+          townResidentIds.contains(fields['otherResidentId']);
+    }
     if (kind == 'mission') {
       return progress.countFor(fields['missionId'] as String) >=
           (fields['minCount'] as int);
@@ -188,8 +242,9 @@ Map<String, dynamic> _object(Object? value, String field) {
   if (value is! Map<String, dynamic>) throw FormatException('Expected object: $field');
   return value;
 }
-void _keys(Map<String, dynamic> data, Set<String> expected, String field) {
-  if (data.keys.toSet().difference(expected).isNotEmpty ||
+void _keys(Map<String, dynamic> data, Set<String> expected, String field,
+    {Set<String> optional = const {}}) {
+  if (data.keys.toSet().difference({...expected, ...optional}).isNotEmpty ||
       expected.difference(data.keys.toSet()).isNotEmpty) {
     throw FormatException('Invalid fields: $field');
   }

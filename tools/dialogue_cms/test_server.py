@@ -20,7 +20,7 @@ def sample():
 class CmsTests(unittest.TestCase):
     def test_character_registry_and_generated_files(self):
         registry = validate_catalog(load_catalog())
-        self.assertEqual(len(registry["characters"]), 6)
+        self.assertEqual(len(registry["characters"]), 7)
         self.assertEqual(generate_dart(DART.read_text("utf-8"), registry["characters"]),
                          DART.read_text("utf-8"))
         self.assertEqual(generate_pubspec(PUBSPEC.read_text("utf-8"), registry["characters"]),
@@ -56,7 +56,8 @@ class CmsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Sprite folder"):
             validate_catalog(modified, previous=original)
         modified["characters"][-1].update({
-            "key": "c009_chef", "id": "009_chef", "label": "シェフ", "artFolder": "009_chef"
+            "key": "c007_hitsuji", "id": "007_hitsuji",
+            "label": "ひつじ", "artFolder": "007_hitsuji"
         })
         validate_catalog(modified, previous=original)
         with self.assertRaisesRegex(ValueError, "Missing"):
@@ -66,13 +67,13 @@ class CmsTests(unittest.TestCase):
         original = load_catalog()
         modified = copy.deepcopy(original)
         modified["characters"].append({
-            "key": "c009_chef", "id": "009_chef", "label": "シェフ",
-            "artFolder": "009_chef", "nextDialogueNumber": 2,
+            "key": "c007_hitsuji", "id": "007_hitsuji", "label": "ひつじ",
+            "artFolder": "007_hitsuji", "nextDialogueNumber": 2,
             "inGacha": True, "walkInTown": True
         })
         validate_catalog(modified, previous=original)
         dart = generate_dart(DART.read_text("utf-8"), modified["characters"])
-        self.assertIn('c009_chef("009_chef", "シェフ", "009_chef"', dart)
+        self.assertIn('c007_hitsuji("007_hitsuji", "ひつじ", "007_hitsuji"', dart)
         for field, value in (("key", "chef"), ("artFolder", "009_wrong")):
             mismatched = copy.deepcopy(modified)
             mismatched["characters"][-1][field] = value
@@ -174,6 +175,41 @@ class CmsTests(unittest.TestCase):
                 doc["dialogues"][-1]["conditions"] = [bad]
                 with self.assertRaises(ValueError):
                     validate(doc)
+
+    def test_town_companion_and_two_speaker_reply_validation(self):
+        normal = sample()
+        selected = normal["dialogues"][0]
+        selected["conditions"] = [{"type": "townTogether", "otherResidentId": "02_rabbit"}]
+        selected["reply"] = {"residentId": "02_rabbit", "text": "絵を描きたい！"}
+        validate(normal)
+        for condition in (
+            {"type": "townTogether", "otherResidentId": "01_shiba"},
+            {"type": "townTogether", "otherResidentId": "unknown"},
+            {"type": "townTogether", "otherResidentId": 10},
+            {"type": "townTogether"},
+        ):
+            with self.subTest(condition=condition):
+                invalid = copy.deepcopy(normal)
+                invalid["dialogues"][0]["conditions"] = [condition]
+                with self.assertRaises(ValueError):
+                    validate(invalid)
+        invalid_reply = copy.deepcopy(normal)
+        invalid_reply["dialogues"][0]["logic"] = "any"
+        with self.assertRaisesRegex(ValueError, "matching AND"):
+            validate(invalid_reply)
+        invalid_reply = copy.deepcopy(normal)
+        invalid_reply["dialogues"][0]["reply"] = {
+            "residentId": "03_penguin", "text": "違う人の返事"}
+        with self.assertRaisesRegex(ValueError, "matching AND"):
+            validate(invalid_reply)
+        invalid_reply = copy.deepcopy(normal)
+        invalid_reply["dialogues"][0]["reply"]["text"] = " "
+        with self.assertRaisesRegex(ValueError, "matching AND"):
+            validate(invalid_reply)
+        invalid_reply = copy.deepcopy(normal)
+        invalid_reply["dialogues"][0]["reply"]["unknown"] = True
+        with self.assertRaisesRegex(ValueError, "invalid fields"):
+            validate(invalid_reply)
 
     def test_save_is_atomic_and_invalid_changes_leave_old_file(self):
         with tempfile.TemporaryDirectory() as temp:

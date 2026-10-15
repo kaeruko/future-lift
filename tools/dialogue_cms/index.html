@@ -68,6 +68,10 @@ nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
   <h2>表示プレビュー</h2>
   <p class="hint">仮の今日・ミッション達成数を入力して、どのセリフになるか確認できます。アプリの実データは変更しません。</p>
   <label>プレビューするキャラ</label><select id="previewResident"></select>
+  <details><summary>まちにいる住民（仮設定・最大8人）</summary>
+    <p class="hint">所持状況を変更せず、チェックを付けた住民だけが「まちで2人そろう」の条件に数えられます。</p>
+    <div id="previewTown"></div>
+  </details>
   <label>仮の日付（日本時間）</label><input id="previewDay" type="date" value="2026-10-13">
   <label>累計ミッション総数</label><input id="previewTotal" type="number" value="0" min="0">
   <label>ことほぎ</label><input id="previewPoints" type="number" value="0" min="0">
@@ -102,6 +106,7 @@ const missions={"all":"全ミッション合計","strength":"筋力を使った"
 const modes={"exact":"指定日","range":"指定期間","annual":"毎年の指定日","annual_range":"毎年の期間","weekday":"毎週の曜日"};
 const byId=id=>document.getElementById(id);
 let data=null,selected=null,dirty=false,registry=null,characterSelected=null,savedCount=0;
+let previewTownIds=new Set();
 function node(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el}
 function append(parent,tag,text){const el=node(tag,text);parent.append(el);return el}
 function opts(element,values,value){for(const [key,label] of Object.entries(values)){const o=node("option",label);o.value=key;element.append(o)}element.value=value}
@@ -154,7 +159,7 @@ function renderEditor(){
   labelControl(area,"セリフ","textarea",entry.text,v=>{entry.text=v;});
   const line=append(area,"div");line.className="row";
   labelControl(line,"優先順位（大きいほど優先）","input",entry.priority,v=>{entry.priority=Number(v)},{type:"number"});
-  labelControl(line,"条件の組み合わせ","select",entry.logic,v=>{entry.logic=v},{options:{"all":"すべて満たす AND","any":"いずれかを満たす OR"}});
+  labelControl(line,"条件の組み合わせ","select",entry.logic,v=>{entry.logic=v;refresh()},{options:{"all":"すべて満たす AND","any":"いずれかを満たす OR"}});
   const wrapper=append(area,"label");wrapper.className="controls";
   const once=append(wrapper,"input");once.type="checkbox";once.checked=entry.once;
   append(wrapper,"span","1回だけ表示（保存済みの閲覧記録で判定）");
@@ -164,20 +169,55 @@ function renderEditor(){
   for(const [index,condition] of entry.conditions.entries())renderCondition(area,entry,condition,index);
   const add=append(area,"button","＋ 条件を追加");add.className="secondary";
   add.onclick=()=>{entry.conditions.push({type:"mission",missionId:"all",minCount:5});dirty=true;refresh()};
+  append(area,"h3","2人の掛け合い（任意）");
+  const companions=entry.conditions.filter(c=>c.type==="townTogether").map(c=>c.otherResidentId);
+  const canReply=entry.logic==="all"&&companions.length>0;
+  if(entry.reply){
+    if(!canReply)append(area,"p","返事には「まちで2人そろう」条件とANDが必要です。").className="hint";
+    const options=Object.fromEntries(companions.map(id=>[id,residents[id]||id]));
+    if(!options[entry.reply.residentId])options[entry.reply.residentId]=residents[entry.reply.residentId]||entry.reply.residentId;
+    labelControl(area,"返事をするキャラ","select",entry.reply.residentId,v=>{entry.reply.residentId=v},{options});
+    labelControl(area,"相手の返事","textarea",entry.reply.text,v=>{entry.reply.text=v});
+    const removeReply=append(area,"button","返事を削除");removeReply.className="secondary";
+    removeReply.onclick=()=>{delete entry.reply;dirty=true;refresh()};
+  }else if(canReply){
+    const addReply=append(area,"button","＋ 相手の返事を追加");addReply.className="secondary";
+    addReply.onclick=()=>{
+      entry.reply={residentId:companions[0],text:"そうだね！"};
+      dirty=true;refresh();
+    };
+  }else{
+    append(area,"p","「まちで2人そろう」をAND条件に追加すると、相手の返事も表示できます。").className="hint";
+  }
 }
 function renderCondition(area,entry,condition,index){
   const box=append(area,"div");box.className="condition";
   const top=append(box,"div");top.className="top";
-  const kind=append(top,"select");opts(kind,{"mission":"ミッション累計","date":"日付","kotohogi":"ことほぎ累計"},condition.type);
+  const kind=append(top,"select");
+  opts(kind,{"mission":"ミッション累計","date":"日付","kotohogi":"ことほぎ累計",
+    "townTogether":"まちで2人そろう"},condition.type);
   kind.onchange=()=>{
-    entry.conditions[index]=kind.value==="mission"?{type:"mission",missionId:"all",minCount:1}:
-      kind.value==="date"?{type:"date",mode:"exact",date:"2026-12-25"}:{type:"kotohogi",min:50};
+    if(kind.value==="townTogether"){
+      const other=registry.characters.find(row=>row.id!==entry.residentId);
+      if(!other){kind.value=condition.type;setStatus("相手キャラを先に登録してください",true);return}
+      entry.conditions[index]={type:"townTogether",otherResidentId:other.id};
+    }else{
+      entry.conditions[index]=kind.value==="mission"?{type:"mission",missionId:"all",minCount:1}:
+        kind.value==="date"?{type:"date",mode:"exact",date:"2026-12-25"}:{type:"kotohogi",min:50};
+    }
     dirty=true;refresh();
   };
   const remove=append(top,"button","削除");remove.className="danger";
   remove.onclick=()=>{entry.conditions.splice(index,1);dirty=true;refresh()};
   const change=(field,convert)=>(v)=>{condition[field]=convert?convert(v):v};
-  if(condition.type==="mission"){
+  if(condition.type==="townTogether"){
+    const others=Object.fromEntries(registry.characters
+      .filter(row=>row.id!==entry.residentId).map(row=>[row.id,row.label+(row.walkInTown?"":"（まち非表示）")]));
+    labelControl(box,"一緒にいる相手","select",condition.otherResidentId,v=>{
+      condition.otherResidentId=v;refresh();
+    },{options:others});
+    append(box,"p","話しかけるキャラと相手の両方が、まちの表示枠（最大8人）にいるときだけ成立します。").className="hint";
+  }else if(condition.type==="mission"){
     labelControl(box,"種類","select",condition.missionId,change("missionId"),{options:missions});
     labelControl(box,"累計何回以上","input",condition.minCount,change("minCount",Number),{type:"number",min:1});
   }else if(condition.type==="kotohogi"){
@@ -202,6 +242,7 @@ function renderCondition(area,entry,condition,index){
   }
 }
 function match(condition,context){
+  if(condition.type==="townTogether")return context.townIds.has(context.speakerId)&&context.townIds.has(condition.otherResidentId);
   if(condition.type==="mission")return (condition.missionId==="all"?context.total:(context.missions[condition.missionId]||0))>=condition.minCount;
   if(condition.type==="kotohogi")return context.points>=condition.min;
   const day=context.day,md=day.slice(5);
@@ -218,13 +259,15 @@ function runPreview(){
     const missionsValues={};
     for(const k of Object.keys(missions))if(k!=="all")missionsValues[k]=Number(byId("m_"+k).value);
     const context={day:byId("previewDay").value,total:Number(byId("previewTotal").value),
-      points:Number(byId("previewPoints").value),missions:missionsValues};
+      points:Number(byId("previewPoints").value),missions:missionsValues,
+      townIds:previewTownIds,speakerId:byId("previewResident").value};
     if(!context.day)throw Error("日付を入力してください");
     const candidates=data.dialogues.filter(entry=>entry.residentId===byId("previewResident").value&&
       (entry.conditions.length===0||(entry.logic==="all"?entry.conditions.every(c=>match(c,context)):entry.conditions.some(c=>match(c,context)))));
     candidates.sort((a,b)=>b.priority-a.priority);
     byId("previewBox").textContent=candidates.length?
       "選ばれるセリフ｜"+residents[candidates[0].residentId]+"\n"+candidates[0].text+
+      (candidates[0].reply?"\n"+(residents[candidates[0].reply.residentId]||candidates[0].reply.residentId)+"「"+candidates[0].reply.text+"」":"")+
       "\nID: "+candidates[0].id+"\n候補: "+candidates.length+"件"+
       (candidates[0].once?"\n※初回のみ。実際には表示済みなら除外。":""):
       "表示できるセリフがありません。条件と通常セリフを確認してください。";
@@ -233,6 +276,30 @@ function runPreview(){
 function setCharacterStatus(message,error=false){
   const el=byId("characterStatus");
   el.textContent=message;el.className="status"+(error?" error":"");
+}
+function renderPreviewTown(){
+  const area=byId("previewTown");area.replaceChildren();
+  const enabled=registry.characters.filter(row=>row.walkInTown);
+  const valid=new Set(enabled.map(row=>row.id));
+  previewTownIds=new Set([...previewTownIds].filter(id=>valid.has(id)));
+  for(const row of enabled){
+    const label=append(area,"label");label.className="controls";
+    const input=append(label,"input");input.type="checkbox";input.checked=previewTownIds.has(row.id);
+    append(label,"span",row.label);
+    input.onchange=()=>{
+      if(input.checked){
+        if(previewTownIds.size>=8){
+          input.checked=false;
+          byId("previewBox").textContent="まちに表示できる住民は最大8人です。";
+          return;
+        }
+        previewTownIds.add(row.id);
+      }else{
+        previewTownIds.delete(row.id);
+      }
+      runPreview();
+    };
+  }
 }
 function rebuildResidentOptions(){
   residents=Object.fromEntries(registry.characters.map(row=>[row.id,row.label]));
@@ -243,6 +310,7 @@ function rebuildResidentOptions(){
     opts(element,id==="filter"?{"all":"すべて",...residents}:residents,
          previous==="all"&&id==="filter"?"all":residents[previous]?previous:(id==="filter"?"all":registry.characters[0].id));
   }
+  renderPreviewTown();
 }
 function activeCharacter(){
   return registry.characters.find(row=>row.id===characterSelected)||null;
@@ -283,6 +351,13 @@ function renderCharacterEditor(){
           dialogue.id=changed;
           dialogue.residentId=value;
         }
+        for(const dialogue of data.dialogues){
+          for(const condition of dialogue.conditions)if(
+            condition.type==="townTogether"&&condition.otherResidentId===oldId)
+            condition.otherResidentId=value;
+          if(dialogue.reply?.residentId===oldId)dialogue.reply.residentId=value;
+        }
+        if(previewTownIds.delete(oldId))previewTownIds.add(value);
         characterSelected=value;
       }
       dirty=true;
@@ -302,7 +377,10 @@ function renderCharacterEditor(){
     const label=append(box,"label");label.className="controls";
     const input=append(label,"input");input.type="checkbox";input.checked=row[field];
     append(label,"span",title);
-    input.onchange=()=>{row[field]=input.checked;dirty=true;renderCharacterList();setCharacterStatus("未保存の変更があります")};
+    input.onchange=()=>{
+      row[field]=input.checked;dirty=true;renderCharacterList();
+      renderPreviewTown();runPreview();setCharacterStatus("未保存の変更があります");
+    };
   }
   if(!locked)append(box,"p","最初のセリフはセリフ管理タブで編集できます。条件なしセリフを1件以上残してください。").className="hint";
   byId("cancelNewCharacter").disabled=locked;
@@ -318,6 +396,8 @@ async function load(){
     if(!dialogResponse.ok)throw Error(dialogBody.error||"セリフ読込失敗");
     data=dialogBody;registry=characterBody;
     savedCount=registry.characters.length;
+    previewTownIds=new Set(registry.characters
+      .filter(row=>row.walkInTown).slice(0,8).map(row=>row.id));
     characterSelected=registry.characters[0].id;
     selected=data.dialogues[0].id;dirty=false;
     rebuildResidentOptions();renderCharacterList();renderCharacterEditor();

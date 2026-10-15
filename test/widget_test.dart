@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:future_lift/main.dart';
 import 'package:future_lift/kotohogisu_tutorial.dart';
 import 'package:future_lift/dialogue_engine.dart';
 import 'package:future_lift/progress.dart';
+import 'package:future_lift/resident_collection.dart';
 import 'package:future_lift/residents.dart';
 import 'package:future_lift/town.dart';
 
@@ -137,6 +139,57 @@ void main() {
     await tester.pumpAndSettle();
     return controller;
   }
+
+  testWidgets('town companions show both speaker and reply', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final defaults = [
+      for (final resident in TownResident.values)
+        {
+          'id': '${resident.id}_fallback',
+          'residentId': resident.id,
+          'text': 'ふつうのおはなし',
+          'priority': 0,
+          'once': false,
+          'logic': 'all',
+          'conditions': [],
+        },
+    ];
+    final catalogue = DialogueCatalog.fromJson(jsonEncode({
+      'version': 1,
+      'dialogues': [
+        ...defaults,
+        {
+          'id': '01_shiba_001',
+          'residentId': '01_shiba',
+          'text': '今日は雲を眺めようよ',
+          'priority': 20,
+          'once': false,
+          'logic': 'all',
+          'conditions': [
+            {'type': 'townTogether', 'otherResidentId': '02_rabbit'},
+          ],
+          'reply': {
+            'residentId': '02_rabbit', 'text': 'あの雲、描いてみたい！',
+          },
+        },
+      ],
+    }));
+    final controller = ProgressController(
+      MemoryStore(), clock: () => DateTime(2026, 10, 15, 12));
+    await tester.pumpWidget(FutureLiftApp(
+      controller: controller,
+      dialogueCatalog: catalogue,
+      enableTutorial: false,
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('resident-0')));
+    await tester.pumpAndSettle();
+    expect(find.text('今日は雲を眺めようよ'), findsOneWidget);
+    expect(find.text('あの雲、描いてみたい！'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('core journey: missions, celebration, +10, town, tip, restart', (
     tester,
