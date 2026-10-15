@@ -76,7 +76,7 @@
     {
       "id": "penguin_default_1",
       "residentId": "03_penguin",
-      "text": "暮らしの中で体を動かすことも、大切な活動なんだって。",
+      "text": "今日はどこにお出かけする？ ぼく、おすすめの場所を知ってるよ！",
       "priority": 0,
       "once": false,
       "logic": "all",
@@ -294,6 +294,21 @@
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "009_chef_004",
+      "residentId": "009_chef",
+      "text": "食事をひとつ整えたの、もう5回目なんだにゃ！小さな工夫をコツコツ重ねてきたんだにゃ。すてきだにゃ〜！シェフから大きな花まるをあげるにゃ！🌸",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "food",
+          "minCount": 5
+        }
+      ]
     }
   ]
 }

@@ -22,7 +22,7 @@
     {
       "key": "penguin",
       "id": "03_penguin",
-      "label": "ペンギン",
+      "label": "まちの案内係",
       "artFolder": "003_penguin",
       "inGacha": true,
       "walkInTown": true,
@@ -60,7 +60,7 @@
       "id": "009_chef",
       "label": "シェフ",
       "artFolder": "009_chef",
-      "nextDialogueNumber": 4,
+      "nextDialogueNumber": 5,
       "inGacha": true,
       "walkInTown": true
     }
