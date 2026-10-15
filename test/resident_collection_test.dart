@@ -197,7 +197,9 @@ void main() {
   });
 
   test('all registered residents never stop draws or ticket earning', () {
-    var progress = funded(points: 240);
+    // One ticket for each new resident plus one for the repeat draw.
+    final drawPoints = (TownResident.values.length - 1) * 30;
+    var progress = funded(points: drawPoints);
     for (final resident in TownResident.values.skip(2)) {
       progress = progress.acquireResident(resident);
     }
@@ -206,12 +208,12 @@ void main() {
     expect(progress.residents.owned.length, TownResident.values.length);
     expect(progress.residents.counts['03_penguin'], 2);
     // The repeated penguin draw also costs one ticket.
-    expect(progress.residents.tickets(240), 8 - (TownResident.values.length - 1));
+    expect(progress.residents.tickets(drawPoints), 0);
     progress = progress
         .complete(Mission.strength)
         .complete(Mission.outside)
         .complete(Mission.conversation);
-    expect(progress.residents.tickets(270), 9 - (TownResident.values.length - 1));
+    expect(progress.residents.tickets(drawPoints + 30), 1);
     expect(Progress.decode(progress.encode()).residents.owned.length,
         TownResident.values.length);
   });

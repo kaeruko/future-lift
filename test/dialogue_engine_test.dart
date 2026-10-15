@@ -125,7 +125,8 @@ void main() {
 
   testWidgets('bundled farmer and daydreamer conversation wins when together',
       (tester) async {
-    final live = await DialogueCatalog.load();
+    final live = await tester.runAsync(DialogueCatalog.load);
+    if (live == null) throw StateError('Bundled dialogue catalog did not load');
     final progress = Progress.empty(DateTime(2026, 10, 15));
     final now = DateTime.utc(2026, 10, 15, 0);
     DialogueEntry pick(Set<String> town) => live.select(
