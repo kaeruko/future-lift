@@ -1,5 +1,5 @@
-Kotohogu sprite package: 011_clean
-Source: 011_clean.png
+Kotohogu sprite package: 011_cleaning
+Source: 011_cleaning.png
 Source size: 1152x1152
 Output PNG: 288x288 pixels, transparent
 
@@ -9,7 +9,7 @@ walk_right_01..04: right walk
 walk_left_01..04: horizontal flips of right walk
 idle_front_01: idle
 clap_front_01..02: clap
-011_clean_sheet_4x4.png: 4x4 sprite sheet
+011_cleaning_sheet_4x4.png: 4x4 sprite sheet
 preview_*.gif: animation previews
 
 IMPORTANT:
