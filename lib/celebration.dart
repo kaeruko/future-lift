@@ -376,12 +376,24 @@ class _RewardScroll extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                '所持ことほぎ  $total',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF63351F),
-                  fontWeight: FontWeight.bold,
+              // The decorative scroll asset may contain mock lettering.
+              // Opaque paper behind the live balance prevents stale artwork
+              // numerals from being mistaken for the saved wallet.
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFECD3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '所持ことほぎ  $total',
+                  key: const ValueKey('celebration-spendable-balance'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF63351F),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],

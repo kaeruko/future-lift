@@ -158,19 +158,19 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     );
     final earned = await controller.complete(mission);
     if (!mounted || !earned) return;
+    // Capture one committed snapshot: lifetime mission points and the
+    // spendable kotohogi wallet are different values after gacha draws.
+    final after = controller.progress!;
+    final balance = after.residents.availableKotohogi(after.points);
     _celebrating = true;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (context) => Celebration(
         missionTitle: mission.title,
-        total: controller.progress!.residents.availableKotohogi(
-          controller.progress!.points,
-        ),
-        creditedKotohogi: controller.progress!.residents.availableKotohogi(
-          controller.progress!.points,
-        ) - beforeBalance,
-        residents: controller.progress!.residents.owned,
+        total: balance,
+        creditedKotohogi: balance - beforeBalance,
+        residents: after.residents.owned,
       ),
     );
     _celebrating = false;
