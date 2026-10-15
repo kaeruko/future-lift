@@ -39,9 +39,13 @@ enum TownResident {
   cat("04_cat", "ねこ", "004_neko", true, true, ""),
   squirrel("05_squirrel", "りす", "005_risu", true, true, ""),
   bear("06_bear", "くま", "006_kuma", true, true, ""),
+  // ignore: constant_identifier_names
   c009_chef("009_chef", "シェフ", "009_chef", true, true, ""),
+  // ignore: constant_identifier_names
   c026_farmer("026_farmer", "やすぞう", "026_farmer", true, true, "本名：多賀　康三。健康を意識している中年男性。"),
+  // ignore: constant_identifier_names
   c027_daydreamer("027_daydreamer", "おやすみくん", "027_daydreamer", true, true, "おしごともべんきょうもおやすみ中の子。ぼくはまだまだこれからなんだ～"),
+  // ignore: constant_identifier_names
   c032_miner("032_miner", "もぐた", "032_miner", true, true, "工事現場ではたらく子")
   // END CMS RESIDENTS
   ;
