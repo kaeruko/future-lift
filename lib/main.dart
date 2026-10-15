@@ -99,7 +99,7 @@ class FutureLiftHome extends StatefulWidget {
 
 class _FutureLiftHomeState extends State<FutureLiftHome>
     with WidgetsBindingObserver {
-  final _townSceneKey = GlobalKey();
+  final ScrollController _townScrollController = ScrollController();
   int _page = 0;
   MissionPeriod _missionPeriod = MissionPeriod.daily;
   Mission _previewMission = Mission.strength;
@@ -150,6 +150,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   @override
   void dispose() {
     _midnight?.cancel();
+    _townScrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -475,6 +476,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                         color: const Color(0xFFFFF3DC),
                         child: ListView(
                           key: ValueKey('page-$_page'),
+                          controller: _townScrollController,
                           padding: EdgeInsets.zero,
                           children: _town(progress, availableHeight),
                         ),
@@ -568,7 +570,6 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       key: const ValueKey('town-page-fullscreen'),
       height: viewportHeight,
       child: TownAreaNavigator(
-        key: _townSceneKey,
         area: _townArea,
         onAreaChanged: (area) => setState(() => _townArea = area),
         level: progress.townLevel,
@@ -593,8 +594,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           ResidentGacha(
             controller: controller,
             onTown: () {
-              final scene = _townSceneKey.currentContext;
-              if (scene != null) Scrollable.ensureVisible(scene);
+              if (_townScrollController.hasClients) {
+                _townScrollController.jumpTo(0);
+              }
             },
           ),
           const SizedBox(height: 24),
