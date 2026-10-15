@@ -20,7 +20,7 @@ DART_START = "  // BEGIN CMS RESIDENTS"
 DART_END = "  // END CMS RESIDENTS"
 ASSETS_START = "    # BEGIN CMS CHARACTER ASSETS"
 ASSETS_END = "    # END CMS CHARACTER ASSETS"
-FIELDS = {"key", "id", "label", "artFolder", "inGacha", "walkInTown", "nextDialogueNumber"}
+FIELDS = {"key", "id", "label", "profile", "artFolder", "inGacha", "walkInTown", "nextDialogueNumber"}
 DIRECTIONS = ("front", "back", "left", "right")
 
 
@@ -31,7 +31,7 @@ def load_catalog():
 def validate_catalog(document, previous=None, *, characters_root=None):
     if not isinstance(document, dict) or set(document) != {"version", "characters"}:
         raise ValueError("Invalid character catalog root")
-    if type(document["version"]) is not int or document["version"] != 3:
+    if type(document["version"]) is not int or document["version"] != 4:
         raise ValueError("Unsupported character catalog version")
     characters = document["characters"]
     if not isinstance(characters, list) or not 1 <= len(characters) <= 64:
@@ -67,6 +67,8 @@ def validate_catalog(document, previous=None, *, characters_root=None):
                 raise ValueError(f"New resident key and art folder must be derived from ID: {identifier}")
         if not isinstance(row["label"], str) or not 1 <= len(row["label"].strip()) <= 40:
             raise ValueError(f"Invalid resident name at row {index}")
+        if not isinstance(row["profile"], str) or len(row["profile"]) > 1000:
+            raise ValueError(f"Invalid profile for {identifier}: expected string of at most 1000 characters")
         if type(row["inGacha"]) is not bool or type(row["walkInTown"]) is not bool:
             raise ValueError(f"Invalid resident flags at row {index}")
         if type(row["nextDialogueNumber"]) is not int or not 1 <= row["nextDialogueNumber"] <= 1000000000:
@@ -141,10 +143,11 @@ def generate_dart(source, characters):
     for row in characters:
         # Dart interpolates dollar signs inside quoted strings; preserve literal labels.
         label = json.dumps(row["label"], ensure_ascii=False).replace("$", r"\$")
+        profile = json.dumps(row["profile"], ensure_ascii=False).replace("$", r"\$")
         declarations.append(
             f'  {row["key"]}("{row["id"]}", {label}, "{row["artFolder"]}", '
             f'{"true" if row["inGacha"] else "false"}, '
-            f'{"true" if row["walkInTown"] else "false"})'
+            f'{"true" if row["walkInTown"] else "false"}, {profile})'
         )
     return replace_section(source, DART_START, DART_END, ",\n".join(declarations))
 

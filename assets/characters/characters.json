@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "characters": [
     {
       "key": "shiba",
@@ -8,7 +8,8 @@
       "artFolder": "001_shiba",
       "inGacha": true,
       "walkInTown": true,
-      "nextDialogueNumber": 1
+      "nextDialogueNumber": 1,
+      "profile": ""
     },
     {
       "key": "rabbit",
@@ -17,7 +18,8 @@
       "artFolder": "002_usagi",
       "inGacha": true,
       "walkInTown": true,
-      "nextDialogueNumber": 1
+      "nextDialogueNumber": 1,
+      "profile": ""
     },
     {
       "key": "penguin",
@@ -26,7 +28,8 @@
       "artFolder": "003_penguin",
       "inGacha": true,
       "walkInTown": true,
-      "nextDialogueNumber": 1
+      "nextDialogueNumber": 1,
+      "profile": ""
     },
     {
       "key": "cat",
@@ -35,7 +38,8 @@
       "artFolder": "004_neko",
       "inGacha": true,
       "walkInTown": true,
-      "nextDialogueNumber": 1
+      "nextDialogueNumber": 1,
+      "profile": ""
     },
     {
       "key": "squirrel",
@@ -44,7 +48,8 @@
       "artFolder": "005_risu",
       "inGacha": true,
       "walkInTown": true,
-      "nextDialogueNumber": 1
+      "nextDialogueNumber": 1,
+      "profile": ""
     },
     {
       "key": "bear",
@@ -53,7 +58,8 @@
       "artFolder": "006_kuma",
       "inGacha": true,
       "walkInTown": true,
-      "nextDialogueNumber": 1
+      "nextDialogueNumber": 1,
+      "profile": ""
     },
     {
       "key": "c009_chef",
@@ -62,7 +68,8 @@
       "artFolder": "009_chef",
       "nextDialogueNumber": 5,
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "profile": ""
     }
   ]
 }

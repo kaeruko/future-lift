@@ -90,7 +90,7 @@ nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
     <h2>登録キャラクター</h2>
     <div class="actions"><button id="addCharacter">＋ キャラ追加</button></div>
     <div id="characterEntries"></div>
-    <p class="hint">登録済みキャラのID・画像フォルダは、セーブデータを守るため変更できません。セリフの連番もキャラごとに保存されます。</p>
+    <p class="hint">登録済みキャラのID・画像フォルダは変更できません。名前とプロフィールは後から編集できます。</p>
   </section>
   <section class="panel">
     <h2>キャラクター設定</h2>
@@ -412,6 +412,13 @@ function renderCharacterEditor(){
     return element;
   };
   edit("キャラ名","label");
+  const profileInput=labelControl(box,"プロフィール","textarea",row.profile,value=>{
+    row.profile=value;
+    setCharacterStatus("未保存の変更があります");
+  });
+  profileInput.rows=5;
+  profileInput.maxLength=1000;
+  append(box,"p","自由文・改行OK。1000文字以内、空欄でも保存できます。").className="hint";
   edit("キャラID（例: 009_chef）","id",locked);
   const folderHint=append(box,"p",locked
     ? `画像フォルダ: assets/characters/${row.artFolder}/（登録済みの設定を維持）`
@@ -469,7 +476,7 @@ byId("addCharacter").onclick=()=>{
   let number=registry.characters.length+1;
   let id=String(number).padStart(3,"0")+"_new";
   while(used.has(id)){number++;id=String(number).padStart(3,"0")+"_new"}
-  const row={key:"c"+id,id,label:"新しい住民",artFolder:id,
+  const row={key:"c"+id,id,label:"新しい住民",profile:"",artFolder:id,
     nextDialogueNumber:1,inGacha:true,walkInTown:true};
   const firstLine=fresh(row);
   firstLine.text="こんにちは！よろしくね。";

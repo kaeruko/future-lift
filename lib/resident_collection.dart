@@ -16,22 +16,23 @@ enum WalkDirection { front, back, left, right }
 
 enum TownResident {
   // BEGIN CMS RESIDENTS
-  shiba("01_shiba", "しばいぬ", "001_shiba", true, true),
-  rabbit("02_rabbit", "うさぎ", "002_usagi", true, true),
-  penguin("03_penguin", "まちの案内係", "003_penguin", true, true),
-  cat("04_cat", "ねこ", "004_neko", true, true),
-  squirrel("05_squirrel", "りす", "005_risu", true, true),
-  bear("06_bear", "くま", "006_kuma", true, true),
-  c009_chef("009_chef", "シェフ", "009_chef", true, true)
+  shiba("01_shiba", "しばいぬ", "001_shiba", true, true, ""),
+  rabbit("02_rabbit", "うさぎ", "002_usagi", true, true, ""),
+  penguin("03_penguin", "まちの案内係", "003_penguin", true, true, ""),
+  cat("04_cat", "ねこ", "004_neko", true, true, ""),
+  squirrel("05_squirrel", "りす", "005_risu", true, true, ""),
+  bear("06_bear", "くま", "006_kuma", true, true, ""),
+  c009_chef("009_chef", "シェフ", "009_chef", true, true, "")
   // END CMS RESIDENTS
   ;
 
-  const TownResident(this.id, this.label, this.artFolder, this.inGacha, this.walkInTown);
+  const TownResident(this.id, this.label, this.artFolder, this.inGacha, this.walkInTown, this.profile);
   final String id;
   final String label;
   final String artFolder;
   final bool inGacha;
   final bool walkInTown;
+  final String profile;
   static List<TownResident> get gachaPool =>
       values.where((resident) => resident.inGacha).toList(growable: false);
   String get idleAsset => 'assets/characters/$artFolder/idle_front_01.png';

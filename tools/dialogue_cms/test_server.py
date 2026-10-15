@@ -32,6 +32,42 @@ class CmsTests(unittest.TestCase):
         output = generate_dart(DART.read_text("utf-8"), entries)
         self.assertIn(r"価格\$100", output)
 
+    def test_profile_updates_preserve_character_ids_and_generate_dart(self):
+        original = load_catalog()
+        modified = copy.deepcopy(original)
+        modified["characters"][0]["profile"] = "おさんぽが好き。\n今日も一緒に歩こう！"
+        self.assertIs(validate_catalog(modified, previous=original), modified)
+        generated = generate_dart(DART.read_text("utf-8"), modified["characters"])
+        self.assertIn(r"おさんぽが好き。\n今日も一緒に歩こう！", generated)
+
+    def test_profile_requires_explicit_schema_and_valid_string(self):
+        original = load_catalog()
+        old_version = copy.deepcopy(original)
+        old_version["version"] = 3
+        with self.assertRaisesRegex(ValueError, "Unsupported character catalog version"):
+            validate_catalog(old_version)
+
+        missing = copy.deepcopy(original)
+        del missing["characters"][0]["profile"]
+        with self.assertRaisesRegex(ValueError, "Invalid character fields"):
+            validate_catalog(missing, previous=original)
+
+        for value in (None, 42, ["wrong"], "あ" * 1001):
+            modified = copy.deepcopy(original)
+            modified["characters"][0]["profile"] = value
+            with self.subTest(value_type=type(value).__name__), self.assertRaisesRegex(ValueError, "Invalid profile"):
+                validate_catalog(modified, previous=original)
+
+        allowed = copy.deepcopy(original)
+        allowed["characters"][0]["profile"] = "あ" * 1000
+        validate_catalog(allowed, previous=original)
+
+    def test_profile_dart_escapes_interpolation_and_quotes(self):
+        characters = copy.deepcopy(load_catalog()["characters"])
+        characters[0]["profile"] = '価格$100と"お話"'
+        generated = generate_dart(DART.read_text("utf-8"), characters)
+        self.assertIn(r'価格\$100と\"お話\"', generated)
+
     def test_existing_character_ids_cannot_change(self):
         original = load_catalog()
         for change in ("remove", "id", "folder"):
@@ -51,6 +87,7 @@ class CmsTests(unittest.TestCase):
         modified["characters"].append({
             "key": "c999_owl", "id": "999_owl", "label": "ふくろう",
             "artFolder": "999_owl", "nextDialogueNumber": 2,
+            "profile": "",
             "inGacha": True, "walkInTown": True
         })
         with self.assertRaisesRegex(ValueError, "Sprite folder"):
@@ -69,6 +106,7 @@ class CmsTests(unittest.TestCase):
         modified["characters"].append({
             "key": "c007_hitsuji", "id": "007_hitsuji", "label": "ひつじ",
             "artFolder": "007_hitsuji", "nextDialogueNumber": 2,
+            "profile": "",
             "inGacha": True, "walkInTown": True
         })
         validate_catalog(modified, previous=original)
@@ -144,7 +182,7 @@ class CmsTests(unittest.TestCase):
 
     def test_character_catalog_has_no_tip_source_or_dialogue_kinds(self):
         registry = validate_catalog(load_catalog())
-        self.assertEqual(registry["version"], 3)
+        self.assertEqual(registry["version"], 4)
         for resident in registry["characters"]:
             self.assertNotIn("tipSource", resident)
         invalid = copy.deepcopy(registry)
