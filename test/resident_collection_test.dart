@@ -440,6 +440,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('footer-town')));
       await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: 'after opening town');
       expect(
         tester.widget<TownScene>(find.byType(TownScene)).residents.length,
         2,
@@ -458,6 +459,7 @@ void main() {
       expect(find.byKey(const ValueKey('gacha-stage-resident')), findsOneWidget);
       expect(find.byKey(const ValueKey('resident-arrival-banner')), findsOneWidget);
       expect(find.byKey(const ValueKey('gacha-draw-one')), findsNothing);
+      expect(tester.takeException(), isNull, reason: 'during gacha reveal');
       expect(
         tester.widget<Semantics>(
           find.byKey(const ValueKey('gacha-result')),
@@ -469,12 +471,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(find.byType(TownScene), -180);
       await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: 'after returning from gacha');
       expect(
         tester.widget<TownScene>(find.byType(TownScene)).residents.length,
         3,
       );
       await tester.tap(find.byKey(const ValueKey('footer-missions')));
       await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: 'after opening missions');
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('complete-strength')),
         180,
@@ -482,6 +486,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('complete-strength')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 800));
+      expect(tester.takeException(), isNull, reason: 'after completing mission');
       expect(find.byType(Celebration), findsOneWidget);
       expect(
         tester.widget<ClapCharacters>(find.byType(ClapCharacters)).residents,
