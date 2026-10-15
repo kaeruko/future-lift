@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/consultation_scene.dart';
 import 'package:future_lift/gacha_reveal.dart';
 import 'package:future_lift/gacha_screen.dart';
+import 'package:future_lift/gacha_hud.dart';
 import 'package:future_lift/home_skin.dart';
 import 'package:future_lift/progress.dart';
 import 'package:future_lift/resident_gacha.dart';
@@ -53,8 +54,13 @@ void main() {
     // The consultation HUD is pinned to the upper-right, with space
     // remaining to the left for the hall's sign and decoration.
     final hallHud = tester.getRect(find.byType(KotohogiBar));
+    final hallHeader = tester.getRect(find.byType(GachaHud));
+    final hallName = tester.getRect(find.byType(PlayerNameplate));
+    expect(hallHeader.left, closeTo(12, .5));
     expect(hallHud.right, closeTo(348, .5));
     expect(hallHud.left, greaterThan(150));
+    expect(hallName.right, lessThan(hallHud.left));
+    expect(find.text('ハル'), findsOneWidget);
     expect(find.byKey(const ValueKey('consultation-stage')), findsOneWidget);
     expect(
       (tester.widget<Image>(
@@ -120,8 +126,12 @@ void main() {
 
     expect(find.byType(GachaReveal), findsOneWidget);
     final revealHud = tester.getRect(find.byType(KotohogiBar));
+    final revealHeader = tester.getRect(find.byType(GachaHud));
+    expect(revealHeader.left, closeTo(12, .5));
     expect(revealHud.right, closeTo(348, .5));
     expect(revealHud.left, greaterThan(150));
+    expect(find.byType(PlayerNameplate), findsOneWidget);
+    expect(find.text('ハル'), findsOneWidget);
     expect(find.byKey(const ValueKey('gacha-back-town')), findsNothing);
     expect(find.byKey(const ValueKey('consultation-town-back')),
         findsOneWidget);

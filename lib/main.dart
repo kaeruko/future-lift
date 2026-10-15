@@ -341,6 +341,25 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     },
   );
 
+  /// One fixed safe-area HUD for every page in the main navigation.
+  /// The full-screen wallpaper remains continuous behind the header.
+  Widget _pageWithSharedHeader(Progress progress, Widget page) => Stack(
+    fit: StackFit.expand,
+    children: [
+      Positioned.fill(
+        child: Image.asset(
+          'assets/kotohogu/town_background.png',
+          fit: BoxFit.cover,
+          excludeFromSemantics: true,
+        ),
+      ),
+      PinnedGachaHud(
+        points: progress.residents.availableKotohogi(progress.points),
+        contentBuilder: (context, availableHeight) => page,
+      ),
+    ],
+  );
+
   Widget _buildWithProgress() => ListenableBuilder(
     listenable: controller,
     builder: (context, child) {
@@ -425,13 +444,17 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                       ],
                     )
                   : _page == 1
-                  ? MissionsScreen(
-                      progress: progress,
-                      busy: controller.busy,
-                      onComplete: _complete,
-                      period: _missionPeriod,
-                      onPeriodChanged: (period) =>
-                          setState(() => _missionPeriod = period),
+                  ? _pageWithSharedHeader(
+                      progress,
+                      MissionsScreen(
+                        progress: progress,
+                        busy: controller.busy,
+                        onComplete: _complete,
+                        period: _missionPeriod,
+                        drawBackground: false,
+                        onPeriodChanged: (period) =>
+                            setState(() => _missionPeriod = period),
+                      ),
                     )
                   : _page == 2
                   ? PinnedGachaHud(
@@ -449,26 +472,34 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                       ),
                     )
                   : _page == 3
-                  ? HistoryScreen(
-                      progress: progress,
-                      busy: controller.busy,
-                      onClear: () async {
-                        await controller.clearHistory();
-                      },
+                  ? _pageWithSharedHeader(
+                      progress,
+                      HistoryScreen(
+                        progress: progress,
+                        busy: controller.busy,
+                        drawBackground: false,
+                        onClear: () async {
+                          await controller.clearHistory();
+                        },
+                      ),
                     )
-                  : DebugMenuScreen(
-                      progress: progress,
-                      selectedMission: _previewMission,
-                      onMissionChanged: (mission) =>
-                          setState(() => _previewMission = mission),
-                      onPreview: _previewCelebration,
-                      onReplayTutorial: _replayTutorial,
-                      onResetAll: controller.resetAllMissionsForDebug,
-                      onAddTickets: controller.grantTicketsForDebug,
-                      debugTownResidents: _debugTownResidents,
-                      onDebugTownEnabled: _setDebugTownEnabled,
-                      onDebugTownResidentChanged: _setDebugTownResident,
-                      busy: controller.busy || _celebrating,
+                  : _pageWithSharedHeader(
+                      progress,
+                      DebugMenuScreen(
+                        progress: progress,
+                        selectedMission: _previewMission,
+                        onMissionChanged: (mission) =>
+                            setState(() => _previewMission = mission),
+                        onPreview: _previewCelebration,
+                        onReplayTutorial: _replayTutorial,
+                        onResetAll: controller.resetAllMissionsForDebug,
+                        onAddTickets: controller.grantTicketsForDebug,
+                        debugTownResidents: _debugTownResidents,
+                        onDebugTownEnabled: _setDebugTownEnabled,
+                        onDebugTownResidentChanged: _setDebugTownResident,
+                        busy: controller.busy || _celebrating,
+                        drawBackground: false,
+                      ),
                     ),
             ),
           ),

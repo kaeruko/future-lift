@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'consultation_scene.dart';
 import 'gacha_hud.dart';
 import 'gacha_reveal.dart';
-import 'home_skin.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
 
@@ -85,7 +84,6 @@ class _GachaScreenState extends State<GachaScreen> {
           !widget.controller.busy &&
           progress.residents.availableKotohogi(progress.points) >= 30;
       final safe = MediaQuery.paddingOf(context);
-      final width = MediaQuery.sizeOf(context).width;
       return PopScope(
         canPop: !_drawing,
         child: Scaffold(
@@ -93,12 +91,6 @@ class _GachaScreenState extends State<GachaScreen> {
           body: Stack(
             children: [
               const Positioned.fill(child: ConsultationBackground()),
-              Positioned(
-                top: safe.top + 10,
-                right: 12,
-                width: (width * .48).clamp(160.0, 270.0),
-                child: KotohogiBar(points: balance),
-              ),
               Positioned(
                 left: 10,
                 right: 10,
@@ -140,6 +132,8 @@ class _GachaScreenState extends State<GachaScreen> {
                   ],
                 ),
               ),
+              // Draw the same pinned header above this scene.
+              Positioned.fill(child: GameHeaderOverlay(points: balance)),
             ],
           ),
         ),

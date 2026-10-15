@@ -19,8 +19,10 @@ class DebugMenuScreen extends StatelessWidget {
     required this.onDebugTownEnabled,
     required this.onDebugTownResidentChanged,
     required this.busy,
+    this.drawBackground = true,
   });
 
+  final bool drawBackground;
   final Progress progress;
   final Mission selectedMission;
   final ValueChanged<Mission> onMissionChanged;
@@ -80,13 +82,14 @@ class DebugMenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Stack(
     children: [
-      Positioned.fill(
-        child: Image.asset(
-          'assets/kotohogu/town_background.png',
-          fit: BoxFit.cover,
-          excludeFromSemantics: true,
+      if (drawBackground)
+        Positioned.fill(
+          child: Image.asset(
+            'assets/kotohogu/town_background.png',
+            fit: BoxFit.cover,
+            excludeFromSemantics: true,
+          ),
         ),
-      ),
       ListView(
         key: const ValueKey('debug-menu-scroll'),
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 36),

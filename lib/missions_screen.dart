@@ -13,7 +13,11 @@ class MissionsScreen extends StatelessWidget {
     required this.onComplete,
     required this.period,
     required this.onPeriodChanged,
+    this.drawBackground = true,
   });
+  // The shared app header owns the wallpaper on full navigation pages.
+  // Standalone previews continue to paint their usual background.
+  final bool drawBackground;
   final Progress progress;
   final bool busy;
   final ValueChanged<Mission> onComplete;
@@ -23,22 +27,19 @@ class MissionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Stack(
     children: [
-      Positioned.fill(
-        child: Image.asset(
-          'assets/kotohogu/town_background.png',
-          fit: BoxFit.cover,
-          excludeFromSemantics: true,
+      if (drawBackground)
+        Positioned.fill(
+          child: Image.asset(
+            'assets/kotohogu/town_background.png',
+            fit: BoxFit.cover,
+            excludeFromSemantics: true,
+          ),
         ),
-      ),
       const Positioned.fill(child: _CornerClouds(top: true)),
       const Positioned.fill(child: _CornerClouds(top: false)),
       ListView(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
         children: [
-          ContributionPanel(
-            points: progress.residents.availableKotohogi(progress.points),
-          ),
-          const SizedBox(height: 20),
           Row(
             children: [
               const _WalkingMissionKotohogisu(),

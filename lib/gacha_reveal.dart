@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'consultation_scene.dart';
-import 'home_skin.dart';
+import 'gacha_hud.dart';
 import 'progress.dart';
 import 'resident_collection.dart';
 
@@ -94,7 +94,6 @@ class _GachaRevealState extends State<GachaReveal>
             animation: _animation,
             builder: (context, _) => LayoutBuilder(
               builder: (context, constraints) {
-                final width = constraints.maxWidth;
                 final t = _animation.value;
                 final ready = _animation.isCompleted;
                 final entry = Curves.easeOutBack.transform(
@@ -112,12 +111,6 @@ class _GachaRevealState extends State<GachaReveal>
 
                 return Stack(
                   children: [
-                    Positioned(
-                      top: safe.top + 10,
-                      right: 12,
-                      width: (width * .48).clamp(160.0, 270.0),
-                      child: KotohogiBar(points: balance),
-                    ),
                     // All arrival art shares the background's 1080x1920
                     // coordinate system, including BoxFit.cover cropping.
                     Positioned.fill(
@@ -276,6 +269,10 @@ class _GachaRevealState extends State<GachaReveal>
                           ),
                         ],
                       ),
+                    ),
+                    // Reuse exactly the same HUD during the resident reveal.
+                    Positioned.fill(
+                      child: GameHeaderOverlay(points: balance),
                     ),
                   ],
                 );

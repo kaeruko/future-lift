@@ -205,3 +205,22 @@ class PinnedGachaHud extends StatelessWidget {
     },
   );
 }
+
+/// The identical header on modal consultation and reveal routes.
+/// Ignoring taps prevents this decorative overlay from blocking scene actions.
+class GameHeaderOverlay extends StatelessWidget {
+  const GameHeaderOverlay({super.key, required this.points});
+
+  final int points;
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: IgnorePointer(
+      child: PinnedGachaHud(
+        points: points,
+        contentBehindHud: true,
+        contentBuilder: (context, availableHeight) => const SizedBox.expand(),
+      ),
+    ),
+  );
+}

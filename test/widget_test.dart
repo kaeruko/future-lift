@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/celebration.dart';
 import 'package:future_lift/clap_characters.dart';
 import 'package:future_lift/main.dart';
+import 'package:future_lift/gacha_hud.dart';
+import 'package:future_lift/home_skin.dart';
 import 'package:future_lift/missions_screen.dart';
 import 'package:future_lift/kotohogisu_tutorial.dart';
 import 'package:future_lift/dialogue_engine.dart';
@@ -172,6 +174,43 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.widget<NavigationBar>(find.byType(NavigationBar))
         .selectedIndex, 0);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('all five main pages share one header size and position',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 850);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await launch(tester, MemoryStore());
+
+    expect(find.byType(GachaHud), findsOneWidget);
+    expect(find.byType(PlayerNameplate), findsOneWidget);
+    expect(find.byType(KotohogiBar), findsOneWidget);
+    final initialHeader = tester.getRect(find.byType(GachaHud));
+    final initialName = tester.getRect(find.byType(PlayerNameplate));
+    final initialBalance = tester.getRect(find.byType(KotohogiBar));
+    expect(find.text('ハル'), findsOneWidget);
+
+    for (final tab in [
+      'footer-missions', 'footer-town', 'footer-history',
+      'footer-menu', 'footer-home',
+    ]) {
+      await tester.tap(find.byKey(ValueKey(tab)));
+      await tester.pumpAndSettle();
+      expect(find.byType(GachaHud), findsOneWidget, reason: tab);
+      expect(find.byType(PlayerNameplate), findsOneWidget, reason: tab);
+      expect(find.byType(KotohogiBar), findsOneWidget, reason: tab);
+      final header = tester.getRect(find.byType(GachaHud));
+      final name = tester.getRect(find.byType(PlayerNameplate));
+      final amount = tester.getRect(find.byType(KotohogiBar));
+      expect(header.left, closeTo(initialHeader.left, .01), reason: tab);
+      expect(header.top, closeTo(initialHeader.top, .01), reason: tab);
+      expect(header.width, closeTo(initialHeader.width, .01), reason: tab);
+      expect(name, initialName, reason: tab);
+      expect(amount, initialBalance, reason: tab);
+      expect(find.byKey(const ValueKey('total-points')), findsOneWidget);
+    }
     expect(tester.takeException(), isNull);
   });
 
