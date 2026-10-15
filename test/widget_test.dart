@@ -81,48 +81,6 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('celebration displays spendable 120, not lifetime 180',
-      (tester) async {
-    tester.view.physicalSize = const Size(430, 1000);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-
-    // Two past gacha draws spent 60 of the 170 lifetime points.
-    final seed = Progress(
-      day: '2026-10-09',
-      lastCompletedDay: '2026-10-08',
-      points: 170,
-      residents: ResidentCollection(
-        baselinePoints: 0,
-        counts: const {'01_shiba': 2, '02_rabbit': 2},
-      ),
-      completed: const {},
-    );
-    final store = MemoryStore()..raw = seed.encode();
-    final controller = await launch(tester, store);
-    expect(controller.progress!.residents.availableKotohogi(170), 110);
-
-    await tester.tap(find.text('ミッション').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('complete-strength')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 700));
-    expect(controller.progress!.points, 180);
-    expect(controller.progress!.residents.availableKotohogi(180), 120);
-    expect(find.text('ことほぎ +10'), findsOneWidget);
-    expect(find.byKey(const ValueKey('celebration-spendable-balance')),
-        findsOneWidget);
-    expect(find.text('所持ことほぎ  120'), findsOneWidget);
-    expect(find.text('所持ことほぎ  180'), findsNothing);
-
-    await tester.tap(find.byKey(const ValueKey('close-celebration')));
-    await tester.pumpAndSettle();
-    expect(controller.progress!.residents.availableKotohogi(
-        controller.progress!.points), 120);
-    expect(Progress.decode(store.raw!).residents.availableKotohogi(180), 120);
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets('up to eight sprites clap in sequence and respect reduced motion', (
     tester,
   ) async {
@@ -181,6 +139,48 @@ void main() {
     await tester.pumpAndSettle();
     return controller;
   }
+
+  testWidgets('celebration displays spendable 120, not lifetime 180',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    // Two past gacha draws spent 60 of the 170 lifetime points.
+    final seed = Progress(
+      day: '2026-10-09',
+      lastCompletedDay: '2026-10-08',
+      points: 170,
+      residents: ResidentCollection(
+        baselinePoints: 0,
+        counts: const {'01_shiba': 2, '02_rabbit': 2},
+      ),
+      completed: const {},
+    );
+    final store = MemoryStore()..raw = seed.encode();
+    final controller = await launch(tester, store);
+    expect(controller.progress!.residents.availableKotohogi(170), 110);
+
+    await tester.tap(find.text('ミッション').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('complete-strength')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(controller.progress!.points, 180);
+    expect(controller.progress!.residents.availableKotohogi(180), 120);
+    expect(find.text('ことほぎ +10'), findsOneWidget);
+    expect(find.byKey(const ValueKey('celebration-spendable-balance')),
+        findsOneWidget);
+    expect(find.text('所持ことほぎ  120'), findsOneWidget);
+    expect(find.text('所持ことほぎ  180'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('close-celebration')));
+    await tester.pumpAndSettle();
+    expect(controller.progress!.residents.availableKotohogi(
+        controller.progress!.points), 120);
+    expect(Progress.decode(store.raw!).residents.availableKotohogi(180), 120);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('town companions speak one at a time', (tester) async {
     tester.view.physicalSize = const Size(430, 1000);
