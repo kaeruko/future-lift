@@ -267,6 +267,33 @@
           "minCount": 5
         }
       ]
+    },
+    {
+      "id": "009_chef_001",
+      "residentId": "009_chef",
+      "text": "きのこには食物繊維がたっぷりにゃ！いろんな種類を食べると、食卓も楽しくなるにゃ〜！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "009_chef_002",
+      "residentId": "009_chef",
+      "text": "旬の食べものは、おいしくて、お財布にもやさしいことが多いんだにゃ！季節の味を楽しんでみようにゃ♪",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "009_chef_003",
+      "residentId": "009_chef",
+      "text": "葉っぱのお野菜が高いときは、冷凍のお野菜でもいいんだにゃ。旬のものにこだわりすぎず、おいしく食べられるものを選ぼうにゃ！",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }

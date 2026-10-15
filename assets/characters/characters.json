@@ -54,6 +54,15 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1
+    },
+    {
+      "key": "c009_chef",
+      "id": "009_chef",
+      "label": "シェフ",
+      "artFolder": "009_chef",
+      "nextDialogueNumber": 4,
+      "inGacha": true,
+      "walkInTown": true
     }
   ]
 }

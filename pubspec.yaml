@@ -83,6 +83,7 @@ flutter:
     - assets/characters/004_neko/
     - assets/characters/005_risu/
     - assets/characters/006_kuma/
+    - assets/characters/009_chef/
     # END CMS CHARACTER ASSETS
     - assets/clap/
     - assets/celebration/

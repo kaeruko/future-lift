@@ -16,7 +16,8 @@ enum TownResident {
   penguin("03_penguin", "ペンギン", "003_penguin", true, true),
   cat("04_cat", "ねこ", "004_neko", true, true),
   squirrel("05_squirrel", "りす", "005_risu", true, true),
-  bear("06_bear", "くま", "006_kuma", true, true)
+  bear("06_bear", "くま", "006_kuma", true, true),
+  c009_chef("009_chef", "シェフ", "009_chef", true, true)
   // END CMS RESIDENTS
   ;
 
