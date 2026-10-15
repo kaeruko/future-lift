@@ -19,12 +19,15 @@ class TownScene extends StatefulWidget {
     super.key,
     required this.level,
     required this.residents,
+    this.debugTownResidents,
     this.onResident,
     this.fillViewport = false,
   });
 
   final int level;
   final List<TownResident> residents;
+  /// A temporary debug-only cast; null uses the owned residents.
+  final List<TownResident>? debugTownResidents;
   final Future<void> Function(TownResident)? onResident;
 
   /// Fill the available phone viewport using the source image's own
@@ -120,7 +123,10 @@ class _TownSceneState extends State<TownScene> {
 
   Widget _scene(BuildContext context, double width, double height) {
     final reduced = MediaQuery.disableAnimationsOf(context);
-    final visibleResidents = visibleTownResidents(widget.residents);
+    final visibleResidents = visibleTownResidents(
+      widget.residents,
+      debugOverride: widget.debugTownResidents,
+    );
     final count = visibleResidents.length;
     final size = (width * .14).clamp(40.0, 76.0);
     return Stack(

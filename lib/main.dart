@@ -108,6 +108,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   static const _tutorialSeenId = 'tutorial_kotohogisu_v1';
   Timer? _midnight;
   final _dialogueIndex = <TownResident, int>{};
+  /// Debug-only town cast kept in memory; never written to the save file.
+  List<TownResident>? _debugTownResidents;
   static Future<DialogueCatalog>? _cachedDialogueCatalog;
   late final Future<DialogueCatalog> _dialoguesFuture;
   ProgressController get controller => widget.controller;
@@ -242,6 +244,37 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     }
   }
 
+  void _setDebugTownEnabled(bool enabled) {
+    if (!kDebugMode || controller.busy || controller.progress == null ||
+        controller.failure != null) {
+      return;
+    }
+    setState(() {
+      _debugTownResidents = enabled
+          ? visibleTownResidents(controller.progress!.residents.owned)
+          : null;
+    });
+  }
+
+  void _setDebugTownResident(TownResident resident, bool selected) {
+    if (!kDebugMode || controller.busy || controller.failure != null) return;
+    final current = _debugTownResidents;
+    if (current == null) {
+      throw StateError('Enable the debug town selection first.');
+    }
+    if (current.contains(resident) == selected) return;
+    if (selected && current.length >= townResidentLimit) {
+      throw StateError('The debug town is limited to $townResidentLimit residents.');
+    }
+    setState(() {
+      _debugTownResidents = List<TownResident>.unmodifiable(
+        selected
+            ? [...current, resident]
+            : current.where((value) => value != resident),
+      );
+    });
+  }
+
   Future<void> _showDialogue(TownResident resident) async {
     if (controller.busy || controller.failure != null ||
         controller.progress == null) {
@@ -251,7 +284,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     if (!mounted || controller.failure != null) return;
     final index = _dialogueIndex[resident] ?? 0;
     final visibleIds = visibleTownResidents(
-      controller.progress!.residents.owned).map((r) => r.id).toSet();
+      controller.progress!.residents.owned,
+      debugOverride: _debugTownResidents,
+    ).map((r) => r.id).toSet();
     final line = catalog.select(
       resident: resident,
       progress: controller.progress!,
@@ -259,8 +294,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       townResidentIds: visibleIds,
       rotation: index,
     );
-    // Record every first-time conversation in the shared durable history.
-    if (!controller.progress!.seenDialogues.contains(line.id)) {
+    // Conversations in the debug-only cast must not alter saved seen IDs.
+    if (_debugTownResidents == null &&
+        !controller.progress!.seenDialogues.contains(line.id)) {
       final persisted = await controller.recordDialogueSeen(line.id);
       if (!persisted || !mounted) return;
     }
@@ -413,6 +449,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                           onMissions: () => setState(() => _page = 1),
                           onTown: () => setState(() => _page = 2),
                           onResident: _showDialogue,
+                          debugTownResidents: _debugTownResidents,
                         ),
                         if (_tutorialReplay ||
                             (widget.enableTutorial &&
@@ -465,6 +502,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                       onReplayTutorial: _replayTutorial,
                       onResetAll: controller.resetAllMissionsForDebug,
                       onAddTickets: controller.grantTicketsForDebug,
+                      debugTownResidents: _debugTownResidents,
+                      onDebugTownEnabled: _setDebugTownEnabled,
+                      onDebugTownResidentChanged: _setDebugTownResident,
                       busy: controller.busy || _celebrating,
                     ),
             ),
@@ -524,6 +564,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
             key: _townSceneKey,
             level: progress.townLevel,
             residents: progress.residents.owned,
+            debugTownResidents: _debugTownResidents,
             onResident: _showDialogue,
             fillViewport: true,
           ),

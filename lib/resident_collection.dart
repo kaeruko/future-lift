@@ -4,9 +4,26 @@ int get ownedResidentLimit => TownResident.values.length > 8 ? TownResident.valu
 const townResidentLimit = 8;
 
 /// The same first eight enabled residents are drawn on the home and town scenes.
-List<TownResident> visibleTownResidents(Iterable<TownResident> residents) =>
-    residents.where((resident) => resident.walkInTown)
-        .take(townResidentLimit).toList(growable: false);
+/// A debug-only override can include unowned/hidden residents without saving them.
+/// An empty override deliberately shows no residents.
+List<TownResident> visibleTownResidents(
+  Iterable<TownResident> residents, {
+  List<TownResident>? debugOverride,
+}) {
+  if (debugOverride != null) {
+    if (debugOverride.length > townResidentLimit ||
+        debugOverride.toSet().length != debugOverride.length) {
+      throw ArgumentError.value(
+        debugOverride,
+        'debugOverride',
+        'Select at most $townResidentLimit different residents',
+      );
+    }
+    return List<TownResident>.unmodifiable(debugOverride);
+  }
+  return residents.where((resident) => resident.walkInTown)
+      .take(townResidentLimit).toList(growable: false);
+}
 const applauseResidentLimit = 8;
 
 /// Maximum spendable kotohogi; contribution totals keep growing.

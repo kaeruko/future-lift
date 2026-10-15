@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'home_skin.dart';
 import 'progress.dart';
+import 'resident_collection.dart';
 
 /// Debug-only controls for testing celebrations, currency and resets.
 class DebugMenuScreen extends StatelessWidget {
@@ -14,6 +15,9 @@ class DebugMenuScreen extends StatelessWidget {
     required this.onReplayTutorial,
     required this.onResetAll,
     required this.onAddTickets,
+    required this.debugTownResidents,
+    required this.onDebugTownEnabled,
+    required this.onDebugTownResidentChanged,
     required this.busy,
   });
 
@@ -24,6 +28,10 @@ class DebugMenuScreen extends StatelessWidget {
   final VoidCallback onReplayTutorial;
   final Future<bool> Function() onResetAll;
   final Future<bool> Function(int) onAddTickets;
+  /// Null means the normal owned-resident display is used.
+  final List<TownResident>? debugTownResidents;
+  final ValueChanged<bool> onDebugTownEnabled;
+  final void Function(TownResident, bool) onDebugTownResidentChanged;
   final bool busy;
 
   Future<void> _addTickets(BuildContext context, int amount) async {
@@ -209,6 +217,64 @@ class DebugMenuScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 8),
+                const Text(
+                  'まちに出す住民（デバッグ）',
+                  style: TextStyle(
+                    color: wood,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '未所持の住民も選べます（最大8匹）。ホームとまちに反映され、'
+                  '所持状況やガチャの結果は変わりません。'
+                  '\nアプリを終了すると設定は消えます。',
+                  style: TextStyle(color: wood, height: 1.6),
+                ),
+                SwitchListTile(
+                  key: const ValueKey('debug-town-enable'),
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('好きな住民を表示する'),
+                  subtitle: const Text('OFFで通常の所持キャラ表示に戻す'),
+                  value: debugTownResidents != null,
+                  onChanged: busy ? null : onDebugTownEnabled,
+                ),
+                if (debugTownResidents case final selected?) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      '選択中：${selected.length} / $townResidentLimit 匹',
+                      key: const ValueKey('debug-town-count'),
+                      style: const TextStyle(
+                        color: wood,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  for (final resident in TownResident.values)
+                    CheckboxListTile(
+                      key: ValueKey('debug-town-resident-${resident.id}'),
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      secondary: TownResidentAvatar(resident: resident, size: 48),
+                      title: Text(resident.label),
+                      subtitle: Text(resident.id),
+                      value: selected.contains(resident),
+                      onChanged: busy ||
+                              (!selected.contains(resident) &&
+                                  selected.length >= townResidentLimit)
+                          ? null
+                          : (checked) {
+                              if (checked != null) {
+                                onDebugTownResidentChanged(resident, checked);
+                              }
+                            },
+                    ),
+                ],
                 const SizedBox(height: 20),
                 const Divider(),
                 const SizedBox(height: 8),

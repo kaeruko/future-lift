@@ -16,12 +16,15 @@ class GameHome extends StatefulWidget {
     required this.onMissions,
     required this.onTown,
     required this.onResident,
+    this.debugTownResidents,
   });
   final Progress progress;
   final VoidCallback onMissions;
 
   final VoidCallback onTown;
   final ValueChanged<TownResident> onResident;
+  /// A temporary debug-only selection; null uses owned residents.
+  final List<TownResident>? debugTownResidents;
 
   @override
   State<GameHome> createState() => _GameHomeState();
@@ -151,7 +154,9 @@ class _GameHomeState extends State<GameHome> {
                           children: [
                             for (final (index, resident)
                                 in visibleTownResidents(
-                                    widget.progress.residents.owned).indexed)
+                                  widget.progress.residents.owned,
+                                  debugOverride: widget.debugTownResidents,
+                                ).indexed)
                               Flexible(
                                 child: Semantics(
                                   button: true,
