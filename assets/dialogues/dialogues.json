@@ -4,7 +4,7 @@
     {
       "id": "shiba_default_1",
       "residentId": "01_shiba",
-      "text": "少し体を動かすことも、毎日のセルフケアになるんだって。",
+      "text": "わんわん！おさんぽだいすきわん！",
       "priority": 0,
       "once": false,
       "logic": "all",
@@ -332,7 +332,7 @@
       "id": "026_farmer_002",
       "residentId": "026_farmer",
       "text": "おやすみくん。農業をやらんかね。",
-      "priority": 60,
+      "priority": 10,
       "once": false,
       "logic": "all",
       "conditions": [
@@ -402,6 +402,48 @@
         {
           "type": "townTogether",
           "otherResidentId": "027_daydreamer"
+        }
+      ]
+    },
+    {
+      "id": "036_mosa_001",
+      "residentId": "036_mosa",
+      "text": "拙者は猛者江戸（モサエド）というサムライにござる。よろしく頼むでござる！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_002",
+      "residentId": "036_mosa",
+      "text": "足腰こそ武士の命！ 日々の鍛錬が肝要でござる",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_003",
+      "residentId": "036_mosa",
+      "text": "拙者のしっぽは、正直者でござる。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_004",
+      "residentId": "036_mosa",
+      "text": "転ばぬ先の筋力でござる！",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "strength",
+          "minCount": 1
         }
       ]
     }

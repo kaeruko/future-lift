@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 4,
   "characters": [
     {
       "key": "shiba",
@@ -9,8 +9,7 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": "",
-      "homeAreaId": "plaza"
+      "profile": ""
     },
     {
       "key": "rabbit",
@@ -20,8 +19,7 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": "",
-      "homeAreaId": "plaza"
+      "profile": ""
     },
     {
       "key": "penguin",
@@ -31,8 +29,7 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": "",
-      "homeAreaId": "plaza"
+      "profile": ""
     },
     {
       "key": "cat",
@@ -42,8 +39,7 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": "",
-      "homeAreaId": "shopping"
+      "profile": ""
     },
     {
       "key": "squirrel",
@@ -53,8 +49,7 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": "",
-      "homeAreaId": "park"
+      "profile": ""
     },
     {
       "key": "bear",
@@ -64,8 +59,7 @@
       "inGacha": true,
       "walkInTown": true,
       "nextDialogueNumber": 1,
-      "profile": "",
-      "homeAreaId": "park"
+      "profile": ""
     },
     {
       "key": "c009_chef",
@@ -75,8 +69,7 @@
       "nextDialogueNumber": 5,
       "inGacha": true,
       "walkInTown": true,
-      "profile": "",
-      "homeAreaId": "shopping"
+      "profile": ""
     },
     {
       "key": "c026_farmer",
@@ -86,8 +79,7 @@
       "artFolder": "026_farmer",
       "nextDialogueNumber": 3,
       "inGacha": true,
-      "walkInTown": true,
-      "homeAreaId": "village"
+      "walkInTown": true
     },
     {
       "key": "c027_daydreamer",
@@ -97,8 +89,7 @@
       "artFolder": "027_daydreamer",
       "nextDialogueNumber": 3,
       "inGacha": true,
-      "walkInTown": true,
-      "homeAreaId": "village"
+      "walkInTown": true
     },
     {
       "key": "c032_miner",
@@ -108,8 +99,17 @@
       "artFolder": "032_miner",
       "nextDialogueNumber": 6,
       "inGacha": true,
-      "walkInTown": true,
-      "homeAreaId": "shopping"
+      "walkInTown": true
+    },
+    {
+      "key": "c036_mosa",
+      "id": "036_mosa",
+      "label": "モサエド",
+      "profile": "拙者、猛者江戸（モサエド）と申す！",
+      "artFolder": "036_mosa",
+      "nextDialogueNumber": 5,
+      "inGacha": true,
+      "walkInTown": true
     }
   ]
 }
