@@ -15,8 +15,9 @@
   .\Split-KotohoguSpritesBatch.ps1 -InputDirectory 'C:\sprites' -OutputRoot 'C:\output'
 .NOTES
   ImageMagick 7 の magick コマンドが必要です。
-  -SkipExisting は同名の出力フォルダとZIPの両方がある場合にだけスキップします。
-  片方しか存在しない場合は不完全な出力の可能性があるため停止します。
+  -SkipExisting は完成済みの出力フォルダがある場合にスキップします（ZIPは任意）。
+  ファイル一覧を検証し、欠損がある場合は停止します。ZIPだけがある場合も停止します。
+  フォルダだけがある場合、ZIPは新規作成しません。
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -59,6 +60,51 @@ if ($inputs.Count -eq 0) {
     throw "対象PNGがありません。必要な名前形式: 014_construction_worker.png (入力先: $($inputItem.FullName))"
 }
 
+# -SkipExisting でスキップする前に、元スクリプトが生成する成果物がそろっているか検証する。
+# 既存フォルダが不完全な場合は暗黙にやり直したり無視したりせず停止する。
+function Assert-CompleteSpriteOutput {
+    param(
+        [Parameter(Mandatory = $true)][string] $Directory,
+        [Parameter(Mandatory = $true)][string] $Name
+    )
+
+    if (-not (Test-Path -LiteralPath $Directory -PathType Container)) {
+        throw "既存の出力先がフォルダではありません: $Directory"
+    }
+
+    $required = @(
+        'README.txt',
+        'idle_front_01.png',
+        'clap_front_01.png',
+        'clap_front_02.png',
+        "${Name}_sheet_4x4.png",
+        'preview_walk_front.gif',
+        'preview_walk_back.gif',
+        'preview_walk_right.gif',
+        'preview_clap.gif'
+    )
+    foreach ($direction in @('front', 'back', 'right', 'left')) {
+        for ($frame = 1; $frame -le 4; $frame++) {
+            $required += ("walk_${direction}_{0:D2}.png" -f $frame)
+        }
+    }
+
+    foreach ($fileName in $required) {
+        $filePath = Join-Path $Directory $fileName
+        if (-not (Test-Path -LiteralPath $filePath -PathType Leaf)) {
+            throw "既存の出力フォルダに必要なファイルがありません: $filePath"
+        }
+        $file = Get-Item -LiteralPath $filePath -ErrorAction Stop
+        if ($file.Length -eq 0) {
+            throw "既存の出力ファイルが空です: $filePath"
+        }
+    }
+    $actualPngs = @(Get-ChildItem -LiteralPath $Directory -Filter '*.png' -File)
+    if ($actualPngs.Count -ne 20) {
+        throw "既存の出力PNGの数が想定外です: $Directory (expected=20, actual=$($actualPngs.Count))"
+    }
+}
+
 # 全入力について出力先の衝突を先に調べてから処理を開始する。
 $pending = @()
 $skipped = 0
@@ -70,13 +116,20 @@ foreach ($inputPng in $inputs) {
     $hasZip = Test-Path -LiteralPath $zip
 
     if ($hasDir -or $hasZip) {
-        if ($SkipExisting -and $hasDir -and $hasZip) {
+        if ($SkipExisting -and $hasDir) {
+            Assert-CompleteSpriteOutput -Directory $outDir -Name $name
+            if ($hasZip -and -not (Test-Path -LiteralPath $zip -PathType Leaf)) {
+                throw "ZIPのパスがファイルではありません: $zip"
+            }
+            if (-not $hasZip) {
+                Write-Warning "ZIPがありません（生成せずフォルダをスキップ）: $zip"
+            }
             Write-Host "スキップ（出力済み）: $name"
             $skipped++
             continue
         }
 
-        throw "出力先が既に存在します: $outDir / $zip。既存のフォルダとZIPの両方がある場合だけ -SkipExisting でスキップできます。"
+        throw "出力先が既に存在します: $outDir / $zip。-SkipExisting は完成済みフォルダのみスキップできます。"
     }
     $pending += $inputPng
 }
