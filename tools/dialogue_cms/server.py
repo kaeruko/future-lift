@@ -125,6 +125,18 @@ def validate(doc, residents=None):
 
 def write_document(doc):
     validate(doc)
+    # New IDs must also reserve their sequence in the character catalog.
+    # The CMS uses /api/cms for that atomic multi-file update.
+    if DATA.exists():
+        previous = json.loads(DATA.read_text(encoding="utf-8"))
+        validate(previous)
+        previous_by_id = {entry["id"]: entry["residentId"] for entry in previous["dialogues"]}
+        for entry in doc["dialogues"]:
+            old_resident = previous_by_id.get(entry["id"])
+            if old_resident is None:
+                raise ValueError("Use /api/cms to add dialogues and reserve IDs")
+            if old_resident != entry["residentId"]:
+                raise ValueError(f"Existing dialogue resident cannot change: {entry['id']}")
     DATA.parent.mkdir(parents=True, exist_ok=True)
     # Atomic overwrite after validation, never truncate the prior good file.
     payload = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"

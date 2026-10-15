@@ -53,7 +53,8 @@ nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
 <section class="panel">
   <h2>セリフ一覧 <span id="count"></span></h2>
   <label for="filter">キャラクターで絞る</label><select id="filter"></select>
-  <div class="actions"><button id="add">＋ 追加</button><button class="secondary" id="reload">保存済みを再読込</button></div>
+  <p class="hint">追加先のキャラクターを選ぶと、キャラID＋連番（例: 009_chef_001）を自動採番します。</p>
+  <div class="actions"><button id="add">＋ セリフ追加</button><button class="secondary" id="reload">保存済みを再読込</button></div>
   <div id="entries"></div>
 </section>
 <section class="panel">
@@ -81,7 +82,7 @@ nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
     <h2>登録キャラクター</h2>
     <div class="actions"><button id="addCharacter">＋ キャラ追加</button></div>
     <div id="characterEntries"></div>
-    <p class="hint">登録済みキャラのID・画像フォルダは、セーブデータを守るため変更できません。</p>
+    <p class="hint">登録済みキャラのID・画像フォルダは、セーブデータを守るため変更できません。セリフの連番もキャラごとに保存されます。</p>
   </section>
   <section class="panel">
     <h2>キャラクター設定</h2>
@@ -113,7 +114,22 @@ function labelControl(parent,title,tag,value,onChange,attributes={}){
   return control;
 }
 function setStatus(message,error=false){const e=byId("status");e.textContent=message;e.className="status"+(error?" error":"")}
-function fresh(){return{id:"line_"+Date.now(),residentId:registry.characters[0].id,text:"新しいセリフ",priority:10,once:false,logic:"all",conditions:[]}}
+function allocateDialogueId(row){
+  if(!row||!Number.isSafeInteger(row.nextDialogueNumber)||
+      row.nextDialogueNumber<1||row.nextDialogueNumber>=1000000000)
+    throw Error("セリフの連番が不正です: "+(row?.id||"unknown"));
+  if(!/^[0-9]{2,}_[a-z][a-z0-9_]*$/.test(row.id))
+    throw Error("先に正しいキャラIDを設定してください: "+row.id);
+  const id=row.id+"_"+String(row.nextDialogueNumber).padStart(3,"0");
+  if(id.length>80)throw Error("セリフIDは80文字以内にしてください: "+id);
+  if(data.dialogues.some(line=>line.id===id))throw Error("セリフIDが重複しています: "+id);
+  row.nextDialogueNumber++;
+  return id;
+}
+function fresh(row){
+  const id=allocateDialogueId(row);
+  return{id,residentId:row.id,text:"新しいセリフ",priority:10,once:false,logic:"all",conditions:[]};
+}
 function current(){if(selected===null)return null;return data.dialogues.find(e=>e.id===selected)||null}
 function refresh(){
   const filter=byId("filter").value;
@@ -132,11 +148,9 @@ function refresh(){
 function renderEditor(){
   const area=byId("editor");area.replaceChildren();const entry=current();
   if(!entry){append(area,"p","セリフを選択してください。");return}
-  const idBox=labelControl(area,"セリフID（変更後も重複不可）","input",entry.id,v=>{
-    entry.id=v;selected=v;refresh();
-  });
-  idBox.autocomplete="off";
-  labelControl(area,"キャラクター","select",entry.residentId,v=>{entry.residentId=v;refresh()},{options:residents});
+  append(area,"p","セリフID（自動採番・変更不可）");
+  const idDisplay=append(area,"code",entry.id);idDisplay.style.display="block";idDisplay.style.marginBottom="12px";idDisplay.style.overflowWrap="anywhere";
+  append(area,"p","キャラクター: "+residents[entry.residentId]);
   labelControl(area,"セリフ","textarea",entry.text,v=>{entry.text=v;});
   const line=append(area,"div");line.className="row";
   labelControl(line,"優先順位（大きいほど優先）","input",entry.priority,v=>{entry.priority=Number(v)},{type:"number"});
@@ -258,7 +272,17 @@ function renderCharacterEditor(){
         row.artFolder=value;
         const folderHint=byId("characterArtFolderHint");
         if(folderHint)folderHint.textContent=`画像フォルダ: assets/characters/${row.artFolder}/（IDから自動設定）`;
-        for(const dialogue of data.dialogues)if(dialogue.residentId===oldId)dialogue.residentId=value;
+        const attached=data.dialogues.filter(dialogue=>dialogue.residentId===oldId);
+        for(const dialogue of attached){
+          const prefix=oldId+"_";
+          if(!dialogue.id.startsWith(prefix)||
+              !/^[0-9]{3,}$/.test(dialogue.id.slice(prefix.length)))
+            throw Error("新規キャラのセリフIDを自動更新できません: "+dialogue.id);
+          const changed=value+"_"+dialogue.id.slice(prefix.length);
+          if(selected===dialogue.id)selected=changed;
+          dialogue.id=changed;
+          dialogue.residentId=value;
+        }
         characterSelected=value;
       }
       dirty=true;
@@ -280,7 +304,7 @@ function renderCharacterEditor(){
     append(label,"span",title);
     input.onchange=()=>{row[field]=input.checked;dirty=true;renderCharacterList();setCharacterStatus("未保存の変更があります")};
   }
-  if(!locked)append(box,"p","最初のセリフはセリフ管理タブで編集できます。通常セリフを1件以上残してください。").className="hint";
+  if(!locked)append(box,"p","最初のセリフはセリフ管理タブで編集できます。条件なしセリフを1件以上残してください。").className="hint";
   byId("cancelNewCharacter").disabled=locked;
 }
 async function load(){
@@ -307,7 +331,13 @@ function setTab(tab){
   byId("showDialogues").setAttribute("aria-selected",tab==="dialogues");
 }
 byId("showCharacters").onclick=()=>setTab("characters");
-byId("showDialogues").onclick=()=>setTab("dialogues");
+byId("showDialogues").onclick=()=>{
+  setTab("dialogues");
+  if(registry&&residents[characterSelected]){
+    byId("filter").value=characterSelected;
+    refresh();
+  }
+};
 byId("addCharacter").onclick=()=>{
   if(!registry)return;
   const used=new Set(registry.characters.flatMap(row=>[row.id,row.artFolder]));
@@ -315,10 +345,12 @@ byId("addCharacter").onclick=()=>{
   let id=String(number).padStart(3,"0")+"_new";
   while(used.has(id)){number++;id=String(number).padStart(3,"0")+"_new"}
   const row={key:"c"+id,id,label:"新しい住民",artFolder:id,
-    inGacha:true,walkInTown:true};
+    nextDialogueNumber:1,inGacha:true,walkInTown:true};
+  const firstLine=fresh(row);
+  firstLine.text="こんにちは！よろしくね。";
+  firstLine.priority=0;
   registry.characters.push(row);
-  data.dialogues.push({id:id+"_default",residentId:row.id,
-    text:"こんにちは！よろしくね。",priority:0,once:false,logic:"all",conditions:[]});
+  data.dialogues.push(firstLine);
   characterSelected=row.id;dirty=true;
   rebuildResidentOptions();renderCharacterList();renderCharacterEditor();
   setCharacterStatus("新しい住民を追加しました。名前・ID・セリフを設定してください。画像フォルダ名とDart識別子は自動設定されます。");
@@ -347,8 +379,17 @@ async function saveAll(){
 }
 byId("saveCharacters").onclick=saveAll;
 byId("add").onclick=()=>{
-  const entry=fresh();data.dialogues.push(entry);selected=entry.id;
-  byId("filter").value="all";dirty=true;refresh();setStatus("未保存の変更があります");
+  try{
+    if(!registry||!data)throw Error("データが読み込まれていません");
+    const residentId=byId("filter").value;
+    if(residentId==="all")throw Error("先に「キャラクターで絞る」から追加先を選んでください");
+    const row=registry.characters.find(row=>row.id===residentId);
+    if(!row)throw Error("キャラクターが見つかりません: "+residentId);
+    const entry=fresh(row);
+    data.dialogues.push(entry);
+    selected=entry.id;dirty=true;refresh();
+    setStatus("セリフID「"+entry.id+"」を採番しました。保存してください。");
+  }catch(err){setStatus("追加エラー: "+err.message,true)}
 };
 byId("delete").onclick=()=>{
   const entry=current();if(!entry||!confirm("削除しますか？ "+entry.id))return;

@@ -20,7 +20,7 @@ DART_START = "  // BEGIN CMS RESIDENTS"
 DART_END = "  // END CMS RESIDENTS"
 ASSETS_START = "    # BEGIN CMS CHARACTER ASSETS"
 ASSETS_END = "    # END CMS CHARACTER ASSETS"
-FIELDS = {"key", "id", "label", "artFolder", "inGacha", "walkInTown"}
+FIELDS = {"key", "id", "label", "artFolder", "inGacha", "walkInTown", "nextDialogueNumber"}
 DIRECTIONS = ("front", "back", "left", "right")
 
 
@@ -31,7 +31,7 @@ def load_catalog():
 def validate_catalog(document, previous=None, *, characters_root=None):
     if not isinstance(document, dict) or set(document) != {"version", "characters"}:
         raise ValueError("Invalid character catalog root")
-    if type(document["version"]) is not int or document["version"] != 2:
+    if type(document["version"]) is not int or document["version"] != 3:
         raise ValueError("Unsupported character catalog version")
     characters = document["characters"]
     if not isinstance(characters, list) or not 1 <= len(characters) <= 64:
@@ -45,7 +45,7 @@ def validate_catalog(document, previous=None, *, characters_root=None):
         if not isinstance(key, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", key):
             raise ValueError(f"Invalid character key at row {index}")
         if key in {"values", "index", "name", "byName", "id", "label", "artFolder",
-                   "inGacha", "walkInTown", "gachaPool",
+                   "inGacha", "walkInTown", "nextDialogueNumber", "gachaPool",
                    "abstract", "as", "assert", "async", "await", "base", "break",
                    "case", "catch", "class", "const", "continue", "covariant",
                    "default", "deferred", "do", "dynamic", "else", "enum",
@@ -69,6 +69,8 @@ def validate_catalog(document, previous=None, *, characters_root=None):
             raise ValueError(f"Invalid resident name at row {index}")
         if type(row["inGacha"]) is not bool or type(row["walkInTown"]) is not bool:
             raise ValueError(f"Invalid resident flags at row {index}")
+        if type(row["nextDialogueNumber"]) is not int or not 1 <= row["nextDialogueNumber"] <= 1000000000:
+            raise ValueError(f"Invalid next dialogue number for {identifier}")
         if identifier in ids or key in keys or folder in folders:
             raise ValueError(f"Duplicate resident ID, key, or sprite folder at row {index}")
         ids.add(identifier)
@@ -97,7 +99,33 @@ def validate_catalog(document, previous=None, *, characters_root=None):
             new = characters[index]
             if any(old[field] != new[field] for field in ("key", "id", "artFolder")):
                 raise ValueError(f"Existing resident identity cannot change: {old['id']}")
+            if new["nextDialogueNumber"] < old["nextDialogueNumber"]:
+                raise ValueError(f"Dialogue number cannot decrease: {old['id']}")
     return document
+
+
+def validate_dialogue_ids(catalog, dialogues, previous_catalog, previous_dialogues):
+    """Keep persisted IDs stable and never allocate retired dialogue numbers."""
+    old_entries = {entry["id"]: entry["residentId"]
+                   for entry in previous_dialogues["dialogues"]}
+    current_rows = {row["id"]: row for row in catalog["characters"]}
+    old_rows = {row["id"]: row for row in previous_catalog["characters"]}
+    for entry in dialogues["dialogues"]:
+        identifier = entry["id"]
+        resident_id = entry["residentId"]
+        if identifier in old_entries and old_entries[identifier] != resident_id:
+            raise ValueError(f"Existing dialogue resident cannot change: {identifier}")
+        row = current_rows[resident_id]
+        prefix = resident_id + "_"
+        suffix = identifier[len(prefix):] if identifier.startswith(prefix) else ""
+        numbered = re.fullmatch(r"[0-9]{3,}", suffix) is not None
+        if identifier not in old_entries:
+            if not numbered or int(suffix) < 1 or suffix != str(int(suffix)).zfill(3):
+                raise ValueError(f"New dialogue ID must use character ID and serial: {identifier}")
+            if resident_id in old_rows and int(suffix) < old_rows[resident_id]["nextDialogueNumber"]:
+                raise ValueError(f"Dialogue number already reserved: {identifier}")
+        if numbered and int(suffix) >= row["nextDialogueNumber"]:
+            raise ValueError(f"Dialogue number was not reserved: {identifier}")
 
 
 def replace_section(source, start, end, lines):
@@ -185,6 +213,9 @@ def save_catalog_and_dialogues(payload, validate_dialogues):
     catalog = validate_catalog(payload["characters"], previous=previous)
     ids = {row["id"] for row in catalog["characters"]}
     dialogues = validate_dialogues(payload["dialogues"], residents=ids)
+    previous_dialogues = json.loads(DIALOGUES.read_text(encoding="utf-8"))
+    validate_dialogues(previous_dialogues, residents={row["id"] for row in previous["characters"]})
+    validate_dialogue_ids(catalog, dialogues, previous, previous_dialogues)
     dart = generate_dart(DART.read_text(encoding="utf-8"), catalog["characters"])
     pubspec = generate_pubspec(PUBSPEC.read_text(encoding="utf-8"), catalog["characters"])
     commit_files({

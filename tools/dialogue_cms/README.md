@@ -15,7 +15,7 @@ python tools/dialogue_cms/server.py
 
 ## できること
 
-- キャラ別のセリフを追加・修正・削除（会話と豆知識を区別せず、同じ条件で出し分け）
+- キャラ別のセリフを追加・修正・削除（セリフIDはキャラID＋連番で自動発行。会話・豆知識の区別なし）
 - 累計ミッション回数（合計・種類別）、ことほぎによる表示条件
 - 指定日・指定期間・毎年の指定日・毎年の期間・曜日による表示条件
 - 条件の AND / OR、優先順位、初回のみのセリフ
@@ -26,8 +26,8 @@ python tools/dialogue_cms/server.py
 
 ```powershell
 git status
-git add assets/dialogues/dialogues.json
-git commit -m "Update dialogue content"
+git add assets/dialogues/dialogues.json assets/characters/characters.json
+git commit -m "Update dialogue content and sequence counters"
 git push
 ```
 
@@ -58,6 +58,20 @@ git push
 
 編集画面の条件プレビューは、閲覧済みのセリフIDを持たない仮ユーザーとして判定します。
 
+## セリフIDの自動採番
+
+セリフ管理タブで「キャラクターで絞る」から追加先を選び、「＋ セリフ追加」を押すと
+`キャラID_連番` を自動発行します（例: `009_chef_001`, `009_chef_002`）。
+番号は各キャラで独立しており、最低3桁のゼロ埋めです（1000件目は4桁）。
+セリフID・所属キャラはセーブデータと閲覧済み記録の参照に使うため変更不可。
+既存の `shiba_default_1` などの旧IDは変更せずに残します。
+
+登録済みキャラの `nextDialogueNumber` は `assets/characters/characters.json` に
+保存し、削除したセリフの番号も再利用しません。キャラの名前や、日付・ミッション条件、
+セリフ本文、優先順位などは通常どおり編集できます。
+CMS保存時はIDと連番が整合するか検証し、食い違いがあれば保存しません。
+
+
 ## 安全性
 
 サーバーは `127.0.0.1` のみに待ち受け、PUTを同一オリジンに制限します。データはJSON検証後に一時ファイルへ書き、原子的に差し替えます。GitHubへの変更はCMSが自動では実行しません。
@@ -72,7 +86,7 @@ git push
 名前・安定したキャラID（例: `009_chef`）・ガチャ登場・まちを歩くを指定します。
 新規キャラは画像フォルダをIDと同じ名前にし、Dart識別子は `c` + ID（例: `c009_chef`）で自動生成します。
 IDは数字2桁以上とアンダースコア・英小文字の名前で構成します。
-セリフ管理タブには、そのキャラの条件なしセリフが自動追加されています。会話も豆知識も同じセリフ欄から登録し、必要な条件を付けてください。
+セリフ管理タブには、そのキャラの `キャラID_001` という条件なしセリフが自動追加されています。会話も豆知識も同じセリフ欄から登録し、必要な条件を付けてください。
 
 各フォルダには `idle_front_01.png`、`clap_front_01.png` と
 `clap_front_02.png`、上下左右それぞれ `walk_<方向>_01.png`〜
@@ -80,7 +94,7 @@ IDは数字2桁以上とアンダースコア・英小文字の名前で構成�
 例: `assets/characters/009_chef/`。フォルダがない場合や画像不足は保存エラーとなります。
 
 キャラ設定に「Tipsの元キャラ」はありません。すべてのセリフは `assets/dialogues/dialogues.json` だけで管理します（セリフJSONは引き続きversion 1）。
-キャラ定義JSONは不要な `tipSource` を削除したversion 2になりました。
+キャラ定義JSONは不要な `tipSource` を削除済みで、採番カウンターを追加したversion 3になりました。
 
 保存は `assets/characters/characters.json` と
 `assets/dialogues/dialogues.json` に加えて、

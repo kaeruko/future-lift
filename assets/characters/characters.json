@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "characters": [
     {
       "key": "shiba",
@@ -7,7 +7,8 @@
       "label": "しばいぬ",
       "artFolder": "001_shiba",
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "nextDialogueNumber": 1
     },
     {
       "key": "rabbit",
@@ -15,7 +16,8 @@
       "label": "うさぎ",
       "artFolder": "002_usagi",
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "nextDialogueNumber": 1
     },
     {
       "key": "penguin",
@@ -23,7 +25,8 @@
       "label": "ペンギン",
       "artFolder": "003_penguin",
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "nextDialogueNumber": 1
     },
     {
       "key": "cat",
@@ -31,7 +34,8 @@
       "label": "ねこ",
       "artFolder": "004_neko",
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "nextDialogueNumber": 1
     },
     {
       "key": "squirrel",
@@ -39,7 +43,8 @@
       "label": "りす",
       "artFolder": "005_risu",
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "nextDialogueNumber": 1
     },
     {
       "key": "bear",
@@ -47,7 +52,8 @@
       "label": "くま",
       "artFolder": "006_kuma",
       "inGacha": true,
-      "walkInTown": true
+      "walkInTown": true,
+      "nextDialogueNumber": 1
     }
   ]
 }

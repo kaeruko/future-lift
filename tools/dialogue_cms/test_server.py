@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from server import validate, write_document
 from characters import (load_catalog, validate_catalog, generate_dart, generate_pubspec,
-                        DART, PUBSPEC, save_catalog_and_dialogues)
+                        DART, PUBSPEC, save_catalog_and_dialogues, validate_dialogue_ids)
 
 
 def sample():
@@ -50,7 +50,7 @@ class CmsTests(unittest.TestCase):
         modified = copy.deepcopy(original)
         modified["characters"].append({
             "key": "c999_owl", "id": "999_owl", "label": "ふくろう",
-            "artFolder": "999_owl",
+            "artFolder": "999_owl", "nextDialogueNumber": 2,
             "inGacha": True, "walkInTown": True
         })
         with self.assertRaisesRegex(ValueError, "Sprite folder"):
@@ -67,7 +67,7 @@ class CmsTests(unittest.TestCase):
         modified = copy.deepcopy(original)
         modified["characters"].append({
             "key": "c009_chef", "id": "009_chef", "label": "シェフ",
-            "artFolder": "009_chef",
+            "artFolder": "009_chef", "nextDialogueNumber": 2,
             "inGacha": True, "walkInTown": True
         })
         validate_catalog(modified, previous=original)
@@ -78,6 +78,58 @@ class CmsTests(unittest.TestCase):
             mismatched["characters"][-1][field] = value
             with self.subTest(field=field), self.assertRaisesRegex(ValueError, "derived from ID"):
                 validate_catalog(mismatched, previous=original)
+
+    def test_dialogue_serials_preserve_existing_ids_and_retired_numbers(self):
+        original = load_catalog()
+        modified = copy.deepcopy(original)
+        modified["characters"][0]["nextDialogueNumber"] = 3
+        dialogues = sample()
+        dialogues["dialogues"].append({
+            "id": "01_shiba_001", "residentId": "01_shiba",
+            "text": "新しい話", "priority": 0, "once": False,
+            "logic": "all", "conditions": [],
+        })
+        dialogues["dialogues"].append({
+            "id": "01_shiba_002", "residentId": "01_shiba",
+            "text": "次の話", "priority": 0, "once": False,
+            "logic": "all", "conditions": [],
+        })
+        validate_catalog(modified, previous=original)
+        validate(dialogues)
+        validate_dialogue_ids(modified, dialogues, original, sample())
+
+        not_reserved = copy.deepcopy(modified)
+        not_reserved["characters"][0]["nextDialogueNumber"] = 2
+        with self.assertRaisesRegex(ValueError, "not reserved"):
+            validate_dialogue_ids(not_reserved, dialogues, original, sample())
+
+        previously_reserved = copy.deepcopy(original)
+        previously_reserved["characters"][0]["nextDialogueNumber"] = 3
+        future = copy.deepcopy(previously_reserved)
+        future["characters"][0]["nextDialogueNumber"] = 4
+        new_dialogues = sample()
+        new_dialogues["dialogues"].append({
+            "id": "01_shiba_002", "residentId": "01_shiba",
+            "text": "削除済み番号の再利用", "priority": 0, "once": False,
+            "logic": "all", "conditions": [],
+        })
+        with self.assertRaisesRegex(ValueError, "already reserved"):
+            validate_dialogue_ids(future, new_dialogues, previously_reserved, sample())
+
+        renamed = copy.deepcopy(dialogues)
+        renamed["dialogues"][0]["residentId"] = "02_rabbit"
+        with self.assertRaisesRegex(ValueError, "resident cannot change"):
+            validate_dialogue_ids(modified, renamed, original, sample())
+
+        invalid = copy.deepcopy(dialogues)
+        invalid["dialogues"][-1]["id"] = "line_123"
+        with self.assertRaisesRegex(ValueError, "character ID and serial"):
+            validate_dialogue_ids(modified, invalid, original, sample())
+
+        rollback_counter = copy.deepcopy(original)
+        rollback_counter["characters"][0]["nextDialogueNumber"] = 3
+        with self.assertRaisesRegex(ValueError, "cannot decrease"):
+            validate_catalog(original, previous=rollback_counter)
 
     def test_bad_catalog_keeps_files_intact(self):
         original = load_catalog()
@@ -91,7 +143,7 @@ class CmsTests(unittest.TestCase):
 
     def test_character_catalog_has_no_tip_source_or_dialogue_kinds(self):
         registry = validate_catalog(load_catalog())
-        self.assertEqual(registry["version"], 2)
+        self.assertEqual(registry["version"], 3)
         for resident in registry["characters"]:
             self.assertNotIn("tipSource", resident)
         invalid = copy.deepcopy(registry)
@@ -136,6 +188,22 @@ class CmsTests(unittest.TestCase):
                     write_document(invalid)
                 self.assertEqual(target.read_bytes(), prior)
                 self.assertEqual(json.loads(prior)["version"], 1)
+
+    def test_dialogue_only_endpoint_cannot_allocate_without_counter(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "dialogues.json"
+            with patch("server.DATA", target):
+                write_document(sample())
+                before = target.read_bytes()
+                modified = sample()
+                modified["dialogues"].append({
+                    "id": "01_shiba_001", "residentId": "01_shiba",
+                    "text": "新しい話", "priority": 0, "once": False,
+                    "logic": "all", "conditions": [],
+                })
+                with self.assertRaisesRegex(ValueError, "Use /api/cms"):
+                    write_document(modified)
+                self.assertEqual(target.read_bytes(), before)
 
     def test_every_resident_needs_fallback_line(self):
         doc = sample()
