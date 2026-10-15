@@ -205,12 +205,13 @@ void main() {
     progress = progress.acquireResident(TownResident.penguin);
     expect(progress.residents.owned.length, TownResident.values.length);
     expect(progress.residents.counts['03_penguin'], 2);
-    expect(progress.residents.tickets(240), 8 - (TownResident.values.length - 2));
+    // The repeated penguin draw also costs one ticket.
+    expect(progress.residents.tickets(240), 8 - (TownResident.values.length - 1));
     progress = progress
         .complete(Mission.strength)
         .complete(Mission.outside)
         .complete(Mission.conversation);
-    expect(progress.residents.tickets(270), 9 - (TownResident.values.length - 2));
+    expect(progress.residents.tickets(270), 9 - (TownResident.values.length - 1));
     expect(Progress.decode(progress.encode()).residents.owned.length,
         TownResident.values.length);
   });

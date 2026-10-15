@@ -181,7 +181,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(BottomSheet),
-        matching: find.text('ペンギン'),
+        matching: find.text(TownResident.penguin.label),
       ),
       findsOneWidget,
     );
@@ -194,7 +194,7 @@ void main() {
       tester.widget<Semantics>(
         find.byKey(const ValueKey('gacha-result')),
       ).properties.label,
-      'ペンギンとまた出会いました！',
+      '${TownResident.penguin.label}とまた出会いました！',
     );
     expect(find.byKey(const ValueKey('gacha-reunion-badge')),
         findsOneWidget);
@@ -219,7 +219,7 @@ void main() {
       tester.widget<Text>(
         find.byKey(const ValueKey('gacha-banner-resident-name')),
       ).data,
-      'ペンギン',
+      TownResident.penguin.label,
     );
     expect(controller.progress!.residents.counts['03_penguin'], 2);
     expect(controller.progress!.residents.availableKotohogi(60), 0);
