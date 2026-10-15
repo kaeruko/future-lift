@@ -1,7 +1,7 @@
-import 'dart:ui' as ui;
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/resident_collection.dart';
 import 'package:future_lift/town_area_navigator.dart';
@@ -19,33 +19,19 @@ void main() {
     expect(TownArea.village.isUnlocked(300), true);
   });
 
-  testWidgets('source dimensions match bundled backgrounds exactly',
-      (tester) async {
+  test('source dimensions match bundled backgrounds exactly', () {
     for (final area in TownArea.values) {
-      if (area.backgroundAsset == null) {
+      final asset = area.backgroundAsset;
+      if (asset == null) {
         expect(area.sourceWidth, isNull);
         expect(area.sourceHeight, isNull);
         continue;
       }
-      expect(area.sourceWidth, greaterThan(0));
-      expect(area.sourceHeight, greaterThan(0));
-      final data = await rootBundle.load(area.backgroundAsset!);
-      final bytes = data.buffer.asUint8List(
-        data.offsetInBytes, data.lengthInBytes);
-      final codec = await ui.instantiateImageCodec(bytes);
-      try {
-        final frame = await codec.getNextFrame();
-        try {
-          expect(frame.image.width, area.sourceWidth,
-              reason: '${area.id} background width');
-          expect(frame.image.height, area.sourceHeight,
-              reason: '${area.id} background height');
-        } finally {
-          frame.image.dispose();
-        }
-      } finally {
-        codec.dispose();
-      }
+      final pixels = _imageDimensions(File(asset).readAsBytesSync());
+      expect(pixels.$1, area.sourceWidth,
+          reason: '${area.id} background width');
+      expect(pixels.$2, area.sourceHeight,
+          reason: '${area.id} background height');
     }
   });
 
@@ -107,4 +93,58 @@ void main() {
         findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
+}
+
+/// Read only the PNG IHDR / JPEG SOF size fields; no asynchronous image
+/// decoding or test-engine frame scheduling is involved.
+(int, int) _imageDimensions(Uint8List data) {
+  if (data.length < 24) {
+    throw const FormatException('Image is too short for dimension metadata');
+  }
+  final header = ByteData.sublistView(data);
+  const png = [137, 80, 78, 71, 13, 10, 26, 10];
+  if (List.generate(8, (i) => data[i]).toString() == png.toString()) {
+    if (String.fromCharCodes(data.sublist(12, 16)) != 'IHDR') {
+      throw const FormatException('PNG has no IHDR header');
+    }
+    return (
+      header.getUint32(16, Endian.big),
+      header.getUint32(20, Endian.big),
+    );
+  }
+  if (data[0] == 0xff && data[1] == 0xd8) {
+    var index = 2;
+    while (index + 4 < data.length) {
+      if (data[index] != 0xff) {
+        throw FormatException('Invalid JPEG marker at byte $index');
+      }
+      while (index < data.length && data[index] == 0xff) {
+        index++;
+      }
+      if (index >= data.length) break;
+      final marker = data[index++];
+      if (marker == 0xd9 || marker == 0xda) break;
+      if (marker == 0x01 || marker >= 0xd0 && marker <= 0xd7) {
+        continue;
+      }
+      if (index + 2 > data.length) break;
+      final length = header.getUint16(index, Endian.big);
+      if (length < 2 || index + length > data.length) {
+        throw FormatException('Invalid JPEG segment length: $length');
+      }
+      if ((marker >= 0xc0 && marker <= 0xc3) ||
+          (marker >= 0xc5 && marker <= 0xc7) ||
+          (marker >= 0xc9 && marker <= 0xcb) ||
+          (marker >= 0xcd && marker <= 0xcf)) {
+        if (length < 7) throw const FormatException('Invalid JPEG SOF');
+        return (
+          header.getUint16(index + 5, Endian.big),
+          header.getUint16(index + 3, Endian.big),
+        );
+      }
+      index += length;
+    }
+    throw const FormatException('JPEG has no supported SOF segment');
+  }
+  throw const FormatException('Only PNG and JPEG town art is supported');
 }
