@@ -24,10 +24,15 @@ MISSIONS = {
 
 
 def require_keys(obj, keys, location, optional=frozenset()):
-    if (not isinstance(obj, dict) or
-            set(obj).difference(set(keys) | set(optional)) or
-            set(keys).difference(obj)):
-        raise ValueError(f"{location}: invalid fields")
+    if not isinstance(obj, dict):
+        raise ValueError(
+            f"{location}: expected a JSON object, got {type(obj).__name__}")
+    present = set(obj)
+    missing = sorted(set(keys) - present)
+    unexpected = sorted(present - (set(keys) | set(optional)))
+    if missing or unexpected:
+        raise ValueError(
+            f"{location}: invalid fields; missing={missing}, unexpected={unexpected}")
 
 
 def whole_number(value, minimum, maximum):

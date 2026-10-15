@@ -158,6 +158,21 @@ class CmsTests(unittest.TestCase):
             self.assertIn("conditions", entry)
         validate(dialogues)
 
+    def test_invalid_dialogue_fields_report_exact_missing_and_extra_keys(self):
+        extra = sample()
+        extra["dialogues"][0]["kind"] = "normal"
+        with self.assertRaisesRegex(
+                ValueError,
+                r"dialogues\[0\]: invalid fields; missing=\[\], unexpected=\['kind'\]"):
+            validate(extra)
+
+        missing = sample()
+        del missing["dialogues"][0]["logic"]
+        with self.assertRaisesRegex(
+                ValueError,
+                r"dialogues\[0\]: invalid fields; missing=\['logic'\], unexpected=\[\]"):
+            validate(missing)
+
     def test_valid_bundled_content(self):
         validate(sample())
 
