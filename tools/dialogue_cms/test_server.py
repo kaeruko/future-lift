@@ -20,7 +20,8 @@ def sample():
 class CmsTests(unittest.TestCase):
     def test_character_registry_and_generated_files(self):
         registry = validate_catalog(load_catalog())
-        self.assertEqual(len(registry["characters"]), 7)
+        # New residents are appended over time; preserve the original seven.
+        self.assertGreaterEqual(len(registry["characters"]), 7)
         self.assertEqual(generate_dart(DART.read_text("utf-8"), registry["characters"]),
                          DART.read_text("utf-8"))
         self.assertEqual(generate_pubspec(PUBSPEC.read_text("utf-8"), registry["characters"]),
