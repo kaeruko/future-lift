@@ -446,6 +446,162 @@
           "minCount": 1
         }
       ]
+    },
+    {
+      "id": "036_mosa_005",
+      "residentId": "036_mosa",
+      "text": "今日もよき日でござるな！",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_006",
+      "residentId": "036_mosa",
+      "text": "むむっ、何やら楽しげな気配！",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_007",
+      "residentId": "036_mosa",
+      "text": "なでなで……？ ぶ、武士にそのような……もっと頼むでござる。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_008",
+      "residentId": "036_mosa",
+      "text": "片足立ちも立派な修行でござるぞ。転ばぬよう、支えのある所でな。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_009",
+      "residentId": "036_mosa",
+      "text": "歩くことは、未来の自分を守ることでござる。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1
+        }
+      ]
+    },
+    {
+      "id": "036_mosa_010",
+      "residentId": "036_mosa",
+      "text": "休む勇気も、武士の心得でござる。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_011",
+      "residentId": "036_mosa",
+      "text": "あっぱれ！ 見事な働きでござる！",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "all",
+          "minCount": 1
+        }
+      ]
+    },
+    {
+      "id": "036_mosa_012",
+      "residentId": "036_mosa",
+      "text": "天晴れ、天晴れ！ 拙者も鼻が高い！",
+      "priority": 20,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "all",
+          "minCount": 10
+        }
+      ]
+    },
+    {
+      "id": "036_mosa_013",
+      "residentId": "036_mosa",
+      "text": "小さな一歩も、積もれば大功でござる！",
+      "priority": 20,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "all",
+          "minCount": 5
+        }
+      ]
+    },
+    {
+      "id": "036_mosa_014",
+      "residentId": "036_mosa",
+      "text": "その努力、拙者しかと見届けた！",
+      "priority": 20,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "strength",
+          "minCount": 5
+        }
+      ]
+    },
+    {
+      "id": "036_mosa_015",
+      "residentId": "036_mosa",
+      "text": "拙者、剣の道一筋！ ……おやつは別腹でござる。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_016",
+      "residentId": "036_mosa",
+      "text": "敵かっ！？ ……なんだ、落ち葉でござった。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_017",
+      "residentId": "036_mosa",
+      "text": "武士たるもの、弱音は……もふ、眠い。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "036_mosa_018",
+      "residentId": "036_mosa",
+      "text": "刀の手入れは欠かさぬ。毛並みの手入れもな！",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }
