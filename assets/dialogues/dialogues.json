@@ -731,6 +731,15 @@
           "minCount": 5
         }
       ]
+    },
+    {
+      "id": "031_kimono_fox_001",
+      "residentId": "031_kimono_fox",
+      "text": "いらっしゃいませ♪ 桜の美容室へようこそ。今日はゆっくりしていってね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }

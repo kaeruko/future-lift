@@ -96,7 +96,7 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
                 Navigator.of(context).push<void>(
                   MaterialPageRoute<void>(
                     settings: const RouteSettings(name: '/village/salon'),
-                    builder: (_) => const SalonRoom(),
+                    builder: (_) => SalonRoom(onResident: widget.onResident),
                   ),
                 );
               },

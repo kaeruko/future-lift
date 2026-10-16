@@ -50,8 +50,10 @@ void main() {
     final together = [
       for (final area in TownArea.values) ...areaResidents(all, area),
     ];
-    expect(together.length, all.length);
-    expect(together.toSet(), all.toSet());
+    // Salon-only NPCs are registered residents but do not walk outside.
+    final walkers = all.where((resident) => resident.walkInTown).toSet();
+    expect(together.length, walkers.length);
+    expect(together.toSet(), walkers);
     expect(areaResidents(all, TownArea.plaza),
         [TownResident.shiba, TownResident.penguin, TownResident.c036_mosa]);
     expect(areaResidents(all, TownArea.park),

@@ -48,7 +48,9 @@ enum TownResident {
   // ignore: constant_identifier_names
   c036_mosa("036_mosa", "モサエド", "036_mosa", true, true, "拙者、猛者江戸（モサエド）と申す！", "plaza"),
   // ignore: constant_identifier_names
-  c035_beaty("035_beaty", "つやこ", "035_beaty", true, true, "美容家", "shopping")
+  c035_beaty("035_beaty", "つやこ", "035_beaty", true, true, "美容家", "shopping"),
+  // ignore: constant_identifier_names
+  c031_kimono_fox("031_kimono_fox", "きものぎつね", "031_kimono_fox", false, false, "桜の美容室の看板娘。和装が好きで、みんなを笑顔で迎える。", "village")
   // END CMS RESIDENTS
   ;
 
