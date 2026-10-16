@@ -106,7 +106,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 350));
     expect(find.byType(SalonRoom), findsOneWidget);
-    expect(find.byKey(const ValueKey('salon-fox-resident')), findsOneWidget);
+    expect(find.byKey(const ValueKey('salon-fox-resident')), findsNothing);
     expect(find.byKey(const ValueKey('salon-resident-035_beaty')), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());

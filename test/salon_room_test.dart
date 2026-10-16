@@ -7,9 +7,9 @@ import 'package:future_lift/salon_room.dart';
 import 'package:future_lift/town_areas.dart';
 
 void main() {
-  test('salon host is not in the gacha or outdoor walking roster', () {
+  test('salon residents need to be acquired and never walk outdoors', () {
     expect(SalonRoom.host.id, '031_kimono_fox');
-    expect(SalonRoom.host.inGacha, false);
+    expect(SalonRoom.host.inGacha, true);
     expect(SalonRoom.host.walkInTown, false);
     expect(SalonRoom.host.homeAreaId, 'salon');
     expect(TownResident.c035_beaty.homeAreaId, 'salon');
@@ -18,11 +18,14 @@ void main() {
     expect(isSalonUnlocked(const []), isFalse);
     expect(isSalonUnlocked([SalonRoom.host]), isFalse);
     expect(isSalonUnlocked([TownResident.c035_beaty]), isTrue);
-    expect(salonResidents(const []), [SalonRoom.host]);
+    expect(salonResidents(const []), isEmpty);
+    expect(salonResidents([SalonRoom.host]), [SalonRoom.host]);
     expect(salonResidents([TownResident.c035_beaty]),
-        [SalonRoom.host, TownResident.c035_beaty]);
+        [TownResident.c035_beaty]);
+    expect(salonResidents([SalonRoom.host, TownResident.c035_beaty]),
+        [TownResident.c035_beaty, SalonRoom.host]);
     expect(TownResident.gachaPool, contains(TownResident.c035_beaty));
-    expect(TownResident.gachaPool, isNot(contains(SalonRoom.host)));
+    expect(TownResident.gachaPool, contains(SalonRoom.host));
     expect(areaResidents(TownResident.values, TownArea.village),
         isNot(contains(SalonRoom.host)));
     expect(visibleTownResidents(TownResident.values),
@@ -33,7 +36,7 @@ void main() {
         isNot(contains(TownResident.c035_beaty)));
   });
 
-  testWidgets('owner appears with fox only after owner is acquired',
+  testWidgets('both acquired salon residents appear and can talk',
       (tester) async {
     tester.view.physicalSize = const Size(430, 930);
     tester.view.devicePixelRatio = 1;
@@ -41,7 +44,9 @@ void main() {
     final spoken = <TownResident>[];
     await tester.pumpWidget(MaterialApp(
       home: SalonRoom(
-        ownedResidents: const [TownResident.c035_beaty],
+        ownedResidents: const [
+          TownResident.c035_beaty, TownResident.c031_kimono_fox,
+        ],
         onResident: (resident) async {
           spoken.add(resident);
         },
@@ -70,7 +75,9 @@ void main() {
     final gate = Completer<void>();
     var conversations = 0;
     await tester.pumpWidget(MaterialApp(
-      home: SalonRoom(onResident: (_) {
+      home: SalonRoom(
+        ownedResidents: const [TownResident.c031_kimono_fox],
+        onResident: (_) {
         conversations++;
         return gate.future;
       }),
@@ -116,7 +123,9 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: MediaQuery(
         data: const MediaQueryData(disableAnimations: true),
-        child: const SalonRoom(),
+        child: const SalonRoom(
+          ownedResidents: [TownResident.c031_kimono_fox],
+        ),
       ),
     ));
     final sprite = find.byKey(const ValueKey('salon-fox-sprite'));
@@ -128,7 +137,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('the salon host is always visible and can use regular dialogue',
+  testWidgets('an acquired fox can use regular dialogue',
       (tester) async {
     tester.view.physicalSize = const Size(430, 930);
     tester.view.devicePixelRatio = 1;
@@ -136,7 +145,9 @@ void main() {
     TownResident? spokenTo;
 
     await tester.pumpWidget(MaterialApp(
-      home: SalonRoom(onResident: (resident) async {
+      home: SalonRoom(
+        ownedResidents: const [TownResident.c031_kimono_fox],
+        onResident: (resident) async {
         spokenTo = resident;
       }),
     ));

@@ -28,17 +28,19 @@ bool isSalonUnlocked(Iterable<TownResident> owned) =>
     owned.contains(TownResident.c035_beaty);
 
 /// Salon occupants are separate from outdoor walkers.
-/// Staff who are not in gacha are always present; gacha residents must be owned.
+/// Every gacha resident must be acquired before appearing in the salon.
 List<TownResident> salonResidents(Iterable<TownResident> owned) {
   final ownedSet = owned.toSet();
   final occupants = TownResident.values.where((resident) =>
       resident.homeAreaId == 'salon' &&
       (!resident.inGacha || ownedSet.contains(resident))).toList();
-  const host = TownResident.c031_kimono_fox;
+  const owner = TownResident.c035_beaty;
+  const fox = TownResident.c031_kimono_fox;
   return List<TownResident>.unmodifiable([
-    if (occupants.contains(host)) host,
+    if (occupants.contains(owner)) owner,
+    if (occupants.contains(fox)) fox,
     for (final resident in occupants)
-      if (resident != host) resident,
+      if (resident != owner && resident != fox) resident,
   ]);
 }
 
@@ -70,7 +72,7 @@ enum TownResident {
   // ignore: constant_identifier_names
   c035_beaty("035_beaty", "つやこ", "035_beaty", true, false, "美容家", "salon"),
   // ignore: constant_identifier_names
-  c031_kimono_fox("031_kimono_fox", "きものぎつね", "031_kimono_fox", false, false, "桜の美容室の看板娘。和装が好きで、みんなを笑顔で迎える。", "salon")
+  c031_kimono_fox("031_kimono_fox", "きものぎつね", "031_kimono_fox", true, false, "桜の美容室の看板娘。和装が好きで、みんなを笑顔で迎える。", "salon")
   // END CMS RESIDENTS
   ;
 

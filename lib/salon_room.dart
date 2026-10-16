@@ -6,7 +6,8 @@ import 'resident_collection.dart';
 
 /// An interior reached by tapping the door of the right-hand village house.
 /// Route navigation preserves the selected village and resident positions.
-/// The salon's host is always present; she is not a gacha/town-walking resident.
+/// The owner unlocks entry through gacha. The fox employee appears only
+/// after being acquired separately, and neither resident walks outdoors.
 class SalonRoom extends StatefulWidget {
   const SalonRoom({super.key, this.onResident, this.ownedResidents = const []});
 
