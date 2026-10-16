@@ -65,3 +65,41 @@ APIキー（`.p8`）も現段階では不要です。
 正しいアプリ名、実機での起動とセーブ、健康Tipsの文言確認。
 iOS設定を細かく変える段階では生成した `ios/` をリポジトリに確定することを推奨。
 Flutter/Dartの実行テストや署名付きビルドの成功は、実際にActionsを走らせて確認してください。
+
+## TestFlightにアップロードする（成功済みIPAを再利用）
+
+`.github/workflows/ios-testflight-upload.yml` は **手動アップロード専用** です。
+`iOS App Store IPA` で成功したrunのartifactを使い、再ビルドせず
+App Store Connectへ送ります。リリースや外部テスターへの配信は自動で行いません。
+
+追加のGitHub Actions Repository Secrets：
+
+| Secret | 内容 |
+| --- | --- |
+| `APP_STORE_CONNECT_API_KEY_ID` | App Store Connect APIキーの10文字のKey ID |
+| `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID（UUID） |
+| `APP_STORE_CONNECT_API_KEY_P8_BASE64` | 該当APIキー `.p8` のBase64 |
+
+Windows PowerShell（キーの**中身を画面に表示せず**GitHubへ貼る）：
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path '.\AuthKey_XXXXXXXXXX.p8'))) | Set-Clipboard
+```
+
+APIキーにはApp Store Connectの対象アプリのビルドアップロード権限が必要です。
+Key IDと.p8は同じキーの組み合わせを使ってください。
+
+1. Actions → `iOS App Store IPA` → 緑チェックの成功済みビルドを開く。
+2. URL末尾の **run ID**（例：`/actions/runs/12345678901` の数値）をコピー。
+3. Actions → `iOS TestFlight Upload` → `Run workflow` → `source_run_id` に数値を入力。
+4. アップロード後、App Store Connect → ことほぐ → TestFlight でAppleの処理を待つ。
+
+ワークフローは指定されたrunが **mainの成功済みiOS App Store IPA** で
+あることを検証し、そのrunの `kotohogu-app-store-ipa` だけを取得。
+展開後にBundle ID `jp.cloxs.kotohogu`、表示名、バージョン、
+署名のTeam IDを確認してから `xcrun altool` で送信します。
+別のrunにフォールバックしません。Artifactsの保存期限（7日）を過ぎたら、
+ビルドワークフローを新しく実行してください。
+
+**注意：** APIキーSecretは署名用Secret（`IOS_P12_BASE64`等）とは別。
+TestFlightへアップロードしても、審査提出や一般公開はまだされません。

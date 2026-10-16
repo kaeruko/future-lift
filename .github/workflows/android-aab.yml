@@ -1,0 +1,142 @@
+name: Android signed AAB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kotohogu-android-release-version
+  cancel-in-progress: false
+
+jobs:
+  signed-aab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Enforce release branch and plan next build number
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == "refs/heads/main" ]] || {
+            echo "::error::Android releases must run from main"
+            exit 1
+          }
+          python3 tools/android/release_version.py plan --format github-env >> "$GITHUB_ENV"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Android release signing key
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            [[ -n "${!name}" ]] || { echo "::error::Missing GitHub secret $name"; exit 1; }
+          done
+          umask 077
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/kotohogu-upload.jks"
+          test -s "$RUNNER_TEMP/kotohogu-upload.jks"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          def prop(value):
+              if "\n" in value or "\r" in value:
+                  raise ValueError("Signing properties may not contain newlines")
+              return (value.replace("\\", "\\\\")
+                           .replace("=", "\\=")
+                           .replace(":", "\\:")
+                           .replace("#", "\\#")
+                           .replace("!", "\\!"))
+
+          lines = [
+              "storeFile=" + prop(os.environ["RUNNER_TEMP"] + "/kotohogu-upload.jks"),
+              "storePassword=" + prop(os.environ["ANDROID_KEYSTORE_PASSWORD"]),
+              "keyAlias=" + prop(os.environ["ANDROID_KEY_ALIAS"]),
+              "keyPassword=" + prop(os.environ["ANDROID_KEY_PASSWORD"]),
+          ]
+          Path("android/key.properties").write_text("\n".join(lines) + "\n")
+          PY
+
+      - name: Build and verify signed App Bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tools/android -p 'test_*.py'
+          flutter pub get
+          flutter build appbundle --release \
+            --build-name "$BUILD_NAME" \
+            --build-number "$NEXT_BUILD_NUMBER"
+          AAB="build/app/outputs/bundle/release/app-release.aab"
+          test -s "$AAB"
+          jarsigner -verify -verbose "$AAB" > "$RUNNER_TEMP/aab-signature.txt"
+          grep -Fq 'jar verified.' "$RUNNER_TEMP/aab-signature.txt" || {
+            echo "::error::AAB JAR signature validation failed"
+            exit 1
+          }
+          grep -Eq '^[[:space:]]*sm[[:space:]]' "$RUNNER_TEMP/aab-signature.txt" || {
+            echo "::error::No signed manifest entries found in AAB"
+            exit 1
+          }
+          echo "AAB_PATH=$AAB" >> "$GITHUB_ENV"
+          {
+            echo "### Google Play signed AAB"
+            echo "- Package: jp.cloxs.kotohogu"
+            echo "- Version: $BUILD_NAME+$NEXT_BUILD_NUMBER"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kotohogu-android-${{ env.BUILD_NAME }}-${{ env.NEXT_BUILD_NUMBER }}
+          path: ${{ env.AAB_PATH }}
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Persist versionCode +1 only after successful AAB
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -B android-release-version origin/main
+          python3 tools/android/release_version.py persist \
+            --expected-version "$SOURCE_VERSION" \
+            --next-build-number "$NEXT_BUILD_NUMBER"
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml
+          git diff --cached --quiet && {
+            echo "::error::No version change after successful AAB build"
+            exit 1
+          }
+          git commit -m "Bump Android release build number to $NEXT_BUILD_NUMBER"
+          git push origin HEAD:main
+          echo "- pubspec.yaml persisted: $BUILD_NAME+$NEXT_BUILD_NUMBER" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove temporary signing materials
+        if: always()
+        shell: bash
+        run: |
+          rm -f android/key.properties "$RUNNER_TEMP/kotohogu-upload.jks"
