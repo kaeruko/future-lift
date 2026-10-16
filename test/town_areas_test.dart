@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/resident_collection.dart';
 import 'package:future_lift/town.dart';
+import 'package:future_lift/salon_room.dart';
 import 'package:future_lift/town_area_navigator.dart';
 import 'package:future_lift/town_areas.dart';
 
@@ -59,8 +60,7 @@ void main() {
     expect(areaResidents(all, TownArea.park),
         [TownResident.rabbit, TownResident.squirrel]);
     expect(areaResidents(all, TownArea.shopping),
-        [TownResident.cat, TownResident.c009_chef, TownResident.c032_miner,
-         TownResident.c035_beaty]);
+        [TownResident.cat, TownResident.c009_chef, TownResident.c032_miner]);
     expect(areaResidents(all, TownArea.village),
         [TownResident.bear, TownResident.c026_farmer,
          TownResident.c027_daydreamer]);
@@ -70,6 +70,46 @@ void main() {
     expect(() => areaResidents(all, TownArea.plaza,
         debugOverride: [TownResident.shiba, TownResident.shiba]),
         throwsArgumentError);
+  });
+
+
+  testWidgets('salon opens with owner, not with its fox employee',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 930);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    Widget app(List<TownResident> owned) => MaterialApp(
+      home: Scaffold(
+        body: TownAreaNavigator(
+          area: TownArea.village,
+          onAreaChanged: (_) {},
+          level: 0,
+          lifetimePoints: 300,
+          residents: owned,
+        ),
+      ),
+    );
+
+    // The fox can live in the salon without ever unlocking its entrance.
+    await tester.pumpWidget(app(const [TownResident.c031_kimono_fox]));
+    final entrance = find.byKey(const ValueKey('village-salon-entrance'));
+    expect(entrance, findsOneWidget);
+    await tester.tap(entrance);
+    await tester.pump();
+    expect(find.textContaining('つやこさんをガチャでお迎えすると'),
+        findsOneWidget);
+    expect(find.byType(SalonRoom), findsNothing);
+
+    // Once the owner is acquired, the same door opens for both residents.
+    await tester.pumpWidget(app(const [TownResident.c035_beaty]));
+    await tester.tap(entrance);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(find.byType(SalonRoom), findsOneWidget);
+    expect(find.byKey(const ValueKey('salon-fox-resident')), findsOneWidget);
+    expect(find.byKey(const ValueKey('salon-resident-035_beaty')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('village front door can be tapped without intercepting other areas',

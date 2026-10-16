@@ -179,7 +179,6 @@ void main() {
       TownResident.cat,
       TownResident.c009_chef,
       TownResident.c032_miner,
-      TownResident.c035_beaty,
     ];
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
@@ -201,7 +200,7 @@ void main() {
     final townRect = tester.getRect(find.byType(TownScene));
     final originalSize =
         (townRect.width * .14).clamp(22.0, 76.0).toDouble();
-    const expectedScales = [1.2, 1.2, 1.4, 1.5];
+    const expectedScales = [1.2, 1.2, 1.4];
     for (var index = 0; index < residents.length; index++) {
       final sprite = find.byKey(ValueKey('resident-sprite-$index'));
       final image = tester.widget<Image>(sprite);

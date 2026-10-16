@@ -19,9 +19,29 @@ List<TownResident> visibleTownResidents(
     return List<TownResident>.unmodifiable(debugOverride);
   }
   return List<TownResident>.unmodifiable(
-    residents.where((resident) => resident.walkInTown),
+    residents.where((resident) => resident.walkInTown && resident.homeAreaId != 'salon'),
   );
 }
+/// Only obtaining the salon owner through gacha unlocks the building.
+/// The fox is a resident of the salon, not its unlocking condition.
+bool isSalonUnlocked(Iterable<TownResident> owned) =>
+    owned.contains(TownResident.c035_beaty);
+
+/// Salon occupants are separate from outdoor walkers.
+/// Staff who are not in gacha are always present; gacha residents must be owned.
+List<TownResident> salonResidents(Iterable<TownResident> owned) {
+  final ownedSet = owned.toSet();
+  final occupants = TownResident.values.where((resident) =>
+      resident.homeAreaId == 'salon' &&
+      (!resident.inGacha || ownedSet.contains(resident))).toList();
+  const host = TownResident.c031_kimono_fox;
+  return List<TownResident>.unmodifiable([
+    if (occupants.contains(host)) host,
+    for (final resident in occupants)
+      if (resident != host) resident,
+  ]);
+}
+
 const applauseResidentLimit = 8;
 
 /// Maximum spendable kotohogi; contribution totals keep growing.
@@ -48,9 +68,9 @@ enum TownResident {
   // ignore: constant_identifier_names
   c036_mosa("036_mosa", "モサエド", "036_mosa", true, true, "拙者、猛者江戸（モサエド）と申す！", "plaza"),
   // ignore: constant_identifier_names
-  c035_beaty("035_beaty", "つやこ", "035_beaty", true, true, "美容家", "shopping"),
+  c035_beaty("035_beaty", "つやこ", "035_beaty", true, false, "美容家", "salon"),
   // ignore: constant_identifier_names
-  c031_kimono_fox("031_kimono_fox", "きものぎつね", "031_kimono_fox", false, false, "桜の美容室の看板娘。和装が好きで、みんなを笑顔で迎える。", "village")
+  c031_kimono_fox("031_kimono_fox", "きものぎつね", "031_kimono_fox", false, false, "桜の美容室の看板娘。和装が好きで、みんなを笑顔で迎える。", "salon")
   // END CMS RESIDENTS
   ;
 

@@ -11,9 +11,55 @@ void main() {
     expect(SalonRoom.host.id, '031_kimono_fox');
     expect(SalonRoom.host.inGacha, false);
     expect(SalonRoom.host.walkInTown, false);
+    expect(SalonRoom.host.homeAreaId, 'salon');
+    expect(TownResident.c035_beaty.homeAreaId, 'salon');
+    expect(TownResident.c035_beaty.inGacha, true);
+    expect(TownResident.c035_beaty.walkInTown, false);
+    expect(isSalonUnlocked(const []), isFalse);
+    expect(isSalonUnlocked([SalonRoom.host]), isFalse);
+    expect(isSalonUnlocked([TownResident.c035_beaty]), isTrue);
+    expect(salonResidents(const []), [SalonRoom.host]);
+    expect(salonResidents([TownResident.c035_beaty]),
+        [SalonRoom.host, TownResident.c035_beaty]);
+    expect(TownResident.gachaPool, contains(TownResident.c035_beaty));
     expect(TownResident.gachaPool, isNot(contains(SalonRoom.host)));
     expect(areaResidents(TownResident.values, TownArea.village),
         isNot(contains(SalonRoom.host)));
+    expect(visibleTownResidents(TownResident.values),
+        isNot(contains(SalonRoom.host)));
+    expect(visibleTownResidents(TownResident.values),
+        isNot(contains(TownResident.c035_beaty)));
+    expect(areaResidents(TownResident.values, TownArea.shopping),
+        isNot(contains(TownResident.c035_beaty)));
+  });
+
+  testWidgets('owner appears with fox only after owner is acquired',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 930);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final spoken = <TownResident>[];
+    await tester.pumpWidget(MaterialApp(
+      home: SalonRoom(
+        ownedResidents: const [TownResident.c035_beaty],
+        onResident: (resident) async {
+          spoken.add(resident);
+        },
+      ),
+    ));
+    final fox = find.byKey(const ValueKey('salon-fox-resident'));
+    final tsuya = find.byKey(const ValueKey('salon-resident-035_beaty'));
+    expect(fox, findsOneWidget);
+    expect(tsuya, findsOneWidget);
+    expect(tester.getRect(fox).overlaps(tester.getRect(tsuya)), isFalse);
+    expect(find.byKey(const ValueKey('salon-sprite-035_beaty')), findsOneWidget);
+    await tester.tap(tsuya);
+    await tester.pump();
+    await tester.tap(fox);
+    await tester.pump();
+    expect(spoken, [TownResident.c035_beaty, SalonRoom.host]);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('fox steps in place, claps, and pauses for dialogue',

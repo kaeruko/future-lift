@@ -130,8 +130,8 @@
       "artFolder": "035_beaty",
       "nextDialogueNumber": 14,
       "inGacha": true,
-      "walkInTown": true,
-      "homeAreaId": "shopping"
+      "walkInTown": false,
+      "homeAreaId": "salon"
     },
     {
       "key": "c031_kimono_fox",
@@ -142,7 +142,7 @@
       "nextDialogueNumber": 2,
       "inGacha": false,
       "walkInTown": false,
-      "homeAreaId": "village"
+      "homeAreaId": "salon"
     }
   ]
 }

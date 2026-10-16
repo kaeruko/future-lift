@@ -69,6 +69,29 @@ class CmsTests(unittest.TestCase):
         moved["characters"][0]["homeAreaId"] = "park"
         validate_catalog(moved, previous=original)
         self.assertIn('"park")', generate_dart(DART.read_text("utf-8"), moved["characters"]))
+        salon = copy.deepcopy(original)
+        salon_resident = next(row for row in salon["characters"]
+                              if row["id"] == "035_beaty")
+        self.assertEqual(salon_resident["homeAreaId"], "salon")
+        self.assertTrue(salon_resident["inGacha"])
+        validate_catalog(salon, previous=original)
+        self.assertIn('"salon")',
+                      generate_dart(DART.read_text("utf-8"), salon["characters"]))
+        invalid_owner = copy.deepcopy(original)
+        row = next(row for row in invalid_owner["characters"]
+                   if row["id"] == "035_beaty")
+        row["homeAreaId"] = "shopping"
+        with self.assertRaisesRegex(ValueError, "Salon owner"):
+            validate_catalog(invalid_owner, previous=original)
+        row["homeAreaId"] = "salon"
+        row["inGacha"] = False
+        with self.assertRaisesRegex(ValueError, "Salon owner"):
+            validate_catalog(invalid_owner, previous=original)
+        overcrowded = copy.deepcopy(original)
+        for row in overcrowded["characters"][:8]:
+            row["homeAreaId"] = "salon"
+        with self.assertRaisesRegex(ValueError, "at most 7"):
+            validate_catalog(overcrowded, previous=original)
         for invalid_area in ("unknown", "", None, 9):
             bad = copy.deepcopy(original)
             bad["characters"][0]["homeAreaId"] = invalid_area

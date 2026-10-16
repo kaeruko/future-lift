@@ -17,6 +17,7 @@ class TownAreaNavigator extends StatefulWidget {
     required this.residents,
     this.debugTownResidents,
     this.onResident,
+    this.onSalonResident,
   });
 
   final TownArea area;
@@ -28,6 +29,7 @@ class TownAreaNavigator extends StatefulWidget {
   final List<TownResident> residents;
   final List<TownResident>? debugTownResidents;
   final Future<void> Function(TownResident)? onResident;
+  final Future<void> Function(TownResident)? onSalonResident;
 
   @override
   State<TownAreaNavigator> createState() => _TownAreaNavigatorState();
@@ -93,10 +95,23 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
               debugTownResidents: widget.debugTownResidents,
               onResident: widget.onResident,
               onEnterSalon: () {
+                if (!isSalonUnlocked(widget.residents)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'つやこさんをガチャでお迎えすると、桜の美容室が開放されるよ',
+                      ),
+                    ),
+                  );
+                  return;
+                }
                 Navigator.of(context).push<void>(
                   MaterialPageRoute<void>(
                     settings: const RouteSettings(name: '/village/salon'),
-                    builder: (_) => SalonRoom(onResident: widget.onResident),
+                    builder: (_) => SalonRoom(
+                      ownedResidents: widget.residents,
+                      onResident: widget.onSalonResident,
+                    ),
                   ),
                 );
               },

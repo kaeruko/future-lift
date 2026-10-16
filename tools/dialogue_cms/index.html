@@ -106,7 +106,7 @@ nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
 <script>
 "use strict";
 let residents={};
-const areaLabels={"plaza":"⛩️ 中央ひろば","park":"🌳 ふれあい公園","shopping":"🏮 ことほぎ商店街","village":"🌱 のんびり里"};
+const areaLabels={"plaza":"⛩️ 中央ひろば","park":"🌳 ふれあい公園","shopping":"🏮 ことほぎ商店街","village":"🌱 のんびり里","salon":"💇 桜の美容室（里山の室内）"};
 const missions={"all":"全ミッション合計","strength":"筋力を使った","outside":"外に出た・歩いた","conversation":"人と話した","movement":"身体を動かした","sittingBreak":"座りっぱなしを途中でやめた","food":"食事をひとつ整えた","hobby":"趣味や学びを楽しんだ","weeklyStrength":"筋トレをした","weeklyActive":"息が弾む運動を楽しんだ","weeklyTogether":"誰かと一緒に活動した","weeklyLearn":"新しいことを学んだ・試した","monthlyCommunity":"地域の活動に参加した","monthlyHabit":"健康習慣をひとつ工夫した","monthlyReview":"今月の言祝ぎを振り返った"};
 const modes={"exact":"指定日","range":"指定期間","annual":"毎年の指定日","annual_range":"毎年の期間","weekday":"毎週の曜日"};
 const byId=id=>document.getElementById(id);
@@ -420,10 +420,16 @@ function renderCharacterEditor(){
   profileInput.rows=5;
   profileInput.maxLength=1000;
   append(box,"p","自由文・改行OK。1000文字以内、空欄でも保存できます。").className="hint";
-  labelControl(box,"住むエリア","select",row.homeAreaId,value=>{
+  const isSalonOwner=row.id==="035_beaty";
+  const homeSelect=labelControl(box,"住むエリア","select",row.homeAreaId,value=>{
     row.homeAreaId=value;
     renderCharacterList();setCharacterStatus("未保存の変更があります");
   },{options:areaLabels});
+  homeSelect.disabled=isSalonOwner;
+  if(row.homeAreaId==="salon")append(box,"p",
+    "美容室は里山の室内施設です。オーナーのつやこさんをガチャでお迎えすると開放されます。きものぎつねだけでは開放されません。").className="hint";
+  if(isSalonOwner)append(box,"p",
+    "つやこさんは美容室のオーナーです。居住エリアとガチャ・屋外表示は固定です。").className="hint";
   edit("キャラID（例: 009_chef）","id",locked);
   const folderHint=append(box,"p",locked
     ? `画像フォルダ: assets/characters/${row.artFolder}/（登録済みの設定を維持）`
@@ -432,6 +438,7 @@ function renderCharacterEditor(){
   for(const [field,title] of [["inGacha","ガチャに登場する"],["walkInTown","まちを歩く"]]){
     const label=append(box,"label");label.className="controls";
     const input=append(label,"input");input.type="checkbox";input.checked=row[field];
+    input.disabled=isSalonOwner;
     append(label,"span",title);
     input.onchange=()=>{
       row[field]=input.checked;dirty=true;renderCharacterList();
@@ -454,7 +461,7 @@ async function load(){
     savedCount=registry.characters.length;
     previewSeenIds=new Set();
     previewTownIds=new Set(registry.characters
-      .filter(row=>row.walkInTown).slice(0,8).map(row=>row.id));
+      .filter(row=>row.walkInTown&&row.homeAreaId!=="salon").slice(0,8).map(row=>row.id));
     characterSelected=registry.characters[0].id;
     selected=data.dialogues[0].id;dirty=false;
     rebuildResidentOptions();renderCharacterList();renderCharacterEditor();

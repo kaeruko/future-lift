@@ -278,7 +278,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     });
   }
 
-  Future<void> _showDialogue(TownResident resident) async {
+  Future<void> _showDialogue(TownResident resident, {bool inSalon = false}) async {
     if (controller.busy || controller.failure != null ||
         controller.progress == null) {
       return;
@@ -286,16 +286,18 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     final catalog = await _dialoguesFuture;
     if (!mounted || controller.failure != null) return;
     final index = _dialogueIndex[resident] ?? 0;
-    final visibleIds = (_page == 2
-        ? areaResidents(
-            controller.progress!.residents.owned,
-            _townArea,
-            debugOverride: _debugTownResidents,
-          )
-        : visibleTownResidents(
-            controller.progress!.residents.owned,
-            debugOverride: _debugTownResidents,
-          )).map((r) => r.id).toSet();
+    final visibleIds = (inSalon
+        ? salonResidents(controller.progress!.residents.owned)
+        : _page == 2
+            ? areaResidents(
+                controller.progress!.residents.owned,
+                _townArea,
+                debugOverride: _debugTownResidents,
+              )
+            : visibleTownResidents(
+                controller.progress!.residents.owned,
+                debugOverride: _debugTownResidents,
+              )).map((r) => r.id).toSet();
     final line = catalog.select(
       resident: resident,
       progress: controller.progress!,
@@ -581,6 +583,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
         residents: progress.residents.owned,
         debugTownResidents: _debugTownResidents,
         onResident: _showDialogue,
+        onSalonResident: (resident) => _showDialogue(resident, inSalon: true),
       ),
     ),
     Padding(

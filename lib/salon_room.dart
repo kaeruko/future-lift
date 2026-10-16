@@ -8,13 +8,14 @@ import 'resident_collection.dart';
 /// Route navigation preserves the selected village and resident positions.
 /// The salon's host is always present; she is not a gacha/town-walking resident.
 class SalonRoom extends StatefulWidget {
-  const SalonRoom({super.key, this.onResident});
+  const SalonRoom({super.key, this.onResident, this.ownedResidents = const []});
 
   static const backgroundAsset = 'assets/kotohogu/salon_background_001.jpg';
   static const host = TownResident.c031_kimono_fox;
 
   /// Uses the same CMS-backed conversations and seen-ID tracking as town NPCs.
   final Future<void> Function(TownResident)? onResident;
+  final List<TownResident> ownedResidents;
 
   @override
   State<SalonRoom> createState() => _SalonRoomState();
@@ -23,6 +24,16 @@ class SalonRoom extends StatefulWidget {
 class _SalonRoomState extends State<SalonRoom> {
   static const _frameDuration = Duration(milliseconds: 200);
   static const _cycleFrames = 40;
+  // Stations use the original 941x1672 salon artwork coordinate system.
+  static const _stations = <Rect>[
+    Rect.fromLTWH(350, 1070, 240, 240),
+    Rect.fromLTWH(620, 930, 205, 205),
+    Rect.fromLTWH(135, 905, 205, 205),
+    Rect.fromLTWH(625, 690, 185, 185),
+    Rect.fromLTWH(145, 675, 185, 185),
+    Rect.fromLTWH(625, 460, 170, 170),
+    Rect.fromLTWH(145, 455, 170, 170),
+  ];
   Timer? _ticker;
   int _ticks = 0;
   bool _talking = false;
@@ -48,31 +59,65 @@ class _SalonRoomState extends State<SalonRoom> {
     super.dispose();
   }
 
-  String _spriteAsset(BuildContext context) {
+  String _spriteAsset(BuildContext context, TownResident resident, int index) {
     if (_talking ||
         MediaQuery.disableAnimationsOf(context) ||
         !TickerMode.valuesOf(context).enabled) {
-      return SalonRoom.host.idleAsset;
+      return resident.idleAsset;
     }
-    final frame = _ticks % _cycleFrames;
-    if (frame < 4) return SalonRoom.host.idleAsset;
-    // Cycle front-facing walking frames without moving the sprite's position.
+    // Offset the animation per resident to avoid synchronized steps.
+    final frame = (_ticks + index * 5) % _cycleFrames;
+    if (frame < 4) return resident.idleAsset;
     if (frame < 32) {
-      return SalonRoom.host.walkAsset(WalkDirection.front, (frame - 4) % 4);
+      return resident.walkAsset(WalkDirection.front, (frame - 4) % 4);
     }
-    // Finish the eight-second cycle with a short round of applause.
-    return SalonRoom.host.clapAssets[((frame - 32) ~/ 2) % 2];
+    return resident.clapAssets[((frame - 32) ~/ 2) % 2];
   }
 
-  Future<void> _talk() async {
+  Future<void> _talk(TownResident resident) async {
     final callback = widget.onResident;
     if (callback == null || _talking) return;
     setState(() => _talking = true);
     try {
-      await callback(SalonRoom.host);
+      await callback(resident);
     } finally {
       if (mounted) setState(() => _talking = false);
     }
+  }
+
+  Widget _salonResident(BuildContext context, TownResident resident, int index) {
+    if (index >= _stations.length) {
+      throw StateError('Salon supports at most 7 visible residents');
+    }
+    final station = _stations[index];
+    final isHost = resident == SalonRoom.host;
+    return Positioned(
+      left: station.left,
+      top: station.top,
+      width: station.width,
+      height: station.height,
+      child: Semantics(
+        button: widget.onResident != null,
+        label: '${resident.label}のおはなし',
+        child: Tooltip(
+          message: resident.label,
+          child: InkWell(
+            key: ValueKey(isHost
+                ? 'salon-fox-resident' : 'salon-resident-${resident.id}'),
+            borderRadius: BorderRadius.circular(36),
+            onTap: widget.onResident == null ? null : () => _talk(resident),
+            child: Image.asset(
+              _spriteAsset(context, resident, index),
+              key: ValueKey(isHost
+                  ? 'salon-fox-sprite' : 'salon-sprite-${resident.id}'),
+              fit: BoxFit.contain,
+              gaplessPlayback: true,
+              excludeFromSemantics: true,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -99,33 +144,9 @@ class _SalonRoomState extends State<SalonRoom> {
                       excludeFromSemantics: true,
                     ),
                   ),
-                  Positioned(
-                    // A welcoming spot toward the foreground of the salon.
-                    // Image and tap target scale together with the background.
-                    left: 350,
-                    top: 1070,
-                    width: 240,
-                    height: 240,
-                    child: Semantics(
-                      button: widget.onResident != null,
-                      label: '${SalonRoom.host.label}のおはなし',
-                      child: Tooltip(
-                        message: SalonRoom.host.label,
-                        child: InkWell(
-                          key: const ValueKey('salon-fox-resident'),
-                          borderRadius: BorderRadius.circular(36),
-                          onTap: widget.onResident == null ? null : _talk,
-                          child: Image.asset(
-                            _spriteAsset(context),
-                            key: const ValueKey('salon-fox-sprite'),
-                            fit: BoxFit.contain,
-                            gaplessPlayback: true,
-                            excludeFromSemantics: true,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  for (final (index, resident) in
+                      salonResidents(widget.ownedResidents).indexed)
+                    _salonResident(context, resident, index),
                 ],
               ),
             ),

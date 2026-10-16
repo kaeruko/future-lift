@@ -21,7 +21,7 @@ DART_END = "  // END CMS RESIDENTS"
 ASSETS_START = "    # BEGIN CMS CHARACTER ASSETS"
 ASSETS_END = "    # END CMS CHARACTER ASSETS"
 FIELDS = {"key", "id", "label", "profile", "artFolder", "inGacha", "walkInTown", "nextDialogueNumber", "homeAreaId"}
-AREA_IDS = {"plaza", "park", "shopping", "village"}
+AREA_IDS = {"plaza", "park", "shopping", "village", "salon"}
 DIRECTIONS = ("front", "back", "left", "right")
 
 
@@ -94,6 +94,17 @@ def validate_catalog(document, previous=None, *, characters_root=None):
         missing = [name for name in required if not (directory / name).is_file()]
         if missing:
             raise ValueError(f"Missing sprite in {folder}: {missing[0]}")
+    owner = next((row for row in characters if row["id"] == "035_beaty"), None)
+    if owner is not None and (
+        owner["homeAreaId"] != "salon"
+        or owner["inGacha"] is not True
+        or owner["walkInTown"] is not False
+    ):
+        raise ValueError(
+            "Salon owner 035_beaty must be in salon, in gacha, and not walk outside"
+        )
+    if sum(row["homeAreaId"] == "salon" for row in characters) > 7:
+        raise ValueError("Salon supports at most 7 assigned residents")
     if not any(row["inGacha"] for row in characters):
         raise ValueError("At least one resident must be available in gacha")
     if previous is not None:
