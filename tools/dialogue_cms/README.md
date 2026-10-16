@@ -188,3 +188,42 @@ CMSはローカル専用です。プロフィールも含め、保存してGit�
 エリア開放はミッションで得た累計ポイントで判定します（0 / 90 / 180 / 300）。ガチャで使えることほぎ残高とは別です。背景画像がまだないエリアは準備中画面に住民を表示し、別エリアの画像を流用しません。未開放エリアには通常は入れません。デバッグで住民を選択したときのみ、未開放エリアのプレビューが可能です。
 
 「まちで2人そろう」条件は、同じエリアに実際に表示される住民だけで判定します。ホーム画面は従来どおり先頭8人を表示します。新背景の追加時は `lib/town_areas.dart` に背景アセットのパスを登録し、`pubspec.yaml` に追加してください。
+
+## ローカル配信の検証（Androidエミュレーター）
+
+FlutterでCMSの住民設定・セリフ・スプライトを、アプリ同梱アセットではなくHTTPから表示する検証用エントリーポイントを追加しました。**本編のガチャ・町・セーブデータはこの段階では従来どおりです。**
+
+PowerShellの1つ目のターミナルでリポジトリを更新し、CMSを起動します。
+
+```powershell
+cd C:\Users\mail\work\kotohogu
+git pull --ff-only origin main
+python tools/dialogue_cms/server.py
+```
+
+別のターミナルで配信データを確認します。
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8765/api/runtime/catalog
+```
+
+Androidエミュレーターを起動して、Flutterのプレビューアプリを実行します。
+
+```powershell
+flutter run -t lib/local_content_preview.dart --dart-define=KOTOHOGU_LOCAL_CONTENT_URL=http://10.0.2.2:8765
+```
+
+Androidエミュレーターの `10.0.2.2` は、ホストPCの `127.0.0.1` を指します。**実機では使えません。** CMSは安全のためローカルループバックにのみ待ち受け、デバッグのAndroidアプリだけHTTPを許可します。Flutter Webはこのプレビュー対象外です。
+
+プレビューで住民を選択すると正面・拍手・歩行のフレームとセリフを確認できます。CMSで新キャラを追加したら右上の更新ボタンで読み直せます。配信エラーや不正なJSON、画像の取得失敗は表示して止めます。暗黙のフォールバックはありません。
+
+追加API: `GET /api/runtime/catalog`（検証済みの全キャラ＋セリフ）、`GET /api/runtime/sprites/<artFolder>/<filename>`（登録済みキャラの画像のみ）。編集用の既存APIやCMS画面は変更しません。
+
+検証コマンド：
+
+```powershell
+python -m unittest discover -s tools/dialogue_cms -p 'test_*.py'
+flutter test test/local_content_preview_test.dart
+```
+
+**次段階**：固定 `TownResident` enum を動的モデルに置換し、この配信データを通常のガチャ・町・会話画面へ取り込みます。これが完了するまでは通常アプリへ新キャラをコード更新なしで追加できるわけではありません。

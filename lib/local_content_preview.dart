@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 
 // Preview-only entrypoint; the shipped game and saved collection are unchanged.
 const _contentUrl = String.fromEnvironment('KOTOHOGU_LOCAL_CONTENT_URL');
-const supportedFrames = <String>[
+final supportedFrames = List<String>.unmodifiable([
   'idle_front_01.png', 'clap_front_01.png', 'clap_front_02.png',
   for (final direction in ['front', 'back', 'left', 'right'])
     for (var n = 1; n <= 4; n++) 'walk_${direction}_0$n.png',
-];
+]);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
