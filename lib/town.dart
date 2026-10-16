@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'resident_collection.dart';
+import 'local_content_preview.dart';
 import 'town_walk.dart';
 import 'town_areas.dart';
 
@@ -37,6 +38,9 @@ class TownScene extends StatefulWidget {
     required this.lifetimePoints,
     this.debugTownResidents,
     this.onResident,
+    this.remoteVisitors = const [],
+    this.remoteContentBaseUri,
+    this.onRemoteVisitor,
     this.onEnterSalon,
     this.fillViewport = false,
   });
@@ -49,6 +53,9 @@ class TownScene extends StatefulWidget {
   /// A temporary debug-only cast; null uses the owned residents.
   final List<TownResident>? debugTownResidents;
   final Future<void> Function(TownResident)? onResident;
+  final List<RemoteResident> remoteVisitors;
+  final Uri? remoteContentBaseUri;
+  final Future<void> Function(RemoteResident)? onRemoteVisitor;
   final VoidCallback? onEnterSalon;
 
   /// Fit the *selected area's* own source dimensions to the phone.
@@ -65,6 +72,8 @@ class _TownSceneState extends State<TownScene> {
   int _ticks = 0;
   final _pauseStarted = <TownResident, int>{};
   final _pausedMillis = <TownResident, int>{};
+  final _remotePauseStarted = <String, int>{};
+  final _remotePausedMillis = <String, int>{};
 
   @override
   void didChangeDependencies() {
@@ -113,6 +122,33 @@ class _TownSceneState extends State<TownScene> {
     }
   }
 
+  Future<void> _talkToVisitor(RemoteResident resident) async {
+    final callback = widget.onRemoteVisitor;
+    if (callback == null || _remotePauseStarted.containsKey(resident.id)) return;
+    setState(() {
+      _remotePauseStarted[resident.id] = _ticks * _frameDuration.inMilliseconds;
+    });
+    try {
+      await callback(resident);
+    } finally {
+      if (mounted) {
+        setState(() {
+          final started = _remotePauseStarted.remove(resident.id)!;
+          _remotePausedMillis[resident.id] =
+              (_remotePausedMillis[resident.id] ?? 0) +
+              _ticks * _frameDuration.inMilliseconds - started;
+        });
+      }
+    }
+  }
+
+  int _visitorElapsed(RemoteResident resident) {
+    final now = _ticks * _frameDuration.inMilliseconds;
+    final started = _remotePauseStarted[resident.id];
+    final ongoingPause = started == null ? 0 : now - started;
+    return now - (_remotePausedMillis[resident.id] ?? 0) - ongoingPause;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.fillViewport) {
@@ -156,7 +192,18 @@ class _TownSceneState extends State<TownScene> {
       lifetimePoints: widget.lifetimePoints,
       debugOverride: widget.debugTownResidents,
     );
-    final count = visibleResidents.length;
+    if (widget.remoteVisitors.isNotEmpty && widget.remoteContentBaseUri == null) {
+      throw StateError('Remote visitors require a local content base URI');
+    }
+    if (widget.remoteVisitors.map((r) => r.id).toSet().length !=
+        widget.remoteVisitors.length) {
+      throw StateError('Duplicate remote visitor IDs');
+    }
+    if (widget.remoteVisitors.any(
+        (visitor) => visibleResidents.any((owned) => owned.id == visitor.id))) {
+      throw StateError('A remote visitor duplicates an existing walker');
+    }
+    final count = visibleResidents.length + widget.remoteVisitors.length;
     final size = (width * (count <= townWalkSlots.length
         ? .14
         : math.min(.14, .64 / math.sqrt(count * 1.3).ceil())))
@@ -176,6 +223,16 @@ class _TownSceneState extends State<TownScene> {
           _resident(
             visibleResidents[index],
             index,
+            count,
+            width,
+            height,
+            size,
+            reduced,
+          ),
+        for (var index = 0; index < widget.remoteVisitors.length; index++)
+          _visitor(
+            widget.remoteVisitors[index],
+            visibleResidents.length + index,
             count,
             width,
             height,
@@ -270,4 +327,71 @@ class _TownSceneState extends State<TownScene> {
       ),
     );
   }
+  Widget _visitor(
+    RemoteResident resident,
+    int index,
+    int totalSlots,
+    double width,
+    double height,
+    double size,
+    bool reduced,
+  ) {
+    final baseUri = widget.remoteContentBaseUri;
+    if (baseUri == null) {
+      throw StateError('Missing remote sprite base URI for ${resident.id}');
+    }
+    final origin = townWalkOrigin(index, totalSlots: totalSlots);
+    final pose = reduced
+        ? TownWalkPose(x: origin.$1, y: origin.$2, direction: null, frame: 0)
+        : townWalkPose(
+            index,
+            Duration(milliseconds: _visitorElapsed(resident)),
+            totalSlots: totalSlots,
+          );
+    final walking = pose.direction != null &&
+        !_remotePauseStarted.containsKey(resident.id) && !reduced;
+    final filename = walking
+        ? 'walk_${pose.direction!.name}_0${pose.frame + 1}.png'
+        : 'idle_front_01.png';
+    final uri = remoteSpriteUri(baseUri, resident, filename);
+    final scale = size * _townResidentScale(origin.$2);
+    final footX = width * pose.x + size / 2;
+    final footY = height * pose.y + size;
+    final sprite = Image.network(
+      uri.toString(),
+      key: ValueKey('remote-visitor-sprite-${resident.id}'),
+      width: scale,
+      height: scale,
+      fit: BoxFit.contain,
+      gaplessPlayback: true,
+      excludeFromSemantics: true,
+      errorBuilder: (context, error, stackTrace) => SizedBox(
+        width: scale,
+        height: scale,
+        child: Tooltip(
+          message: 'スプライト取得エラー $uri: $error',
+          child: const Icon(Icons.broken_image_outlined, color: Colors.red),
+        ),
+      ),
+    );
+    return Positioned(
+      left: footX - scale / 2,
+      top: footY - scale,
+      child: Semantics(
+        button: widget.onRemoteVisitor != null,
+        label: '配信テスト・${resident.label}のおはなし',
+        child: Tooltip(
+          message: '配信テスト: ${resident.label}',
+          child: InkWell(
+            key: ValueKey('remote-visitor-${resident.id}'),
+            borderRadius: BorderRadius.circular(20),
+            onTap: widget.onRemoteVisitor == null
+                ? null : () => _talkToVisitor(resident),
+            child: sprite,
+          ),
+        ),
+      ),
+    );
+  }
+
 }

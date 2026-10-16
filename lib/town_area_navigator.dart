@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'resident_collection.dart';
+import 'local_content_preview.dart';
 import 'salon_room.dart';
 import 'town.dart';
 import 'town_areas.dart';
@@ -17,6 +18,9 @@ class TownAreaNavigator extends StatefulWidget {
     required this.lifetimePoints,
     required this.residents,
     this.debugTownResidents,
+    this.remoteVisitors = const [],
+    this.remoteContentBaseUri,
+    this.onRemoteVisitor,
     this.salonUnlockMode = SalonUnlockDebugMode.normal,
     this.onResident,
     this.onSalonResident,
@@ -30,6 +34,9 @@ class TownAreaNavigator extends StatefulWidget {
   final int lifetimePoints;
   final List<TownResident> residents;
   final List<TownResident>? debugTownResidents;
+  final List<RemoteResident> remoteVisitors;
+  final Uri? remoteContentBaseUri;
+  final Future<void> Function(RemoteResident)? onRemoteVisitor;
   final SalonUnlockDebugMode salonUnlockMode;
   final Future<void> Function(TownResident)? onResident;
   final Future<void> Function(TownResident)? onSalonResident;
@@ -115,6 +122,9 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
               lifetimePoints: widget.lifetimePoints,
               residents: widget.residents,
               debugTownResidents: widget.debugTownResidents,
+              remoteVisitors: widget.remoteVisitors,
+              remoteContentBaseUri: widget.remoteContentBaseUri,
+              onRemoteVisitor: widget.onRemoteVisitor,
               onResident: widget.onResident,
               onEnterSalon: () {
                 if (!isSalonAccessible(
