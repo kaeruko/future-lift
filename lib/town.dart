@@ -219,7 +219,10 @@ class _TownSceneState extends State<TownScene> {
             excludeFromSemantics: true,
           ),
         ),
-        for (var index = 0; index < count; index++)
+        // Total slots include visitors, but each collection must be indexed
+        // using its own length. Otherwise two owned + one remote attempts to
+        // read visibleResidents[2] and throws RangeError.
+        for (var index = 0; index < visibleResidents.length; index++)
           _resident(
             visibleResidents[index],
             index,

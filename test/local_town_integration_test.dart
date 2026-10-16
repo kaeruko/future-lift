@@ -41,6 +41,62 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+
+  testWidgets('two owned residents plus one visitor do not overrun the owned list',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: true),
+        child: child!,
+      ),
+      home: Scaffold(body: TownScene(
+        level: 0, area: TownArea.plaza, lifetimePoints: 0,
+        residents: const [TownResident.shiba, TownResident.rabbit],
+        remoteVisitors: const [visitor], remoteContentBaseUri: base,
+      )),
+    ));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('resident-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('resident-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('resident-2')), findsNothing);
+    expect(find.byKey(const ValueKey('remote-visitor-038_owl')), findsOneWidget);
+    expect(find.byKey(const ValueKey('remote-visitor-sprite-038_owl')),
+        findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('two visitors can occupy slots without any owned residents',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const second = RemoteResident(
+      id: '039_fox', label: 'きつね', artFolder: '039_fox',
+      homeAreaId: 'plaza', profile: '',
+    );
+    await tester.pumpWidget(MaterialApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: true),
+        child: child!,
+      ),
+      home: Scaffold(body: TownScene(
+        level: 0, area: TownArea.plaza, lifetimePoints: 0,
+        residents: const [],
+        remoteVisitors: const [visitor, second], remoteContentBaseUri: base,
+      )),
+    ));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('resident-0')), findsNothing);
+    expect(find.byKey(const ValueKey('remote-visitor-038_owl')), findsOneWidget);
+    expect(find.byKey(const ValueKey('remote-visitor-039_fox')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('navigator passes visitor into town scene', (tester) async {
     tester.view.physicalSize = const Size(430, 1000);
     tester.view.devicePixelRatio = 1;
