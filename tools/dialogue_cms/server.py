@@ -33,6 +33,43 @@ def portrait_path(folder):
     return image
 
 
+RUNTIME_SPRITE_FILE = re.compile(
+    r"(?:idle_front_01|clap_front_0[12]|"
+    r"walk_(?:front|back|left|right)_0[1-4])\.png\Z"
+)
+
+
+def runtime_catalog():
+    """One validated snapshot for local remote-content experiments."""
+    registry = validate_catalog(load_catalog())
+    dialogues = json.loads(DATA.read_text(encoding="utf-8"))
+    validate(dialogues, residents={row["id"] for row in registry["characters"]})
+    return {
+        "version": 1,
+        "characters": registry["characters"],
+        "dialogues": dialogues["dialogues"],
+    }
+
+
+def runtime_sprite_path(folder, filename):
+    if (not isinstance(folder, str)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", folder)
+            or ".." in folder
+            or not isinstance(filename, str)
+            or RUNTIME_SPRITE_FILE.fullmatch(filename) is None):
+        raise ValueError("Invalid runtime sprite path")
+    catalog = validate_catalog(load_catalog())
+    if folder not in {row["artFolder"] for row in catalog["characters"]}:
+        raise ValueError("Unregistered sprite folder: " + folder)
+    root = SPRITES.resolve()
+    image = (root / folder / filename).resolve()
+    if not image.is_relative_to(root):
+        raise ValueError("Runtime sprite escaped asset root")
+    if not image.is_file():
+        raise FileNotFoundError(f"Missing runtime sprite: {folder}/{filename}")
+    return image
+
+
 def resident_ids():
     return {row["id"] for row in validate_catalog(load_catalog())["characters"]}
 MISSIONS = {
@@ -246,6 +283,34 @@ class Handler(BaseHTTPRequestHandler):
                 raw = image.read_bytes()
                 if not raw.startswith(b"\x89PNG\r\n\x1a\n"):
                     raise OSError(f"Not a valid PNG: {image}")
+                self._headers(200, "image/png", len(raw))
+                self.wfile.write(raw)
+            except ValueError as exc:
+                self._send(400, {"error": str(exc)})
+            except FileNotFoundError as exc:
+                self._send(404, {"error": str(exc)})
+            except OSError as exc:
+                self._send(500, {"error": str(exc)})
+        elif path == "/api/runtime/catalog":
+            try:
+                if url.query:
+                    raise ValueError("Runtime catalog takes no query parameters")
+                self._send(200, runtime_catalog())
+            except ValueError as exc:
+                self._send(400, {"error": str(exc)})
+            except (OSError, TypeError) as exc:
+                self._send(500, {"error": str(exc)})
+        elif path.startswith("/api/runtime/sprites/"):
+            try:
+                if url.query:
+                    raise ValueError("Runtime sprites take no query parameters")
+                segments = path.removeprefix("/api/runtime/sprites/").split("/")
+                if len(segments) != 2:
+                    raise ValueError("Runtime sprite requires folder and filename")
+                image = runtime_sprite_path(*segments)
+                raw = image.read_bytes()
+                if not raw.startswith(b"\x89PNG\r\n\x1a\n"):
+                    raise OSError(f"Invalid PNG file: {image}")
                 self._headers(200, "image/png", len(raw))
                 self.wfile.write(raw)
             except ValueError as exc:

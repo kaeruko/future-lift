@@ -6,7 +6,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from server import portrait_path, validate, write_document
+from server import (portrait_path, runtime_catalog, runtime_sprite_path,
+                    validate, write_document)
 from characters import (load_catalog, validate_catalog, generate_dart, generate_pubspec,
                         DART, PUBSPEC, save_catalog_and_dialogues, validate_dialogue_ids)
 
@@ -32,6 +33,39 @@ class CmsTests(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             portrait_path("999999_missing")
 
+
+    def test_runtime_catalog_includes_new_residents_and_dialogues(self):
+        result = runtime_catalog()
+        self.assertEqual(result["version"], 1)
+        characters = {row["id"] for row in result["characters"]}
+        self.assertIn("037_tora", characters)
+        self.assertTrue(any(row["residentId"] == "037_tora"
+                            for row in result["dialogues"]))
+        self.assertEqual(len(characters), len(result["characters"]))
+
+    def test_runtime_sprite_paths_are_explicit_and_safe(self):
+        image = runtime_sprite_path("037_tora", "idle_front_01.png")
+        self.assertTrue(image.is_file())
+        self.assertTrue(image.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        self.assertEqual(runtime_sprite_path("037_tora", "clap_front_02.png").suffix, ".png")
+        for folder, filename in (
+            ("../../tmp", "idle_front_01.png"),
+            ("037_tora", "../../characters.json"),
+            ("037_tora", "preview_clap.gif"),
+            ("037_tora", "random.png"),
+            ("99999_unregistered", "idle_front_01.png"),
+        ):
+            with self.subTest(folder=folder, filename=filename):
+                with self.assertRaises(ValueError):
+                    runtime_sprite_path(folder, filename)
+
+    def test_runtime_catalog_invalid_data_fails_without_fallback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "dialogues.json"
+            path.write_text('{"version":1,"dialogues":[]}', encoding="utf-8")
+            with patch("server.DATA", path):
+                with self.assertRaisesRegex(ValueError, "nonempty"):
+                    runtime_catalog()
 
     def test_character_registry_and_generated_files(self):
         registry = validate_catalog(load_catalog())
