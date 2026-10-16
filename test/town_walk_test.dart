@@ -38,7 +38,28 @@ void main() {
     expect(townWalkPose(0, const Duration(milliseconds: 12800)).direction,
         WalkDirection.right);
     expect(() => townWalkPose(-1, Duration.zero), throwsRangeError);
-    expect(() => townWalkPose(8, Duration.zero), throwsRangeError);
+    expect(townWalkPose(8, Duration.zero, totalSlots: 12).x,
+        inInclusiveRange(0, .86));
+    expect(
+      () => townWalkPose(12, Duration.zero, totalSlots: 12),
+      throwsRangeError,
+    );
+  });
+
+  test('more than eight walkers use distinct, bounded positions', () {
+    for (final count in [9, 12, 25, 60]) {
+      final origins = <(double, double)>{};
+      for (var i = 0; i < count; i++) {
+        final origin = townWalkOrigin(i, totalSlots: count);
+        expect(origins.add(origin), isTrue, reason: 'duplicate slot $i');
+        final pose = townWalkPose(
+          i, const Duration(milliseconds: 1350), totalSlots: count);
+        expect(pose.x, inInclusiveRange(0, .86));
+        expect(pose.y, inInclusiveRange(0, .82));
+      }
+      expect(origins.length, count);
+    }
+    expect(() => townWalkOrigin(0, totalSlots: 0), throwsRangeError);
   });
 
   test('sprite directions use the real files, shiba mirrors left explicitly', () {

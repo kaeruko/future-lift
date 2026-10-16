@@ -31,18 +31,12 @@ void main() {
       throwsArgumentError,
     );
     expect(
-      () => visibleTownResidents(
-        owned,
-        debugOverride: TownResident.values.take(townResidentLimit + 1).toList(),
-      ),
-      throwsArgumentError,
+      visibleTownResidents(owned, debugOverride: TownResident.values.toList()),
+      TownResident.values.toList(),
     );
     expect(
-      visibleTownResidents(
-        owned,
-        debugOverride: TownResident.values.take(townResidentLimit).toList(),
-      ).length,
-      townResidentLimit,
+      visibleTownResidents(TownResident.values).length,
+      TownResident.values.length,
     );
   });
 

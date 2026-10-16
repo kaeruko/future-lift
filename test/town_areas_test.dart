@@ -47,6 +47,11 @@ void main() {
     expect(TownResident.c027_daydreamer.homeAreaId, 'village');
     expect(TownResident.c009_chef.homeAreaId, 'shopping');
     final all = TownResident.values.toList();
+    final together = [
+      for (final area in TownArea.values) ...areaResidents(all, area),
+    ];
+    expect(together.length, all.length);
+    expect(together.toSet(), all.toSet());
     expect(areaResidents(all, TownArea.plaza),
         [TownResident.shiba, TownResident.penguin, TownResident.c036_mosa]);
     expect(areaResidents(all, TownArea.park),
