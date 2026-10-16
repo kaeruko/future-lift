@@ -7,6 +7,10 @@ import 'town_walk.dart';
 import 'town_areas.dart';
 
 const townNames = ['穏やかなまち', '花のあるまち', '笑顔が集まるまち', 'にぎやかなまち'];
+/// The tappable front-right house doorway in the 941x1672 village artwork.
+/// Keep this rect in source-image coordinates, not screen coordinates.
+const villageSalonDoor = Rect.fromLTWH(782, 728, 112, 132);
+
 const townDescriptions = [
   'いつものまちで、みんなが暮らしています。',
   '道ばたに、色とりどりの花が咲きました。',
@@ -23,6 +27,7 @@ class TownScene extends StatefulWidget {
     this.area = TownArea.plaza,
     this.debugTownResidents,
     this.onResident,
+    this.onEnterSalon,
     this.fillViewport = false,
   });
 
@@ -32,6 +37,7 @@ class TownScene extends StatefulWidget {
   /// A temporary debug-only cast; null uses the owned residents.
   final List<TownResident>? debugTownResidents;
   final Future<void> Function(TownResident)? onResident;
+  final VoidCallback? onEnterSalon;
 
   /// Fit the *selected area's* own source dimensions to the phone.
   /// Walkers and background share a transform, without image distortion.
@@ -158,6 +164,28 @@ class _TownSceneState extends State<TownScene> {
             height,
             size,
             reduced,
+          ),
+        if (widget.area == TownArea.village && widget.onEnterSalon != null)
+          Positioned(
+            left: width * villageSalonDoor.left / 941,
+            top: height * villageSalonDoor.top / 1672,
+            width: width * villageSalonDoor.width / 941,
+            height: height * villageSalonDoor.height / 1672,
+            child: Semantics(
+              button: true,
+              label: '桜の美容室に入る',
+              child: Tooltip(
+                message: '桜の美容室',
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
+                    key: const ValueKey('village-salon-entrance'),
+                    onTap: widget.onEnterSalon,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+            ),
           ),
       ],
     );

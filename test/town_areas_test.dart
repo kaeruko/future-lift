@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/resident_collection.dart';
+import 'package:future_lift/town.dart';
 import 'package:future_lift/town_area_navigator.dart';
 import 'package:future_lift/town_areas.dart';
 
@@ -56,6 +57,41 @@ void main() {
     expect(() => areaResidents(all, TownArea.plaza,
         debugOverride: [TownResident.shiba, TownResident.shiba]),
         throwsArgumentError);
+  });
+
+  testWidgets('village front door can be tapped without intercepting other areas',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 930);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    var visits = 0;
+    Future<void> show(TownArea area) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: TownScene(
+            level: 0,
+            area: area,
+            residents: const [],
+            fillViewport: true,
+            onEnterSalon: () => visits++,
+          ),
+        ),
+      ));
+      await tester.pump();
+    }
+
+    await show(TownArea.plaza);
+    expect(find.byKey(const ValueKey('village-salon-entrance')), findsNothing);
+
+    await show(TownArea.village);
+    final door = find.byKey(const ValueKey('village-salon-entrance'));
+    expect(door, findsOneWidget);
+    await tester.tap(door);
+    await tester.pump();
+    expect(visits, 1);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('arrows navigate locked and artwork-pending areas', (tester) async {

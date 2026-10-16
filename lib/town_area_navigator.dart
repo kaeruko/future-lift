@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'resident_collection.dart';
+import 'salon_room.dart';
 import 'town.dart';
 import 'town_areas.dart';
 
@@ -86,6 +87,14 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
               residents: widget.residents,
               debugTownResidents: widget.debugTownResidents,
               onResident: widget.onResident,
+              onEnterSalon: () {
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    settings: const RouteSettings(name: '/village/salon'),
+                    builder: (_) => const SalonRoom(),
+                  ),
+                );
+              },
               fillViewport: true,
             )
           else
