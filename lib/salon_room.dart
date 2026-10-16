@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'resident_collection.dart';
@@ -5,7 +7,7 @@ import 'resident_collection.dart';
 /// An interior reached by tapping the door of the right-hand village house.
 /// Route navigation preserves the selected village and resident positions.
 /// The salon's host is always present; she is not a gacha/town-walking resident.
-class SalonRoom extends StatelessWidget {
+class SalonRoom extends StatefulWidget {
   const SalonRoom({super.key, this.onResident});
 
   static const backgroundAsset = 'assets/kotohogu/salon_background_001.jpg';
@@ -13,6 +15,65 @@ class SalonRoom extends StatelessWidget {
 
   /// Uses the same CMS-backed conversations and seen-ID tracking as town NPCs.
   final Future<void> Function(TownResident)? onResident;
+
+  @override
+  State<SalonRoom> createState() => _SalonRoomState();
+}
+
+class _SalonRoomState extends State<SalonRoom> {
+  static const _frameDuration = Duration(milliseconds: 200);
+  static const _cycleFrames = 40;
+  Timer? _ticker;
+  int _ticks = 0;
+  bool _talking = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final enabled = TickerMode.valuesOf(context).enabled &&
+        !MediaQuery.disableAnimationsOf(context);
+    if (enabled && _ticker == null) {
+      _ticker = Timer.periodic(_frameDuration, (_) {
+        if (mounted && !_talking) setState(() => _ticks++);
+      });
+    } else if (!enabled) {
+      _ticker?.cancel();
+      _ticker = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  String _spriteAsset(BuildContext context) {
+    if (_talking ||
+        MediaQuery.disableAnimationsOf(context) ||
+        !TickerMode.valuesOf(context).enabled) {
+      return SalonRoom.host.idleAsset;
+    }
+    final frame = _ticks % _cycleFrames;
+    if (frame < 4) return SalonRoom.host.idleAsset;
+    // Cycle front-facing walking frames without moving the sprite's position.
+    if (frame < 32) {
+      return SalonRoom.host.walkAsset(WalkDirection.front, (frame - 4) % 4);
+    }
+    // Finish the eight-second cycle with a short round of applause.
+    return SalonRoom.host.clapAssets[((frame - 32) ~/ 2) % 2];
+  }
+
+  Future<void> _talk() async {
+    final callback = widget.onResident;
+    if (callback == null || _talking) return;
+    setState(() => _talking = true);
+    try {
+      await callback(SalonRoom.host);
+    } finally {
+      if (mounted) setState(() => _talking = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -32,7 +93,7 @@ class SalonRoom extends StatelessWidget {
                 children: [
                   Positioned.fill(
                     child: Image.asset(
-                      backgroundAsset,
+                      SalonRoom.backgroundAsset,
                       key: const ValueKey('salon-background'),
                       fit: BoxFit.cover,
                       excludeFromSemantics: true,
@@ -46,19 +107,19 @@ class SalonRoom extends StatelessWidget {
                     width: 240,
                     height: 240,
                     child: Semantics(
-                      button: onResident != null,
-                      label: '${host.label}のおはなし',
+                      button: widget.onResident != null,
+                      label: '${SalonRoom.host.label}のおはなし',
                       child: Tooltip(
-                        message: host.label,
+                        message: SalonRoom.host.label,
                         child: InkWell(
                           key: const ValueKey('salon-fox-resident'),
                           borderRadius: BorderRadius.circular(36),
-                          onTap: onResident == null
-                              ? null
-                              : () => onResident!(host),
+                          onTap: widget.onResident == null ? null : _talk,
                           child: Image.asset(
-                            host.idleAsset,
+                            _spriteAsset(context),
+                            key: const ValueKey('salon-fox-sprite'),
                             fit: BoxFit.contain,
+                            gaplessPlayback: true,
                             excludeFromSemantics: true,
                           ),
                         ),
