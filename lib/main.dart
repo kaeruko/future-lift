@@ -137,6 +137,12 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
         ? SynchronousFuture(widget.dialogueCatalog!)
         : (_cachedDialogueCatalog ??= DialogueCatalog.load());
     if (_localContentUrl.isNotEmpty) {
+      if (!kDebugMode) {
+        throw StateError(
+          'Local HTTP content is for debug builds only. '
+          'Do not enable KOTOHOGU_LOCAL_CONTENT_URL in release builds.',
+        );
+      }
       _remoteContentBaseUri = localServerUri(_localContentUrl);
       _remoteContentFuture = fetchLocalContent(_remoteContentBaseUri!);
     }
