@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'home_skin.dart';
@@ -18,6 +19,8 @@ class DebugMenuScreen extends StatelessWidget {
     required this.debugTownResidents,
     required this.onDebugTownEnabled,
     required this.onDebugTownResidentChanged,
+    required this.salonUnlockMode,
+    required this.onSalonUnlockModeChanged,
     required this.busy,
     this.drawBackground = true,
   });
@@ -34,6 +37,8 @@ class DebugMenuScreen extends StatelessWidget {
   final List<TownResident>? debugTownResidents;
   final ValueChanged<bool> onDebugTownEnabled;
   final void Function(TownResident, bool) onDebugTownResidentChanged;
+  final SalonUnlockDebugMode salonUnlockMode;
+  final ValueChanged<SalonUnlockDebugMode> onSalonUnlockModeChanged;
   final bool busy;
 
   Future<void> _addTickets(BuildContext context, int amount) async {
@@ -277,6 +282,51 @@ class DebugMenuScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 const Divider(),
                 const SizedBox(height: 8),
+                if (kDebugMode) ...[
+                  const Text('施設の開放テスト',
+                      style: TextStyle(color: wood, fontSize: 20,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('💇 桜の美容室',
+                      style: TextStyle(color: wood,
+                          fontWeight: FontWeight.bold)),
+                  Text(
+                    '通常の状態：${isSalonUnlocked(progress.residents.owned) ? "開放" : "未開放"}'
+                    '（つやこさんの所持で判定）',
+                    key: const ValueKey('debug-salon-actual-status'),
+                    style: const TextStyle(color: wood),
+                  ),
+                  for (final (mode, title) in [
+                    (SalonUnlockDebugMode.normal, '通常の開放条件で判定'),
+                    (SalonUnlockDebugMode.forceOpen, '強制開放してテスト'),
+                    (SalonUnlockDebugMode.forceClosed, '強制未開放でテスト'),
+                  ])
+                    RadioListTile<SalonUnlockDebugMode>(
+                      key: ValueKey('debug-salon-mode-${mode.name}'),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(title),
+                      value: mode,
+                      groupValue: salonUnlockMode,
+                      onChanged: busy ? null : (value) {
+                        if (value != null) onSalonUnlockModeChanged(value);
+                      },
+                    ),
+                  Text(
+                    'テスト中の状態：${isSalonAccessible(progress.residents.owned, debugMode: salonUnlockMode) ? "開放" : "未開放"}',
+                    key: const ValueKey('debug-salon-effective-status'),
+                    style: const TextStyle(color: wood,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const Text(
+                    '所持キャラ・ガチャ結果・既読記録は変更しません。'
+                    '強制開放中は2人を仮表示して会話も試せます。'
+                    '里山にも一時的に入れます。アプリ再起動で通常に戻ります。',
+                    style: TextStyle(color: wood, fontSize: 12, height: 1.6),
+                  ),
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                ],
                 const Text(
                   'テスト用ことほぎの追加',
                   style: TextStyle(

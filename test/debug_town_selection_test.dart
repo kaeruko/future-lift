@@ -36,7 +36,9 @@ void main() {
     );
     expect(
       visibleTownResidents(TownResident.values).length,
-      TownResident.values.length,
+      TownResident.values.where(
+          (resident) => resident.walkInTown &&
+              resident.homeAreaId != 'salon').length,
     );
   });
 
@@ -163,4 +165,105 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
+  testWidgets('salon debug mode is session only and keeps saves untouched',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final store = MemoryStore();
+    final catalog = DialogueCatalog.fromJson(jsonEncode({
+      'version': 1,
+      'dialogues': [
+        for (final resident in TownResident.values)
+          {
+            'id': 'debug_salon_${resident.id}',
+            'residentId': resident.id,
+            'text': 'こんにちは、${resident.label}です。',
+            'priority': 0,
+            'once': false,
+            'logic': 'all',
+            'conditions': [],
+          },
+      ],
+    }));
+    final controller = ProgressController(
+      store, clock: () => DateTime(2026, 10, 16, 12));
+    Future<void> start(ProgressController active) async {
+      await tester.pumpWidget(FutureLiftApp(
+        controller: active,
+        dialogueCatalog: catalog,
+        enableTutorial: false,
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    await start(controller);
+    final originalRaw = store.raw;
+    final originalWrites = store.writes;
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
+    await tester.pumpAndSettle();
+    final forceOpen = find.byKey(const ValueKey('debug-salon-mode-forceOpen'));
+    await tester.scrollUntilVisible(forceOpen, 170);
+    await tester.pumpAndSettle();
+    await tester.tap(forceOpen);
+    await tester.pumpAndSettle();
+    expect(tester.widget<DebugMenuScreen>(find.byType(DebugMenuScreen))
+        .salonUnlockMode, SalonUnlockDebugMode.forceOpen);
+    expect(find.text('テスト中の状態：開放'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byKey(const ValueKey('town-area-next')));
+      await tester.pumpAndSettle();
+    }
+    expect(tester.widget<TownAreaNavigator>(find.byType(TownAreaNavigator))
+        .area, TownArea.village);
+    await tester.tap(find.byKey(const ValueKey('village-salon-entrance')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('salon-resident-035_beaty')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('salon-fox-resident')),
+        findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('salon-resident-035_beaty')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('こんにちは、つやこです。'), findsOneWidget);
+    await tester.tap(find.text('また話そう'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(controller.progress!.seenDialogues, isEmpty);
+    expect(controller.progress!.residents.owned,
+        [TownResident.shiba, TownResident.rabbit]);
+    expect(store.raw, originalRaw);
+    expect(store.writes, originalWrites);
+
+    await tester.tap(find.byKey(const ValueKey('salon-return-village')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
+    await tester.pumpAndSettle();
+    final forceClosed = find.byKey(
+        const ValueKey('debug-salon-mode-forceClosed'));
+    await tester.scrollUntilVisible(forceClosed, 170);
+    await tester.pumpAndSettle();
+    await tester.tap(forceClosed);
+    await tester.pumpAndSettle();
+    expect(find.text('テスト中の状態：未開放'), findsOneWidget);
+
+    // A fresh app session uses normal mode without any stored override.
+    await tester.pumpWidget(const SizedBox());
+    await start(ProgressController(
+      store, clock: () => DateTime(2026, 10, 16, 12)));
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<DebugMenuScreen>(find.byType(DebugMenuScreen))
+        .salonUnlockMode, SalonUnlockDebugMode.normal);
+    expect(store.raw, originalRaw);
+    expect(store.writes, originalWrites);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
 }

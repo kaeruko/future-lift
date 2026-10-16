@@ -36,6 +36,38 @@ void main() {
         isNot(contains(TownResident.c035_beaty)));
   });
 
+  test('debug salon modes respect ownership in normal mode', () {
+    const foxOnly = [TownResident.c031_kimono_fox];
+    const ownerOnly = [TownResident.c035_beaty];
+    expect(isSalonAccessible(foxOnly), isFalse);
+    expect(isSalonAccessible(foxOnly,
+        debugMode: SalonUnlockDebugMode.forceOpen), isTrue);
+    expect(isSalonAccessible(ownerOnly,
+        debugMode: SalonUnlockDebugMode.forceClosed), isFalse);
+    expect(isSalonAccessible(ownerOnly), isTrue);
+    expect(isSalonUnlocked(foxOnly), isFalse);
+    expect(isSalonUnlocked(ownerOnly), isTrue);
+    expect(salonResidents(foxOnly), foxOnly);
+    expect(salonResidents(const [], previewUnowned: true),
+        [TownResident.c035_beaty, TownResident.c031_kimono_fox]);
+  });
+
+  testWidgets('forced preview renders both unowned salon characters',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 930);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(const MaterialApp(
+      home: SalonRoom(previewUnownedResidents: true),
+    ));
+    expect(find.byKey(const ValueKey('salon-resident-035_beaty')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('salon-fox-resident')),
+        findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('both acquired salon residents appear and can talk',
       (tester) async {
     tester.view.physicalSize = const Size(430, 930);

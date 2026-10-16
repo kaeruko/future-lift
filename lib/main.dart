@@ -115,6 +115,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   final _dialogueIndex = <TownResident, int>{};
   /// Debug-only town cast kept in memory; never written to the save file.
   List<TownResident>? _debugTownResidents;
+  /// In-memory only; recreated as normal whenever the app restarts.
+  SalonUnlockDebugMode _salonUnlockMode = SalonUnlockDebugMode.normal;
   static Future<DialogueCatalog>? _cachedDialogueCatalog;
   late final Future<DialogueCatalog> _dialoguesFuture;
   ProgressController get controller => widget.controller;
@@ -278,6 +280,14 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     });
   }
 
+  void _setSalonUnlockMode(SalonUnlockDebugMode mode) {
+    if (!kDebugMode || controller.busy || controller.failure != null ||
+        controller.progress == null) {
+      return;
+    }
+    setState(() => _salonUnlockMode = mode);
+  }
+
   Future<void> _showDialogue(TownResident resident, {bool inSalon = false}) async {
     if (controller.busy || controller.failure != null ||
         controller.progress == null) {
@@ -287,7 +297,11 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     if (!mounted || controller.failure != null) return;
     final index = _dialogueIndex[resident] ?? 0;
     final visibleIds = (inSalon
-        ? salonResidents(controller.progress!.residents.owned)
+        ? salonResidents(
+            controller.progress!.residents.owned,
+            previewUnowned: kDebugMode &&
+                _salonUnlockMode == SalonUnlockDebugMode.forceOpen,
+          )
         : _page == 2
             ? areaResidents(
                 controller.progress!.residents.owned,
@@ -307,6 +321,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     );
     // Conversations in the debug-only cast must not alter saved seen IDs.
     if (_debugTownResidents == null &&
+        !(inSalon && kDebugMode &&
+            _salonUnlockMode == SalonUnlockDebugMode.forceOpen) &&
         !controller.progress!.seenDialogues.contains(line.id)) {
       final persisted = await controller.recordDialogueSeen(line.id);
       if (!persisted || !mounted) return;
@@ -513,6 +529,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                         debugTownResidents: _debugTownResidents,
                         onDebugTownEnabled: _setDebugTownEnabled,
                         onDebugTownResidentChanged: _setDebugTownResident,
+                        salonUnlockMode: _salonUnlockMode,
+                        onSalonUnlockModeChanged: _setSalonUnlockMode,
                         busy: controller.busy || _celebrating,
                         drawBackground: false,
                       ),
@@ -582,6 +600,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
         lifetimePoints: progress.points,
         residents: progress.residents.owned,
         debugTownResidents: _debugTownResidents,
+        salonUnlockMode: kDebugMode
+            ? _salonUnlockMode : SalonUnlockDebugMode.normal,
         onResident: _showDialogue,
         onSalonResident: (resident) => _showDialogue(resident, inSalon: true),
       ),

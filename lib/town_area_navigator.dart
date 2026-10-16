@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'resident_collection.dart';
@@ -16,6 +17,7 @@ class TownAreaNavigator extends StatefulWidget {
     required this.lifetimePoints,
     required this.residents,
     this.debugTownResidents,
+    this.salonUnlockMode = SalonUnlockDebugMode.normal,
     this.onResident,
     this.onSalonResident,
   });
@@ -28,6 +30,7 @@ class TownAreaNavigator extends StatefulWidget {
   final int lifetimePoints;
   final List<TownResident> residents;
   final List<TownResident>? debugTownResidents;
+  final SalonUnlockDebugMode salonUnlockMode;
   final Future<void> Function(TownResident)? onResident;
   final Future<void> Function(TownResident)? onSalonResident;
 
@@ -50,7 +53,11 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
     final area = widget.area;
     final debugPreview = widget.debugTownResidents != null;
     final unlocked = area.isUnlocked(widget.lifetimePoints);
-    final accessible = unlocked || debugPreview;
+    // Allow test access to the village door before earning 300 points.
+    final salonOverride = kDebugMode &&
+        widget.salonUnlockMode != SalonUnlockDebugMode.normal;
+    final accessible = unlocked || debugPreview ||
+        (area == TownArea.village && salonOverride);
     // The shopping-street lantern strings leave a central opening for a sign.
     // Keep the conventional heading when the area is still locked.
     final hangingShoppingSign =
@@ -95,12 +102,18 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
               debugTownResidents: widget.debugTownResidents,
               onResident: widget.onResident,
               onEnterSalon: () {
-                if (!isSalonUnlocked(widget.residents)) {
+                if (!isSalonAccessible(
+                  widget.residents,
+                  debugMode: widget.salonUnlockMode,
+                )) {
+                  final forcedClosed = kDebugMode &&
+                      widget.salonUnlockMode ==
+                          SalonUnlockDebugMode.forceClosed;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'つやこさんをガチャでお迎えすると、桜の美容室が開放されるよ',
-                      ),
+                    SnackBar(
+                      content: Text(forcedClosed
+                          ? 'デバッグ設定で桜の美容室を未開放にしています'
+                          : 'つやこさんをガチャでお迎えすると、桜の美容室が開放されるよ'),
                     ),
                   );
                   return;
@@ -110,6 +123,8 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
                     settings: const RouteSettings(name: '/village/salon'),
                     builder: (_) => SalonRoom(
                       ownedResidents: widget.residents,
+                      previewUnownedResidents: kDebugMode &&
+                          widget.salonUnlockMode == SalonUnlockDebugMode.forceOpen,
                       onResident: widget.onSalonResident,
                     ),
                   ),

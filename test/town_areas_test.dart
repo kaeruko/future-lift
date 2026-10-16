@@ -73,6 +73,60 @@ void main() {
   });
 
 
+  testWidgets('facility debug modes override only salon entry temporarily',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 930);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    Widget scene(SalonUnlockDebugMode mode, {
+      List<TownResident> owned = const [TownResident.c031_kimono_fox],
+    }) => MaterialApp(
+      home: Scaffold(
+        body: TownAreaNavigator(
+          area: TownArea.village,
+          onAreaChanged: (_) {},
+          level: 0,
+          lifetimePoints: 0,
+          residents: owned,
+          salonUnlockMode: mode,
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(scene(SalonUnlockDebugMode.forceOpen));
+    expect(find.byKey(const ValueKey('village-salon-entrance')),
+        findsOneWidget, reason: 'Debug override reaches locked village door');
+    await tester.tap(find.byKey(const ValueKey('village-salon-entrance')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(SalonRoom), findsOneWidget);
+    expect(find.byKey(const ValueKey('salon-resident-035_beaty')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('salon-fox-resident')),
+        findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('salon-return-village')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.pumpWidget(scene(
+      SalonUnlockDebugMode.forceClosed,
+      owned: const [TownResident.c035_beaty],
+    ));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('village-salon-entrance')));
+    await tester.pump();
+    expect(find.text('デバッグ設定で桜の美容室を未開放にしています'),
+        findsOneWidget);
+    expect(find.byType(SalonRoom), findsNothing);
+
+    await tester.pumpWidget(scene(SalonUnlockDebugMode.normal));
+    await tester.pump();
+    expect(find.text('まだ行けないエリアだよ'), findsOneWidget);
+    expect(find.byKey(const ValueKey('village-salon-entrance')), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('salon opens with owner, not with its fox employee',
       (tester) async {
     tester.view.physicalSize = const Size(430, 930);

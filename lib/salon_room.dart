@@ -9,7 +9,12 @@ import 'resident_collection.dart';
 /// The owner unlocks entry through gacha. The fox employee appears only
 /// after being acquired separately, and neither resident walks outdoors.
 class SalonRoom extends StatefulWidget {
-  const SalonRoom({super.key, this.onResident, this.ownedResidents = const []});
+  const SalonRoom({
+    super.key,
+    this.onResident,
+    this.ownedResidents = const [],
+    this.previewUnownedResidents = false,
+  });
 
   static const backgroundAsset = 'assets/kotohogu/salon_background_001.jpg';
   static const host = TownResident.c031_kimono_fox;
@@ -17,6 +22,8 @@ class SalonRoom extends StatefulWidget {
   /// Uses the same CMS-backed conversations and seen-ID tracking as town NPCs.
   final Future<void> Function(TownResident)? onResident;
   final List<TownResident> ownedResidents;
+  /// Debug-only visual preview; does not grant ownership.
+  final bool previewUnownedResidents;
 
   @override
   State<SalonRoom> createState() => _SalonRoomState();
@@ -146,7 +153,10 @@ class _SalonRoomState extends State<SalonRoom> {
                     ),
                   ),
                   for (final (index, resident) in
-                      salonResidents(widget.ownedResidents).indexed)
+                      salonResidents(
+                        widget.ownedResidents,
+                        previewUnowned: widget.previewUnownedResidents,
+                      ).indexed)
                     _salonResident(context, resident, index),
                 ],
               ),

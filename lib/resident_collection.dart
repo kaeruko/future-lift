@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 int get ownedResidentLimit => TownResident.values.length > 8 ? TownResident.values.length : 8;
@@ -27,13 +28,35 @@ List<TownResident> visibleTownResidents(
 bool isSalonUnlocked(Iterable<TownResident> owned) =>
     owned.contains(TownResident.c035_beaty);
 
+/// Temporary debug preview, never part of saved progress.
+enum SalonUnlockDebugMode { normal, forceOpen, forceClosed }
+
+bool isSalonAccessible(
+  Iterable<TownResident> owned, {
+  SalonUnlockDebugMode debugMode = SalonUnlockDebugMode.normal,
+}) {
+  final ownedOwner = isSalonUnlocked(owned);
+  if (!kDebugMode) return ownedOwner;
+  return switch (debugMode) {
+    SalonUnlockDebugMode.normal => ownedOwner,
+    SalonUnlockDebugMode.forceOpen => true,
+    SalonUnlockDebugMode.forceClosed => false,
+  };
+}
+
 /// Salon occupants are separate from outdoor walkers.
 /// Every gacha resident must be acquired before appearing in the salon.
-List<TownResident> salonResidents(Iterable<TownResident> owned) {
+List<TownResident> salonResidents(
+  Iterable<TownResident> owned, {
+  bool previewUnowned = false,
+}) {
+  if (previewUnowned && !kDebugMode) {
+    throw StateError('Salon preview of unowned residents requires debug mode');
+  }
   final ownedSet = owned.toSet();
   final occupants = TownResident.values.where((resident) =>
       resident.homeAreaId == 'salon' &&
-      (!resident.inGacha || ownedSet.contains(resident))).toList();
+      (previewUnowned || !resident.inGacha || ownedSet.contains(resident))).toList();
   const owner = TownResident.c035_beaty;
   const fox = TownResident.c031_kimono_fox;
   return List<TownResident>.unmodifiable([
