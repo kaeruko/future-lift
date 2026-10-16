@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'celebration.dart';
 import 'dialogue_engine.dart';
 import 'local_content_preview.dart';
+import 'google_drive_content_source.dart';
 import 'local_town_visitors.dart';
 import 'progress.dart';
 import 'home_skin.dart';
@@ -30,6 +31,7 @@ void main() {
       controller: ProgressController(
         LocalProgressStore(SharedPreferencesAsync()),
       ),
+      remoteContentLoader: loadAppTownContent,
     ),
   );
 }
@@ -45,9 +47,13 @@ class FutureLiftApp extends StatelessWidget {
     required this.controller,
     this.dialogueCatalog,
     this.enableTutorial = true,
+    this.remoteContentLoader,
   });
   final ProgressController controller;
   final bool enableTutorial;
+  /// Production entrypoint resolves the URL from Google Drive.
+  /// Null keeps deterministic legacy widget tests network-independent.
+  final Future<HostedTownContent> Function()? remoteContentLoader;
   /// Optional fixed catalog allows deterministic tests without asset-loading races.
   final DialogueCatalog? dialogueCatalog;
 
@@ -80,6 +86,7 @@ class FutureLiftApp extends StatelessWidget {
       controller: controller,
       dialogueCatalog: dialogueCatalog,
       enableTutorial: enableTutorial,
+      remoteContentLoader: remoteContentLoader,
     ),
   );
 }
@@ -90,10 +97,12 @@ class FutureLiftHome extends StatefulWidget {
     required this.controller,
     this.dialogueCatalog,
     this.enableTutorial = true,
+    this.remoteContentLoader,
   });
   final ProgressController controller;
   final DialogueCatalog? dialogueCatalog;
   final bool enableTutorial;
+  final Future<HostedTownContent> Function()? remoteContentLoader;
 
   @override
   State<FutureLiftHome> createState() => _FutureLiftHomeState();
@@ -121,12 +130,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   SalonUnlockDebugMode _salonUnlockMode = SalonUnlockDebugMode.normal;
   static Future<DialogueCatalog>? _cachedDialogueCatalog;
   late final Future<DialogueCatalog> _dialoguesFuture;
-  // Opt-in local HTTP content test. Without the URL normal play is unchanged.
-  static const _localContentUrl = String.fromEnvironment(
-    'KOTOHOGU_LOCAL_CONTENT_URL',
-  );
-  Uri? _remoteContentBaseUri;
-  Future<RemoteContentCatalog>? _remoteContentFuture;
+  // A single future carries both the pinned CDN URL and matching catalog.
+  Future<HostedTownContent>? _remoteContentFuture;
   ProgressController get controller => widget.controller;
 
   @override
@@ -136,16 +141,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     _dialoguesFuture = widget.dialogueCatalog != null
         ? SynchronousFuture(widget.dialogueCatalog!)
         : (_cachedDialogueCatalog ??= DialogueCatalog.load());
-    if (_localContentUrl.isNotEmpty) {
-      if (!kDebugMode) {
-        throw StateError(
-          'Local HTTP content is for debug builds only. '
-          'Do not enable KOTOHOGU_LOCAL_CONTENT_URL in release builds.',
-        );
-      }
-      _remoteContentBaseUri = contentPreviewUri(_localContentUrl);
-      _remoteContentFuture = fetchLocalContent(_remoteContentBaseUri!);
-    }
+    final loader = widget.remoteContentLoader;
+    if (loader != null) _remoteContentFuture = loader();
     controller.initialize();
     _scheduleMidnight();
   }
@@ -378,7 +375,45 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<DialogueCatalog>(
+  Widget build(BuildContext context) => FutureBuilder<HostedTownContent>(
+    future: _remoteContentFuture,
+    builder: (context, hostedSnapshot) {
+      if (_remoteContentFuture != null && hostedSnapshot.hasError) {
+        return Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      '配信設定または住民データを取得できないため、停止しました。',
+                      key: ValueKey('town-remote-content-error'),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    SelectableText(
+                      '${hostedSnapshot.error}\n${hostedSnapshot.stackTrace}',
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: _reloadLocalResidents,
+                      child: const Text('再試行'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+      if (_remoteContentFuture != null && !hostedSnapshot.hasData) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+      return FutureBuilder<DialogueCatalog>(
     future: _dialoguesFuture,
     builder: (context, snapshot) {
       if (snapshot.hasError) {
@@ -404,6 +439,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
         );
       }
       return _buildWithProgress();
+    },
+      );
     },
   );
 
@@ -636,22 +673,19 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
 
 
   void _reloadLocalResidents() {
-    final uri = _remoteContentBaseUri;
-    if (uri == null) return;
+    final loader = widget.remoteContentLoader;
+    if (loader == null) return;
     setState(() {
-      // Same configured backend, no silent switch to bundled characters.
-      _remoteContentFuture = fetchLocalContent(uri);
+      // Re-read Drive on refresh/resume. Never switch to packaged assets.
+      _remoteContentFuture = loader();
     });
   }
 
   Future<void> _showLocalVisitor(
-      RemoteContentCatalog catalog, RemoteResident resident) async {
+      HostedTownContent hosted, RemoteResident resident) async {
     // This visitor is not owned. Never touch saved seenDialogues or tickets.
-    final line = visitorGreeting(catalog, resident.id);
-    final baseUri = _remoteContentBaseUri;
-    if (baseUri == null) {
-      throw StateError('Missing configured local content URI');
-    }
+    final line = visitorGreeting(hosted.catalog, resident.id);
+    final baseUri = hosted.baseUri;
     if (!mounted) return;
     await showDialog<void>(
       context: context,
@@ -699,7 +733,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   Widget _townWithLocalVisitors(Progress progress) {
     final future = _remoteContentFuture;
     if (future == null) return _townNavigator(progress, null);
-    return FutureBuilder<RemoteContentCatalog>(
+    return FutureBuilder<HostedTownContent>(
       future: future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -707,8 +741,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: SelectableText(
-                'ローカル配信データの取得に失敗したため、まちの表示を停止しました。\n'
-                '$_remoteContentBaseUri\n${snapshot.error}\n'
+                '配信データの取得に失敗したため、まちの表示を停止しました。\n'
+                '${snapshot.error}\n'
                 '${snapshot.stackTrace}',
                 key: const ValueKey('town-remote-content-error'),
               ),
@@ -724,11 +758,11 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   }
 
   Widget _townNavigator(
-      Progress progress, RemoteContentCatalog? remoteCatalog) {
-    final visitors = remoteCatalog == null
+      Progress progress, HostedTownContent? hosted) {
+    final visitors = hosted == null
         ? const <RemoteResident>[]
         : localVisitorsForArea(
-            remoteCatalog,
+            hosted.catalog,
             _townArea,
             lifetimePoints: progress.points,
             owned: progress.residents.owned,
@@ -746,23 +780,23 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           residents: progress.residents.owned,
           debugTownResidents: _debugTownResidents,
           remoteVisitors: visitors,
-          remoteContentBaseUri: _remoteContentBaseUri,
-          onRemoteVisitor: remoteCatalog == null
+          remoteContentBaseUri: hosted?.baseUri,
+          onRemoteVisitor: hosted == null
               ? null
-              : (resident) => _showLocalVisitor(remoteCatalog, resident),
+              : (resident) => _showLocalVisitor(hosted, resident),
           salonUnlockMode: kDebugMode
               ? _salonUnlockMode : SalonUnlockDebugMode.normal,
           onResident: _showDialogue,
           onSalonResident: (resident) =>
               _showDialogue(resident, inSalon: true),
         ),
-        if (_remoteContentBaseUri != null)
+        if (widget.remoteContentLoader != null)
           Positioned(
             right: 14,
             bottom: 18,
             child: FloatingActionButton.small(
               key: const ValueKey('town-remote-reload'),
-              tooltip: '配信中の住民を再読み込み',
+              tooltip: 'Google Driveの配信先と住民を再読み込み',
               onPressed: _reloadLocalResidents,
               child: const Icon(Icons.sync),
             ),
