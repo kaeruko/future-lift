@@ -101,6 +101,53 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+
+  testWidgets('owner and fox stand deeper in the salon at stable spots',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 930);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    Future<void> show(List<TownResident> owned) async {
+      await tester.pumpWidget(MaterialApp(
+        home: SalonRoom(ownedResidents: owned),
+      ));
+      await tester.pump();
+    }
+
+    Positioned station(String key) => tester.widget<Positioned>(
+      find.ancestor(
+        of: find.byKey(ValueKey(key)),
+        matching: find.byType(Positioned),
+      ).first,
+    );
+
+    await show(const [TownResident.c031_kimono_fox]);
+    final foxOnly = find.byKey(const ValueKey('salon-fox-resident'));
+    expect(foxOnly, findsOneWidget);
+    expect(station('salon-fox-resident').left, 585);
+    expect(station('salon-fox-resident').top, 805);
+    expect(station('salon-fox-resident').width, 180);
+    expect(station('salon-fox-resident').height, 180);
+    final foxPosition = tester.getRect(foxOnly);
+
+    await show(const [
+      TownResident.c035_beaty, TownResident.c031_kimono_fox,
+    ]);
+    expect(tester.getRect(foxOnly), foxPosition,
+        reason: 'Acquiring the owner must not relocate the fox');
+    final owner = station('salon-resident-035_beaty');
+    expect(owner.left, 360);
+    expect(owner.top, 925);
+    expect(owner.width, 210);
+    expect(owner.height, 210);
+    expect(tester.getRect(
+        find.byKey(const ValueKey('salon-resident-035_beaty')))
+        .overlaps(tester.getRect(foxOnly)), isFalse);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('fox steps in place, claps, and pauses for dialogue',
       (tester) async {
     tester.view.physicalSize = const Size(430, 930);

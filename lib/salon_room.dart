@@ -33,15 +33,34 @@ class _SalonRoomState extends State<SalonRoom> {
   static const _frameDuration = Duration(milliseconds: 200);
   static const _cycleFrames = 40;
   // Stations use the original 941x1672 salon artwork coordinate system.
+  // The owner and fox stand farther inside the salon, past the front counter.
+  // Their smaller size follows the room's perspective. Keep the remaining
+  // spots separate from these two for future CMS-assigned salon residents.
   static const _stations = <Rect>[
-    Rect.fromLTWH(350, 1070, 240, 240),
-    Rect.fromLTWH(620, 930, 205, 205),
+    Rect.fromLTWH(360, 925, 210, 210), // Tsuyako (salon owner).
+    Rect.fromLTWH(585, 805, 180, 180), // Kimono fox.
     Rect.fromLTWH(135, 905, 205, 205),
-    Rect.fromLTWH(625, 690, 185, 185),
+    Rect.fromLTWH(365, 680, 175, 175),
     Rect.fromLTWH(145, 675, 185, 185),
     Rect.fromLTWH(625, 460, 170, 170),
     Rect.fromLTWH(145, 455, 170, 170),
   ];
+
+  Rect _stationFor(TownResident resident) {
+    // Keep these two assigned to the same physical positions even if only
+    // one has been acquired: the fox must not jump to Tsuyako's station.
+    if (resident == TownResident.c035_beaty) return _stations[0];
+    if (resident == SalonRoom.host) return _stations[1];
+    final additional = TownResident.values.where((candidate) =>
+        candidate.homeAreaId == 'salon' &&
+        candidate != TownResident.c035_beaty &&
+        candidate != SalonRoom.host).toList();
+    final offset = additional.indexOf(resident);
+    if (offset < 0 || offset + 2 >= _stations.length) {
+      throw StateError('Salon supports at most 7 assigned residents');
+    }
+    return _stations[offset + 2];
+  }
   Timer? _ticker;
   int _ticks = 0;
   bool _talking = false;
@@ -97,7 +116,7 @@ class _SalonRoomState extends State<SalonRoom> {
     if (index >= _stations.length) {
       throw StateError('Salon supports at most 7 visible residents');
     }
-    final station = _stations[index];
+    final station = _stationFor(resident);
     final isHost = resident == SalonRoom.host;
     return Positioned(
       left: station.left,
