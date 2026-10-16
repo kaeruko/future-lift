@@ -112,6 +112,7 @@ void main() {
             width: 360,
             child: TownScene(
               level: 0,
+              lifetimePoints: 0,
               residents: residents,
               onResident: (_) async {
                 conversations++;
@@ -170,6 +171,67 @@ void main() {
   });
 
 
+  testWidgets('owned walkers appear together, then move home when unlocked',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const owned = [
+      TownResident.shiba,
+      TownResident.rabbit,
+      TownResident.cat,
+      TownResident.bear,
+      TownResident.c035_beaty,
+      TownResident.c031_kimono_fox,
+    ];
+
+    Future<void> show(TownArea area, int points,
+        List<TownResident> expected) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: TownScene(
+              level: 0,
+              area: area,
+              lifetimePoints: points,
+              residents: owned,
+              fillViewport: true,
+            ),
+          ),
+        ),
+      ));
+      for (var index = 0; index < expected.length; index++) {
+        final finder = find.byKey(ValueKey('resident-sprite-$index'));
+        expect(finder, findsOneWidget,
+            reason: '${area.id} at $points, walker $index');
+        final image = tester.widget<Image>(finder).image as AssetImage;
+        expect(image.assetName, expected[index].idleAsset);
+      }
+      expect(find.byKey(ValueKey('resident-${expected.length}')),
+          findsNothing, reason: 'No extra walker in ${area.id}');
+      expect(tester.takeException(), isNull);
+    }
+
+    // Before the park opens, all four outdoor friends gather in the plaza.
+    await show(TownArea.plaza, 10, const [
+      TownResident.shiba, TownResident.rabbit,
+      TownResident.cat, TownResident.bear,
+    ]);
+    await show(TownArea.plaza, 90, const [
+      TownResident.shiba, TownResident.cat, TownResident.bear,
+    ]);
+    await show(TownArea.park, 90, const [TownResident.rabbit]);
+    await show(TownArea.plaza, 180, const [
+      TownResident.shiba, TownResident.bear,
+    ]);
+    await show(TownArea.shopping, 180, const [TownResident.cat]);
+    await show(TownArea.plaza, 300, const [TownResident.shiba]);
+    await show(TownArea.village, 300, const [TownResident.bear]);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+
   testWidgets('walkers grow with depth without moving their foot anchors',
       (tester) async {
     tester.view.physicalSize = const Size(430, 1000);
@@ -190,6 +252,7 @@ void main() {
               child: TownScene(
                 level: 0,
                 area: TownArea.shopping,
+                lifetimePoints: 300,
                 residents: residents,
               ),
             ),
@@ -234,13 +297,14 @@ void main() {
             child: TownScene(
               level: 0,
               area: area,
+              lifetimePoints: 300,
               residents: residents,
               fillViewport: true,
             ),
           ),
         ),
       ));
-      final active = areaResidents(residents, area);
+      final active = areaResidents(residents, area, lifetimePoints: 300);
       expect(active, isNotEmpty);
       final base =
           (area.sourceWidth!.toDouble() * .14).clamp(22.0, 76.0).toDouble();
@@ -265,6 +329,7 @@ void main() {
               data: MediaQuery.of(context).copyWith(disableAnimations: true),
               child: const TownScene(
                 level: 0,
+                lifetimePoints: 0,
                 residents: [TownResident.shiba, TownResident.rabbit],
               ),
             ),

@@ -112,6 +112,7 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
               key: widget.sceneKey,
               level: widget.level,
               area: area,
+              lifetimePoints: widget.lifetimePoints,
               residents: widget.residents,
               debugTownResidents: widget.debugTownResidents,
               onResident: widget.onResident,
@@ -155,6 +156,7 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
               residents: areaResidents(
                 widget.residents,
                 area,
+                lifetimePoints: widget.lifetimePoints,
                 debugOverride: widget.debugTownResidents,
               ),
               onResident: widget.onResident,

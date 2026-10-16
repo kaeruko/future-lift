@@ -34,6 +34,7 @@ class TownScene extends StatefulWidget {
     required this.level,
     required this.residents,
     this.area = TownArea.plaza,
+    required this.lifetimePoints,
     this.debugTownResidents,
     this.onResident,
     this.onEnterSalon,
@@ -43,6 +44,8 @@ class TownScene extends StatefulWidget {
   final int level;
   final List<TownResident> residents;
   final TownArea area;
+  /// Lifetime mission points, not the spendable kotohogi balance.
+  final int lifetimePoints;
   /// A temporary debug-only cast; null uses the owned residents.
   final List<TownResident>? debugTownResidents;
   final Future<void> Function(TownResident)? onResident;
@@ -150,6 +153,7 @@ class _TownSceneState extends State<TownScene> {
     final visibleResidents = areaResidents(
       widget.residents,
       widget.area,
+      lifetimePoints: widget.lifetimePoints,
       debugOverride: widget.debugTownResidents,
     );
     final count = visibleResidents.length;

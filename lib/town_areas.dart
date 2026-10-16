@@ -35,16 +35,30 @@ enum TownArea {
   );
 }
 
-/// Every owned resident appears in their assigned area without a population cap.
+/// Outdoor residents temporarily meet at the plaza until their assigned
+/// neighborhood opens. Indoor residents (including salon staff) never move
+/// outdoors. Unknown outdoor area IDs are errors, not implicit fallbacks.
+TownArea? residentCurrentArea(TownResident resident, int lifetimePoints) {
+  if (!resident.walkInTown) return null;
+  final home = TownArea.fromId(resident.homeAreaId);
+  return home.isUnlocked(lifetimePoints) ? home : TownArea.plaza;
+}
+
+/// Allocate each owned walker to exactly one currently accessible area.
+/// The debug cast is deliberately different: it previews residents in their
+/// original CMS-assigned area, even if that area has not opened yet.
 List<TownResident> areaResidents(
   Iterable<TownResident> owned,
   TownArea area, {
+  required int lifetimePoints,
   List<TownResident>? debugOverride,
 }) {
   final candidates = debugOverride == null
       ? owned.where((resident) => resident.walkInTown)
       : visibleTownResidents(owned, debugOverride: debugOverride);
   return List<TownResident>.unmodifiable(
-    candidates.where((resident) => resident.homeAreaId == area.id),
+    candidates.where((resident) => debugOverride != null
+        ? resident.walkInTown && resident.homeAreaId == area.id
+        : residentCurrentArea(resident, lifetimePoints) == area),
   );
 }

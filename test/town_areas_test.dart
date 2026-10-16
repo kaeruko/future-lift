@@ -49,29 +49,111 @@ void main() {
     expect(TownResident.c009_chef.homeAreaId, 'shopping');
     final all = TownResident.values.toList();
     final together = [
-      for (final area in TownArea.values) ...areaResidents(all, area),
+      for (final area in TownArea.values)
+        ...areaResidents(all, area, lifetimePoints: 300),
     ];
     // Salon-only NPCs are registered residents but do not walk outside.
     final walkers = all.where((resident) => resident.walkInTown).toSet();
     expect(together.length, walkers.length);
     expect(together.toSet(), walkers);
-    expect(areaResidents(all, TownArea.plaza),
+    expect(areaResidents(all, TownArea.plaza, lifetimePoints: 300),
         [TownResident.shiba, TownResident.penguin, TownResident.c036_mosa]);
-    expect(areaResidents(all, TownArea.park),
+    expect(areaResidents(all, TownArea.park, lifetimePoints: 300),
         [TownResident.rabbit, TownResident.squirrel]);
-    expect(areaResidents(all, TownArea.shopping),
+    expect(areaResidents(all, TownArea.shopping, lifetimePoints: 300),
         [TownResident.cat, TownResident.c009_chef, TownResident.c032_miner]);
-    expect(areaResidents(all, TownArea.village),
+    expect(areaResidents(all, TownArea.village, lifetimePoints: 300),
         [TownResident.bear, TownResident.c026_farmer,
          TownResident.c027_daydreamer]);
     expect(areaResidents(all, TownArea.village,
-        debugOverride: [TownResident.shiba, TownResident.c027_daydreamer]),
+        lifetimePoints: 300, debugOverride: [TownResident.shiba, TownResident.c027_daydreamer]),
         [TownResident.c027_daydreamer]);
     expect(() => areaResidents(all, TownArea.plaza,
-        debugOverride: [TownResident.shiba, TownResident.shiba]),
+        lifetimePoints: 300, debugOverride: [TownResident.shiba, TownResident.shiba]),
         throwsArgumentError);
   });
 
+
+  test('residents stay at plaza until their homes open', () {
+    const owned = [
+      TownResident.shiba,
+      TownResident.rabbit,
+      TownResident.cat,
+      TownResident.bear,
+      TownResident.c035_beaty,
+      TownResident.c031_kimono_fox,
+    ];
+    const outdoors = [
+      TownResident.shiba,
+      TownResident.rabbit,
+      TownResident.cat,
+      TownResident.bear,
+    ];
+
+    for (final points in [0, 10, 89]) {
+      expect(areaResidents(owned, TownArea.plaza,
+          lifetimePoints: points), outdoors);
+      for (final area in TownArea.values.skip(1)) {
+        expect(areaResidents(owned, area, lifetimePoints: points), isEmpty);
+      }
+    }
+
+    expect(areaResidents(owned, TownArea.plaza, lifetimePoints: 90),
+        [TownResident.shiba, TownResident.cat, TownResident.bear]);
+    expect(areaResidents(owned, TownArea.park, lifetimePoints: 90),
+        [TownResident.rabbit]);
+    expect(areaResidents(owned, TownArea.plaza, lifetimePoints: 179),
+        [TownResident.shiba, TownResident.cat, TownResident.bear]);
+
+    expect(areaResidents(owned, TownArea.plaza, lifetimePoints: 180),
+        [TownResident.shiba, TownResident.bear]);
+    expect(areaResidents(owned, TownArea.shopping, lifetimePoints: 180),
+        [TownResident.cat]);
+    expect(areaResidents(owned, TownArea.plaza, lifetimePoints: 299),
+        [TownResident.shiba, TownResident.bear]);
+
+    expect(areaResidents(owned, TownArea.plaza, lifetimePoints: 300),
+        [TownResident.shiba]);
+    expect(areaResidents(owned, TownArea.village, lifetimePoints: 300),
+        [TownResident.bear]);
+
+    // No resident is cloned into another area at any threshold.
+    for (final points in [0, 89, 90, 179, 180, 299, 300, 500]) {
+      final roster = [
+        for (final area in TownArea.values)
+          ...areaResidents(owned, area, lifetimePoints: points),
+      ];
+      expect(roster, containsAll(outdoors));
+      expect(roster.length, outdoors.length);
+      expect(roster.toSet().length, outdoors.length);
+      expect(roster, isNot(contains(TownResident.c035_beaty)));
+      expect(roster, isNot(contains(TownResident.c031_kimono_fox)));
+    }
+    expect(salonResidents(owned),
+        [TownResident.c035_beaty, TownResident.c031_kimono_fox]);
+    expect(() => residentCurrentArea(TownResident.c035_beaty, 0),
+        returnsNormally);
+    expect(residentCurrentArea(TownResident.c035_beaty, 0), isNull);
+  });
+
+  test('debug preview keeps CMS homes even before area unlock', () {
+    const preview = [
+      TownResident.shiba, TownResident.rabbit,
+      TownResident.cat, TownResident.bear,
+    ];
+    expect(areaResidents(const [], TownArea.plaza,
+        lifetimePoints: 0, debugOverride: preview),
+        [TownResident.shiba]);
+    expect(areaResidents(const [], TownArea.park,
+        lifetimePoints: 0, debugOverride: preview),
+        [TownResident.rabbit]);
+    expect(areaResidents(const [], TownArea.shopping,
+        lifetimePoints: 0, debugOverride: preview),
+        [TownResident.cat]);
+    expect(areaResidents(const [], TownArea.village,
+        lifetimePoints: 0, debugOverride: preview),
+        [TownResident.bear]);
+  });
 
   testWidgets('facility debug modes override only salon entry temporarily',
       (tester) async {
@@ -179,6 +261,7 @@ void main() {
           body: TownScene(
             level: 0,
             area: area,
+            lifetimePoints: 300,
             residents: const [],
             fillViewport: true,
             onEnterSalon: () => visits++,
