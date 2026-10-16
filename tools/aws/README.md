@@ -53,7 +53,7 @@ python tools/aws/publish_content.py --stack kotohogu-content --region ap-northea
 
 S3への転送後はキーとサイズを照合し、最新版ポインタを更新するまで以前の配信を維持します。同じ内容の再実行では同じリリースIDになります。アップロード失敗時は例外と診断情報を出して停止し、自動の経路切り替えはしません。
 
-**重要**：`current.json` は最新情報の参照先であり、現段階のFlutter本編はまだ自動的にこのファイルを読まない仕様です。本番利用には別途その対応が必要です。
+**重要**：`current.json` はS3が公開した最新リリースを示します。一方、アプリはGoogle Driveの `kotohogu_api.txt` にある固定リリースURLを読みます。新しいリリースを反映するには **同じDriveファイルの内容を更新**してください。S3公開だけではアプリの参照先は自動変更されません。
 
 ## 4. 配信確認
 
@@ -82,3 +82,25 @@ python -m unittest discover -s tools/aws -p "test_*.py"
 flutter test test/local_content_preview_test.dart test/local_town_visitors_test.dart test/local_town_integration_test.dart
 flutter analyze
 ```
+
+
+## Google DriveからURLを管理する（tobus_go方式）
+
+コトホグの接続先はGoogle Driveの公開テキスト `kotohogu_api.txt` に記載した**1行の固定リリースURL**で管理します。URLそのものはアプリにハードコードしません。
+
+- DriveのファイルIDはアプリに登録します。ファイル共有は「リンクを知っている全員：閲覧者」を設定します。アクセストークン・AWS認証情報を入れないでください。
+- 通常のアプリ起動ではDriveの `/uc?export=download&id=...&t=...` を取得し、その1行を検証後、CloudFrontからキャラ・セリフ・PNGを読みます。
+- URLは `https://<CloudFrontドメイン>/releases/<SHA-256>/` の形式（ハッシュと最後のスラッシュの間に空白なし）です。`current.json` はDriveファイルに書かず、固定版のベースURLを書きます。
+- CMSを更新してAWSにアップロードしたら、Publisherの `Pinned release base URL` をコピーし、**元の同じGoogle Driveファイルを編集・上書き**します。新しいファイルを作るとDriveのIDが変わり、アプリが古いファイルを参照します。
+- 起動時とフォアグラウンドへの復帰時にDriveを読み直します。まちの再読み込みボタンでも確認できます。Drive/CloudFront/JSONが失敗したらエラーと再試行を表示し、バンドル済みのキャラへ暗黙には切り替えません。
+- `--dart-define=KOTOHOGU_LOCAL_CONTENT_URL=http://10.0.2.2:8765` のデバッグ上書きは維持します。リリースビルドでこの上書きを指定するとエラーで停止します。
+
+Google Drive経由の本編起動（URLを直接指定する必要なし）：
+
+```powershell
+flutter run -t lib/main.dart
+```
+
+Driveの共有設定を確認したうえで、アプリが再起動時に最新URLを読み込むか確認します。ネットワーク不可時は初期画面で処理を停止します。
+
+**現在の実装範囲**：サーバー由来のキャラはまだ「来訪者」（まちでの表示と通常セリフのみ）です。ガチャ・所持・正式な会話条件は従来の同梱データで動作しています。Drive経由のURL管理は導入されましたが、完全な動的住民への移行は次段階です。
