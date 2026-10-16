@@ -38,6 +38,15 @@ button:disabled{opacity:.5;cursor:not-allowed}
 nav{display:flex;gap:8px;padding:14px 18px 0;max-width:1380px;margin:auto}
 nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
 #characterMain{grid-template-columns:280px minmax(0,1fr)}
+.character-portrait{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;margin:0 0 16px;padding:12px;min-height:210px;border:1px solid #ead7b5;
+  border-radius:14px;background:linear-gradient(180deg,#fffaf0,#f5ead6)}
+.character-portrait img{width:170px;height:170px;max-width:100%;object-fit:contain}
+.character-portrait figcaption{font-size:12px;color:#796356;text-align:center;overflow-wrap:anywhere}
+.character-portrait.compact{min-height:138px;flex-direction:row;gap:14px;justify-content:flex-start}
+.character-portrait.compact img{width:110px;height:110px;flex:none}
+.character-portrait.load-error{border-color:#bb6d6d;background:#fff7f5}
+.character-portrait.load-error figcaption{color:#9c3030}
 #characterMain[hidden],#dialogueMain[hidden]{display:none}
 @media(max-width:1120px){main{grid-template-columns:250px minmax(0,1fr)}main>.panel:last-child{grid-column:1/-1}}
 @media(max-width:700px){main{display:block}main>.panel{margin-bottom:16px}#entries{max-height:230px}}
@@ -125,6 +134,29 @@ function labelControl(parent,title,tag,value,onChange,attributes={}){
   return control;
 }
 function setStatus(message,error=false){const e=byId("status");e.textContent=message;e.className="status"+(error?" error":"")}
+function updatePortrait(figure,row){
+  const picture=figure.querySelector("img");
+  const caption=figure.querySelector("figcaption");
+  figure.classList.remove("load-error");
+  picture.hidden=false;
+  picture.alt=row.label+"の立ち絵";
+  caption.textContent="正面・待機ポーズ";
+  picture.onload=()=>{caption.textContent="正面・待機ポーズ"};
+  picture.onerror=()=>{
+    figure.classList.add("load-error");
+    picture.hidden=true;
+    caption.textContent="立ち絵を読み込めません：assets/characters/"+row.artFolder+"/idle_front_01.png";
+  };
+  picture.src="/api/portrait?folder="+encodeURIComponent(row.artFolder);
+}
+function renderPortrait(parent,row,compact=false){
+  const figure=append(parent,"figure");
+  figure.className="character-portrait"+(compact?" compact":"");
+  append(figure,"img");
+  append(figure,"figcaption");
+  updatePortrait(figure,row);
+  return figure;
+}
 function allocateDialogueId(row){
   if(!row||!Number.isSafeInteger(row.nextDialogueNumber)||
       row.nextDialogueNumber<1||row.nextDialogueNumber>=1000000000)
@@ -163,6 +195,9 @@ function renderEditor(){
   append(area,"p","セリフID（自動採番・変更不可）");
   const idDisplay=append(area,"code",entry.id);idDisplay.style.display="block";idDisplay.style.marginBottom="12px";idDisplay.style.overflowWrap="anywhere";
   append(area,"p","キャラクター: "+residents[entry.residentId]);
+  const speaker=registry.characters.find(row=>row.id===entry.residentId);
+  if(!speaker)throw Error("セリフに対応するキャラがいません: "+entry.residentId);
+  renderPortrait(area,speaker,true);
   labelControl(area,"セリフ","textarea",entry.text,v=>{entry.text=v;});
   const line=append(area,"div");line.className="row";
   labelControl(line,"優先順位（大きいほど優先）","input",entry.priority,v=>{entry.priority=Number(v)},{type:"number"});
@@ -368,6 +403,7 @@ function renderCharacterEditor(){
   const row=activeCharacter();
   if(!row){append(box,"p","キャラクターを選んでください");return}
   const index=registry.characters.indexOf(row), locked=index<savedCount;
+  const portrait=renderPortrait(box,row);
   const edit=(title,field,readonly=false)=>{
     const element=labelControl(box,title,"input",row[field],value=>{
       const oldId=row.id;
@@ -376,6 +412,7 @@ function renderCharacterEditor(){
         if(locked)throw Error("登録済みキャラのIDは変更できません");
         row.key="c"+value;
         row.artFolder=value;
+        updatePortrait(portrait,row);
         const folderHint=byId("characterArtFolderHint");
         if(folderHint)folderHint.textContent=`画像フォルダ: assets/characters/${row.artFolder}/（IDから自動設定）`;
         const attached=data.dialogues.filter(dialogue=>dialogue.residentId===oldId);
@@ -405,6 +442,7 @@ function renderCharacterEditor(){
           id=>renamedDialogueIds.get(id)||id));
         characterSelected=value;
       }
+      if(field==="label")portrait.querySelector("img").alt=row.label+"の立ち絵";
       dirty=true;
       rebuildResidentOptions();renderCharacterList();
       setCharacterStatus("未保存の変更があります");

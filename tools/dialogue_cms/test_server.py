@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from server import validate, write_document
+from server import portrait_path, validate, write_document
 from characters import (load_catalog, validate_catalog, generate_dart, generate_pubspec,
                         DART, PUBSPEC, save_catalog_and_dialogues, validate_dialogue_ids)
 
@@ -18,6 +18,21 @@ def sample():
 
 
 class CmsTests(unittest.TestCase):
+    def test_character_portrait_resolves_idle_png_only(self):
+        catalog = load_catalog()
+        folder = next(row["artFolder"] for row in catalog["characters"]
+                      if row["id"] == "037_tora")
+        image = portrait_path(folder)
+        self.assertEqual(image.name, "idle_front_01.png")
+        self.assertTrue(image.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        for invalid in ("", ".", "..", "../characters", "037_tora/../001_shiba",
+                        "037_tora?file=other", "/tmp", None):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                portrait_path(invalid)
+        with self.assertRaises(FileNotFoundError):
+            portrait_path("999999_missing")
+
+
     def test_character_registry_and_generated_files(self):
         registry = validate_catalog(load_catalog())
         # New residents are appended over time; preserve the original seven.

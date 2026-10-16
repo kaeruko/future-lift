@@ -8,12 +8,31 @@ import tempfile
 from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 from characters import load_catalog, validate_catalog, save_catalog_and_dialogues
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "assets" / "dialogues" / "dialogues.json"
 INDEX = Path(__file__).with_name("index.html")
+SPRITES = ROOT / "assets" / "characters"
+
+
+def portrait_path(folder):
+    """Read only the front idle sprite from a safe asset directory."""
+    if (not isinstance(folder, str)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", folder)
+            or ".." in folder):
+        raise ValueError("Invalid character sprite folder")
+    root = SPRITES.resolve()
+    image = (root / folder / "idle_front_01.png").resolve()
+    if not image.is_relative_to(root):
+        raise ValueError("Portrait path escapes the sprite directory")
+    if not image.is_file():
+        raise FileNotFoundError(
+            f"Portrait not found: assets/characters/{folder}/idle_front_01.png")
+    return image
+
+
 def resident_ids():
     return {row["id"] for row in validate_catalog(load_catalog())["characters"]}
 MISSIONS = {
@@ -211,11 +230,30 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def do_GET(self):
-        path = urlsplit(self.path).path
+        url = urlsplit(self.path)
+        path = url.path
         if path == "/":
             raw = INDEX.read_bytes()
             self._headers(200, "text/html; charset=utf-8", len(raw))
             self.wfile.write(raw)
+        elif path == "/api/portrait":
+            try:
+                args = parse_qs(url.query, strict_parsing=True,
+                                keep_blank_values=True, max_num_fields=1)
+                if set(args) != {"folder"} or len(args["folder"]) != 1:
+                    raise ValueError("Exactly one portrait folder is required")
+                image = portrait_path(args["folder"][0])
+                raw = image.read_bytes()
+                if not raw.startswith(b"\x89PNG\r\n\x1a\n"):
+                    raise OSError(f"Not a valid PNG: {image}")
+                self._headers(200, "image/png", len(raw))
+                self.wfile.write(raw)
+            except ValueError as exc:
+                self._send(400, {"error": str(exc)})
+            except FileNotFoundError as exc:
+                self._send(404, {"error": str(exc)})
+            except OSError as exc:
+                self._send(500, {"error": str(exc)})
         elif path == "/api/characters":
             try:
                 document = validate_catalog(load_catalog())
