@@ -708,7 +708,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
               padding: const EdgeInsets.all(24),
               child: SelectableText(
                 'ローカル配信データの取得に失敗したため、まちの表示を停止しました。\n'
-                '${_remoteContentBaseUri}\n${snapshot.error}\n'
+                '$_remoteContentBaseUri\n${snapshot.error}\n'
                 '${snapshot.stackTrace}',
                 key: const ValueKey('town-remote-content-error'),
               ),

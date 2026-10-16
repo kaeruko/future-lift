@@ -296,21 +296,30 @@ class DebugMenuScreen extends StatelessWidget {
                     key: const ValueKey('debug-salon-actual-status'),
                     style: const TextStyle(color: wood),
                   ),
-                  for (final (mode, title) in [
-                    (SalonUnlockDebugMode.normal, '通常の開放条件で判定'),
-                    (SalonUnlockDebugMode.forceOpen, '強制開放してテスト'),
-                    (SalonUnlockDebugMode.forceClosed, '強制未開放でテスト'),
-                  ])
-                    RadioListTile<SalonUnlockDebugMode>(
-                      key: ValueKey('debug-salon-mode-${mode.name}'),
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(title),
-                      value: mode,
-                      groupValue: salonUnlockMode,
-                      onChanged: busy ? null : (value) {
-                        if (value != null) onSalonUnlockModeChanged(value);
-                      },
+                  RadioGroup<SalonUnlockDebugMode>(
+                    groupValue: salonUnlockMode,
+                    onChanged: (value) {
+                      if (value != null && !busy) {
+                        onSalonUnlockModeChanged(value);
+                      }
+                    },
+                    child: Column(
+                      children: [
+                        for (final (mode, title) in [
+                          (SalonUnlockDebugMode.normal, '通常の開放条件で判定'),
+                          (SalonUnlockDebugMode.forceOpen, '強制開放してテスト'),
+                          (SalonUnlockDebugMode.forceClosed, '強制未開放でテスト'),
+                        ])
+                          RadioListTile<SalonUnlockDebugMode>(
+                            key: ValueKey('debug-salon-mode-${mode.name}'),
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(title),
+                            value: mode,
+                            enabled: !busy,
+                          ),
+                      ],
                     ),
+                  ),
                   Text(
                     'テスト中の状態：${isSalonAccessible(progress.residents.owned, debugMode: salonUnlockMode) ? "開放" : "未開放"}',
                     key: const ValueKey('debug-salon-effective-status'),

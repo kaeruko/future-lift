@@ -327,7 +327,8 @@ class _LocalContentPreviewScreenState extends State<LocalContentPreviewScreen> {
         if (resident.profile.isNotEmpty) Text(resident.profile),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
-          value: _frame,
+          key: ValueKey('frame-${resident.id}-$_frame'),
+          initialValue: _frame,
           decoration: const InputDecoration(labelText: '画像フレーム'),
           items: [
             for (final filename in supportedFrames)
