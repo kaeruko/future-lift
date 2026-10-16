@@ -206,22 +206,27 @@ class _GachaRevealState extends State<GachaReveal>
                                   ),
                                 ),
                               ),
-                              if (!_isNew)
-                                // Show reunions beside the resident's lower
-                                // right side instead of the banner's left edge,
-                                // which is cropped by BoxFit.cover on phones.
-                                Positioned(
-                                  left: ConsultationComposition.resident.right - 35,
-                                  top: ConsultationComposition.resident.bottom - 170,
-                                  width: 175,
-                                  height: 175,
-                                  child: Image.asset(
-                                    'assets/gacya/parts/badge_reunion.png',
-                                    key: const ValueKey('gacha-reunion-badge'),
-                                    fit: BoxFit.contain,
-                                    semanticLabel: 'また会えた',
+                              // Keep both first-time and reunion badges
+                              // beside the resident's lower-right side.
+                              // The banner's left edge is cropped on phones.
+                              Positioned(
+                                left: ConsultationComposition.resident.right - 35,
+                                top: ConsultationComposition.resident.bottom - 170,
+                                width: 175,
+                                height: 175,
+                                child: Image.asset(
+                                  _isNew
+                                      ? 'assets/gacya/parts/badge_new.png'
+                                      : 'assets/gacya/parts/badge_reunion.png',
+                                  key: ValueKey(
+                                    _isNew
+                                        ? 'gacha-new-badge'
+                                        : 'gacha-reunion-badge',
                                   ),
+                                  fit: BoxFit.contain,
+                                  semanticLabel: _isNew ? 'NEW' : 'また会えた',
                                 ),
+                              ),
                             ],
                           ],
                         ),

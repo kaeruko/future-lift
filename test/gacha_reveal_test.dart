@@ -173,6 +173,15 @@ void main() {
       ).properties.label,
       '${TownResident.penguin.label}が、まちにやってきました！',
     );
+    // First arrival uses the NEW artwork, never the reunion stamp.
+    final newBadge = find.byKey(const ValueKey('gacha-new-badge'));
+    expect(newBadge, findsOneWidget);
+    expect(find.byKey(const ValueKey('gacha-reunion-badge')), findsNothing);
+    expect(
+      (tester.widget<Image>(newBadge).image as AssetImage).assetName,
+      'assets/gacya/parts/badge_new.png',
+    );
+    expect(find.bySemanticsLabel('NEW'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('gacha-banner-resident-name')),
       findsOneWidget,
@@ -208,6 +217,13 @@ void main() {
     );
     expect(find.byKey(const ValueKey('gacha-reunion-badge')),
         findsOneWidget);
+    expect(find.byKey(const ValueKey('gacha-new-badge')), findsNothing);
+    expect(
+      (tester.widget<Image>(
+        find.byKey(const ValueKey('gacha-reunion-badge')),
+      ).image as AssetImage).assetName,
+      'assets/gacya/parts/badge_reunion.png',
+    );
     final badge = tester.getRect(
       find.byKey(const ValueKey('gacha-reunion-badge')),
     );
@@ -247,6 +263,63 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
+
+  for (final viewport in <Size>[
+    const Size(320, 640),
+    const Size(360, 640),
+    const Size(402, 874),
+  ]) {
+    testWidgets('NEW badge stays on screen beside resident at $viewport',
+        (tester) async {
+      tester.view.physicalSize = viewport;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final controller = ProgressController(
+        MemoryStore()..raw = funded(points: 60).encode(),
+        clock: () => DateTime(2026, 10, 11),
+        random: FixedRandom(2),
+      );
+      await controller.initialize();
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: GachaReveal(
+            controller: controller,
+            resident: TownResident.penguin,
+            isNew: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final badge = find.byKey(const ValueKey('gacha-new-badge'));
+      final resident = find.byKey(const ValueKey('gacha-stage-resident'));
+      final banner = find.byKey(const ValueKey('resident-arrival-banner'));
+      expect(badge, findsOneWidget);
+      expect(find.byKey(const ValueKey('gacha-reunion-badge')), findsNothing);
+      expect(resident, findsOneWidget);
+      expect(banner, findsOneWidget);
+      expect(
+        (tester.widget<Image>(badge).image as AssetImage).assetName,
+        'assets/gacya/parts/badge_new.png',
+      );
+      final b = tester.getRect(badge);
+      final r = tester.getRect(resident);
+      expect(tester.getRect(banner).bottom, lessThan(r.top - 10));
+      expect(b.left, greaterThanOrEqualTo(0));
+      expect(b.right, lessThanOrEqualTo(viewport.width));
+      expect(b.top, greaterThanOrEqualTo(0));
+      expect(b.bottom, lessThanOrEqualTo(viewport.height));
+      expect(b.left, greaterThan(r.center.dx));
+      expect(b.top, greaterThan(r.center.dy));
+      expect(find.bySemanticsLabel('NEW'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
 
   for (final viewport in <Size>[
     const Size(320, 640),
