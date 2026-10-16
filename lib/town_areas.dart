@@ -10,7 +10,7 @@ enum TownArea {
   shopping('shopping', 'ことほぎ商店街', 'お店と仕事の話が聞こえてくる通り。', 180,
       'assets/kotohogu/ChatGPT 画像 2026年10月15日 21_10_28-1.png', 937, 1679),
   village('village', 'のんびり里', '畑とおうちで、それぞれのペースで暮らす場所。', 300,
-      'assets/kotohogu/桜舞う日本の里山広場.png', 941, 1672);
+      'assets/kotohogu/village_background_001.png', 941, 1672);
 
   const TownArea(this.id, this.label, this.description, this.unlockAt,
       this.backgroundAsset, this.sourceWidth, this.sourceHeight);
