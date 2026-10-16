@@ -744,11 +744,110 @@
     {
       "id": "037_tora_001",
       "residentId": "037_tora",
-      "text": "こんにちは！よろしくね。",
+      "text": "よーし！とらおコーチだ！今日も自分のペースで体を動かそう！",
       "priority": 0,
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "037_tora_002",
+      "residentId": "037_tora",
+      "text": "走るとひざの軟骨がすり減るって？必ずしもそうじゃないぞ！適度なランニングは関節にもいい刺激になるんだ！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "037_tora_003",
+      "residentId": "037_tora",
+      "text": "趣味で走る人は、走らない人より、ひざや股関節の変形性関節症が少ない傾向が報告されているぞ！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "037_tora_004",
+      "residentId": "037_tora",
+      "text": "関節の軟骨は、関節液から栄養を受け取るんだ。ほどよく動かすことも大切だぞ！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "037_tora_005",
+      "residentId": "037_tora",
+      "text": "大事なのは『適度に』だ！いきなり距離を増やさず、少しずつ慣らしていこう！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "037_tora_006",
+      "residentId": "037_tora",
+      "text": "ひざが痛い、腫れている……そんなときは無理するな！症状が続くなら医療機関に相談だ！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "037_tora_007",
+      "residentId": "037_tora",
+      "text": "走るだけが運動じゃないぞ！歩くのも筋トレも、自分に合えば立派なトレーニングだ！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "037_tora_008",
+      "residentId": "037_tora",
+      "text": "おっ！外に出たんだな！いいぞ！自分のペースで続けていこう！",
+      "priority": 20,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1
+        }
+      ]
+    },
+    {
+      "id": "037_tora_009",
+      "residentId": "037_tora",
+      "text": "体を動かすミッション5回達成！コツコツ積み重ねたな！よくやった！",
+      "priority": 30,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "movement",
+          "minCount": 5
+        }
+      ]
+    },
+    {
+      "id": "037_tora_010",
+      "residentId": "037_tora",
+      "text": "筋トレ5回達成！筋肉は関節を支える心強い味方だ！その調子！",
+      "priority": 30,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "strength",
+          "minCount": 5
+        }
+      ]
     }
   ]
 }
