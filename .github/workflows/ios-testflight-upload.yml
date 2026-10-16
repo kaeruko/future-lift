@@ -5,8 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       source_run_id:
-        description: "Successful iOS App Store IPA run ID (number from the run URL)"
-        required: true
+        description: "Optional: leave blank to upload the latest successful iOS IPA build"
+        required: false
+        default: ""
         type: string
 
 permissions:
@@ -22,21 +23,44 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 30
     steps:
-      - name: Verify exact source run
+      - name: Resolve and verify source run
+        id: source
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          REQUESTED_RUN_ID: ${{ inputs.source_run_id }}
         run: |
           set -euo pipefail
           [[ "$GITHUB_REF" == "refs/heads/main" ]] || {
             echo "::error::Only main may upload to TestFlight"
             exit 1
           }
-          [[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]] || {
-            echo "::error::source_run_id must be a numeric GitHub Actions run ID"
-            exit 1
-          }
+          if [[ -n "$REQUESTED_RUN_ID" ]]; then
+            [[ "$REQUESTED_RUN_ID" =~ ^[1-9][0-9]*$ ]] || {
+              echo "::error::source_run_id must be numeric if provided"
+              exit 1
+            }
+            SOURCE_RUN_ID="$REQUESTED_RUN_ID"
+          else
+            # GitHub assigns run IDs. Use the newest successful build from
+            # this exact workflow on main, never a run from another workflow.
+            curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/workflows/ios-app-store.yml/runs?branch=main&event=workflow_dispatch&status=success&per_page=30" \
+              > "$RUNNER_TEMP/source-runs.json"
+            SOURCE_RUN_ID="$(jq -er --arg repo "$GITHUB_REPOSITORY" '
+              [.workflow_runs[] |
+                select(.status == "completed" and
+                       .conclusion == "success" and
+                       .head_branch == "main" and
+                       .head_repository.full_name == $repo)] |
+                sort_by(.created_at, .id) | last | .id // empty
+            ' "$RUNNER_TEMP/source-runs.json")" || {
+              echo "::error::No successful iOS App Store IPA run found on main"
+              exit 1
+            }
+          fi
           curl --fail --silent --show-error \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
@@ -48,18 +72,20 @@ jobs:
             .event == "workflow_dispatch" and
             .head_branch == "main" and
             .head_repository.full_name == $repo and
-            (.path // "" | endswith("ios-app-store.yml"))
+            (.path // "" | contains("ios-app-store.yml"))
           ' "$RUNNER_TEMP/source-run.json" >/dev/null || {
             echo "::error::Source run must be a successful main-branch iOS App Store IPA workflow run"
             exit 1
           }
+          echo "run_id=$SOURCE_RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "SOURCE_RUN_ID=$SOURCE_RUN_ID" >> "$GITHUB_ENV"
           echo "Source run verified: $SOURCE_RUN_ID"
 
       - name: Download signed IPA from exact run
         uses: actions/download-artifact@v4
         with:
           name: kotohogu-app-store-ipa
-          run-id: ${{ inputs.source_run_id }}
+          run-id: ${{ steps.source.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: downloaded-ipa
 
@@ -117,7 +143,7 @@ jobs:
           echo "VERIFIED_IPA=$ipa" >> "$GITHUB_ENV"
           {
             echo "### TestFlight upload source"
-            echo "- Build run: ${{ inputs.source_run_id }}"
+            echo "- Build run: $SOURCE_RUN_ID"
             echo "- Bundle: $bundle_id"
             echo "- Version: $build_name ($build_number)"
           } >> "$GITHUB_STEP_SUMMARY"
@@ -170,4 +196,4 @@ jobs:
         shell: bash
         run: |
           rm -rf "$HOME/.appstoreconnect/private_keys" "$RUNNER_TEMP/verify-ipa"
-          rm -f "$RUNNER_TEMP/source-run.json"
+          rm -f "$RUNNER_TEMP/source-run.json" "$RUNNER_TEMP/source-runs.json"

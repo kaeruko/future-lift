@@ -89,12 +89,15 @@ Windows PowerShell（キーの**中身を画面に表示せず**GitHubへ貼る�
 APIキーにはApp Store Connectの対象アプリのビルドアップロード権限が必要です。
 Key IDと.p8は同じキーの組み合わせを使ってください。
 
-1. Actions → `iOS App Store IPA` → 緑チェックの成功済みビルドを開く。
-2. URL末尾の **run ID**（例：`/actions/runs/12345678901` の数値）をコピー。
-3. Actions → `iOS TestFlight Upload` → `Run workflow` → `source_run_id` に数値を入力。
+1. Actions → `iOS App Store IPA` で署名付きIPAビルドが成功していることを確認。
+2. Actions → `iOS TestFlight Upload` → `Run workflow` をクリック。
+   **`source_run_id` は空欄のままでOK**。GitHubが採番した最新の成功済み
+   `iOS App Store IPA` のRun IDを自動取得する。
+3. 過去のIPAを選びたいときだけ、成功済みビルドURL
+   （例：`/actions/runs/12345678901`）のRun IDを任意入力する。
 4. アップロード後、App Store Connect → ことほぐ → TestFlight でAppleの処理を待つ。
 
-ワークフローは指定されたrunが **mainの成功済みiOS App Store IPA** で
+ワークフローは選択したrunが **mainの成功済みiOS App Store IPA** で
 あることを検証し、そのrunの `kotohogu-app-store-ipa` だけを取得。
 展開後にBundle ID `jp.cloxs.kotohogu`、表示名、バージョン、
 署名のTeam IDを確認してから `xcrun altool` で送信します。
