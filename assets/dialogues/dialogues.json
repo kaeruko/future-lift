@@ -848,6 +848,24 @@
           "minCount": 5
         }
       ]
+    },
+    {
+      "id": "037_tora_011",
+      "residentId": "037_tora",
+      "text": "よ～し！今日も体をうごかすぞ！",
+      "priority": 40,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "townTogether",
+          "otherResidentId": "027_daydreamer"
+        }
+      ],
+      "reply": {
+        "residentId": "027_daydreamer",
+        "text": "ぼくはおやすみするんだもふ～。"
+      }
     }
   ]
 }

@@ -87,7 +87,7 @@
       "nextDialogueNumber": 3,
       "inGacha": true,
       "walkInTown": true,
-      "homeAreaId": "village"
+      "homeAreaId": "park"
     },
     {
       "key": "c027_daydreamer",
@@ -98,7 +98,7 @@
       "nextDialogueNumber": 3,
       "inGacha": true,
       "walkInTown": true,
-      "homeAreaId": "village"
+      "homeAreaId": "park"
     },
     {
       "key": "c032_miner",
@@ -150,7 +150,7 @@
       "label": "とらお",
       "profile": "",
       "artFolder": "037_tora",
-      "nextDialogueNumber": 11,
+      "nextDialogueNumber": 12,
       "inGacha": true,
       "walkInTown": true,
       "homeAreaId": "park"
