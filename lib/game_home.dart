@@ -149,15 +149,22 @@ class _GameHomeState extends State<GameHome> {
                         padding: EdgeInsets.symmetric(
                           horizontal: constraints.maxWidth * .10,
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minWidth: constraints.maxWidth * .80,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
                             for (final (index, resident)
                                 in visibleTownResidents(
                                   widget.progress.residents.owned,
                                   debugOverride: widget.debugTownResidents,
                                 ).indexed)
-                              Flexible(
+                              SizedBox(
+                                width: (constraints.maxWidth * .15).clamp(44, 80) + 6,
                                 child: Semantics(
                                   button: true,
                                   label: '${resident.label}のおはなし',
@@ -198,7 +205,9 @@ class _GameHomeState extends State<GameHome> {
                                   ),
                                 ),
                               ),
-                          ],
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],

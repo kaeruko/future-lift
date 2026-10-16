@@ -233,7 +233,7 @@ class DebugMenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '未所持の住民も選べます（最大8匹）。ホームとまちに反映され、'
+                  '未所持の住民も人数制限なく選べます。ホームとまちに反映され、'
                   '所持状況やガチャの結果は変わりません。'
                   '\nアプリを終了すると設定は消えます。',
                   style: TextStyle(color: wood, height: 1.6),
@@ -250,7 +250,7 @@ class DebugMenuScreen extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Text(
-                      '選択中：${selected.length} / $townResidentLimit 匹',
+                      '選択中：${selected.length} 匹',
                       key: const ValueKey('debug-town-count'),
                       style: const TextStyle(
                         color: wood,
@@ -267,11 +267,7 @@ class DebugMenuScreen extends StatelessWidget {
                       title: Text(resident.label),
                       subtitle: Text(resident.id),
                       value: selected.contains(resident),
-                      onChanged: busy ||
-                              (!selected.contains(resident) &&
-                                  selected.length >= townResidentLimit)
-                          ? null
-                          : (checked) {
+                      onChanged: busy ? null : (checked) {
                               if (checked != null) {
                                 onDebugTownResidentChanged(resident, checked);
                               }

@@ -269,9 +269,6 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       throw StateError('Enable the debug town selection first.');
     }
     if (current.contains(resident) == selected) return;
-    if (selected && current.length >= townResidentLimit) {
-      throw StateError('The debug town is limited to $townResidentLimit residents.');
-    }
     setState(() {
       _debugTownResidents = List<TownResident>.unmodifiable(
         selected

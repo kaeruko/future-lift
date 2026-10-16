@@ -35,7 +35,7 @@ enum TownArea {
   );
 }
 
-/// An area receives up to eight residents *after* filtering by home.
+/// Every owned resident appears in their assigned area without a population cap.
 List<TownResident> areaResidents(
   Iterable<TownResident> owned,
   TownArea area, {
@@ -45,7 +45,6 @@ List<TownResident> areaResidents(
       ? owned.where((resident) => resident.walkInTown)
       : visibleTownResidents(owned, debugOverride: debugOverride);
   return List<TownResident>.unmodifiable(
-    candidates.where((resident) => resident.homeAreaId == area.id)
-        .take(townResidentLimit),
+    candidates.where((resident) => resident.homeAreaId == area.id),
   );
 }

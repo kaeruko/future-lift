@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
 
 int get ownedResidentLimit => TownResident.values.length > 8 ? TownResident.values.length : 8;
-const townResidentLimit = 8;
-
-/// The same first eight enabled residents are drawn on the home and town scenes.
-/// A debug-only override can include unowned/hidden residents without saving them.
+/// All enabled residents can appear in their assigned town area.
+/// A debug-only override may include unowned/hidden residents without saving them.
 /// An empty override deliberately shows no residents.
 List<TownResident> visibleTownResidents(
   Iterable<TownResident> residents, {
   List<TownResident>? debugOverride,
 }) {
   if (debugOverride != null) {
-    if (debugOverride.length > townResidentLimit ||
-        debugOverride.toSet().length != debugOverride.length) {
+    if (debugOverride.toSet().length != debugOverride.length) {
       throw ArgumentError.value(
         debugOverride,
         'debugOverride',
-        'Select at most $townResidentLimit different residents',
+        'Each resident may be selected only once',
       );
     }
     return List<TownResident>.unmodifiable(debugOverride);
   }
-  return residents.where((resident) => resident.walkInTown)
-      .take(townResidentLimit).toList(growable: false);
+  return List<TownResident>.unmodifiable(
+    residents.where((resident) => resident.walkInTown),
+  );
 }
 const applauseResidentLimit = 8;
 
