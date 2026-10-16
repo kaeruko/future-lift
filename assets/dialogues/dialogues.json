@@ -870,7 +870,7 @@
     {
       "id": "029_office_worker_001",
       "residentId": "029_office_worker",
-      "text": "こんにちは！よろしくね。",
+      "text": "会社で発表するとき、緊張したら『たのしみになってきた！』って言うんだ。そうすると、ちょっと勇気が出るんだよ。",
       "priority": 0,
       "once": false,
       "logic": "all",
