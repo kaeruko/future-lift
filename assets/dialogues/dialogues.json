@@ -332,7 +332,7 @@
       "id": "026_farmer_002",
       "residentId": "026_farmer",
       "text": "おやすみくん。農業をやらんかね。",
-      "priority": 10,
+      "priority": 50,
       "once": false,
       "logic": "all",
       "conditions": [
