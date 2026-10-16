@@ -75,6 +75,16 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('社会保障に貢献しました！'), findsOneWidget);
+    // Celebration uses the same full-screen wallpaper as the missions list.
+    final celebrationBackground = tester.widget<Image>(
+      find.byKey(const ValueKey('celebration-background')),
+    );
+    expect(
+      (celebrationBackground.image as AssetImage).assetName,
+      MissionsScreen.backgroundAsset,
+    );
+    expect(celebrationBackground.fit, BoxFit.cover);
+    expect(find.byKey(const ValueKey('close-celebration')), findsOneWidget);
     expect(
       find.text('参考推計：医療・介護費 年間約81,000円（研究集団の比較）'),
       findsOneWidget,
