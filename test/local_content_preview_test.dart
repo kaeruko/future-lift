@@ -48,6 +48,30 @@ void main() {
     }
   });
 
+  test('pinned HTTPS release uses one immutable catalog and sprite base', () {
+    const hash = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    final base = contentPreviewUri('https://d1234.cloudfront.net/releases/$hash/');
+    expect(base.resolve('api/runtime/catalog').toString(),
+        'https://d1234.cloudfront.net/releases/$hash/api/runtime/catalog');
+    const person = RemoteResident(
+      id: '038_owl', label: 'ふくろう', artFolder: '038_owl',
+      profile: '', homeAreaId: 'park',
+    );
+    expect(remoteSpriteUri(base, person, 'idle_front_01.png').toString(),
+        'https://d1234.cloudfront.net/releases/$hash/api/runtime/sprites/038_owl/idle_front_01.png');
+    for (final bad in [
+      'https://d1234.cloudfront.net/',
+      'https://d1234.cloudfront.net/current.json',
+      'https://d1234.cloudfront.net/releases/latest/',
+      'https://d1234.cloudfront.net/releases/$hash',
+      'https://d1234.cloudfront.net/releases/$hash/?ignored=1',
+      'http://example.org/releases/$hash/',
+    ]) {
+      expect(() => contentPreviewUri(bad), throwsFormatException,
+          reason: bad);
+    }
+  });
+
   test('unexpected image filename is rejected', () {
     const character = RemoteResident(id: '038_owl', label: 'new',
         artFolder: '038_owl', profile: '', homeAreaId: 'park');

@@ -16,7 +16,7 @@ void main() {
   if (_contentUrl.isEmpty) {
     throw StateError('KOTOHOGU_LOCAL_CONTENT_URL must be specified');
   }
-  runApp(LocalContentPreviewApp(baseUri: localServerUri(_contentUrl)));
+  runApp(LocalContentPreviewApp(baseUri: contentPreviewUri(_contentUrl)));
 }
 
 Uri localServerUri(String value) {
@@ -30,6 +30,22 @@ Uri localServerUri(String value) {
     );
   }
   return url;
+}
+
+/// Resolve only local development endpoints or immutable HTTPS releases.
+Uri contentPreviewUri(String value) {
+  final uri = Uri.parse(value);
+  if (uri.scheme == 'http') return localServerUri(value);
+  if (uri.scheme != 'https' || uri.host.isEmpty ||
+      uri.userInfo.isNotEmpty || uri.hasQuery || uri.hasFragment ||
+      uri.port != 443 ||
+      !RegExp(r'^/releases/[a-f0-9]{64}/$').hasMatch(uri.path)) {
+    throw FormatException(
+      'Use local HTTP or a pinned HTTPS path ending in '
+      '/releases/<64-character-sha256>/: $value',
+    );
+  }
+  return uri;
 }
 
 Map<String, dynamic> objectOf(Object? raw, String field) {
@@ -185,13 +201,13 @@ Uri remoteSpriteUri(Uri baseUri, RemoteResident resident, String filename) {
     throw ArgumentError.value(filename, 'filename', 'Unrecognized frame');
   }
   return baseUri.resolve(
-    '/api/runtime/sprites/${Uri.encodeComponent(resident.artFolder)}/'
+    'api/runtime/sprites/${Uri.encodeComponent(resident.artFolder)}/'
     '${Uri.encodeComponent(filename)}',
   );
 }
 
 Future<RemoteContentCatalog> fetchLocalContent(Uri baseUri) async {
-  final url = baseUri.resolve('/api/runtime/catalog');
+  final url = baseUri.resolve('api/runtime/catalog');
   final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
   try {
     final request = await client.getUrl(url);

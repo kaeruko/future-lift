@@ -143,7 +143,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           'Do not enable KOTOHOGU_LOCAL_CONTENT_URL in release builds.',
         );
       }
-      _remoteContentBaseUri = localServerUri(_localContentUrl);
+      _remoteContentBaseUri = contentPreviewUri(_localContentUrl);
       _remoteContentFuture = fetchLocalContent(_remoteContentBaseUri!);
     }
     controller.initialize();
