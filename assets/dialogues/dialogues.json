@@ -611,6 +611,126 @@
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "035_beaty_002",
+      "residentId": "035_beaty",
+      "text": "あら、今日のあなた、いいお顔ね。鏡を見るたび、好きなところをひとつ見つけてちょうだい♡",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_003",
+      "residentId": "035_beaty",
+      "text": "シワはね、たくさん笑ってきた勲章なのよ。わたくし、けっこう気に入っているの♡",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_004",
+      "residentId": "035_beaty",
+      "text": "白髪を染めても、そのまま楽しんでもいいの。自分で選ぶおしゃれがいちばん素敵よ♪",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_005",
+      "residentId": "035_beaty",
+      "text": "お肌のお手入れは、やさしく洗って保湿するところから。高価なものをそろえなくてもいいのよ♡",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_006",
+      "residentId": "035_beaty",
+      "text": "日差しの強い日だけじゃなくて、普段のお出かけでも日焼け止めや帽子を忘れずにね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_007",
+      "residentId": "035_beaty",
+      "text": "髪を整えたら、ちょっとお出かけしたくなるわね。近所をひと回りするのも気分転換になるわ♪",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_008",
+      "residentId": "035_beaty",
+      "text": "お気に入りのお洋服、しまいっぱなしはもったいないわ。今日着たっていいじゃない♡",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_009",
+      "residentId": "035_beaty",
+      "text": "お化粧する日もしない日も、どちらも素敵。自分が心地いいのがいちばんよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_010",
+      "residentId": "035_beaty",
+      "text": "手が乾燥するときは、手洗いのあとにハンドクリームを。ちいさなご自愛ね♪",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_011",
+      "residentId": "035_beaty",
+      "text": "あら、寝ぐせ？ それも個性だけれど、ブラシを通すと気分が変わるかもしれないわね♡",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "035_beaty_012",
+      "residentId": "035_beaty",
+      "text": "お外へ出かけたのね！ おしゃれをして歩くのも、普段着で歩くのも、どちらも素敵よ♡",
+      "priority": 20,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1
+        }
+      ]
+    },
+    {
+      "id": "035_beaty_013",
+      "residentId": "035_beaty",
+      "text": "5回もお出かけしたのね！ 好きな景色や人に会えたかしら？ 無理のないペースで楽しんでね♡",
+      "priority": 30,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 5
+        }
+      ]
     }
   ]
 }
