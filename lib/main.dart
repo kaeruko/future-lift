@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'celebration.dart';
 import 'dialogue_engine.dart';
+import 'local_content_preview.dart';
+import 'local_town_visitors.dart';
 import 'progress.dart';
 import 'home_skin.dart';
 import 'game_home.dart';
@@ -119,6 +121,12 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   SalonUnlockDebugMode _salonUnlockMode = SalonUnlockDebugMode.normal;
   static Future<DialogueCatalog>? _cachedDialogueCatalog;
   late final Future<DialogueCatalog> _dialoguesFuture;
+  // Opt-in local HTTP content test. Without the URL normal play is unchanged.
+  static const _localContentUrl = String.fromEnvironment(
+    'KOTOHOGU_LOCAL_CONTENT_URL',
+  );
+  Uri? _remoteContentBaseUri;
+  Future<RemoteContentCatalog>? _remoteContentFuture;
   ProgressController get controller => widget.controller;
 
   @override
@@ -128,6 +136,10 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     _dialoguesFuture = widget.dialogueCatalog != null
         ? SynchronousFuture(widget.dialogueCatalog!)
         : (_cachedDialogueCatalog ??= DialogueCatalog.load());
+    if (_localContentUrl.isNotEmpty) {
+      _remoteContentBaseUri = localServerUri(_localContentUrl);
+      _remoteContentFuture = fetchLocalContent(_remoteContentBaseUri!);
+    }
     controller.initialize();
     _scheduleMidnight();
   }
@@ -147,6 +159,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     if (state == AppLifecycleState.resumed) {
       controller.refreshDay();
       _scheduleMidnight();
+      _reloadLocalResidents();
     }
   }
 
@@ -615,23 +628,148 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     },
   );
 
+
+  void _reloadLocalResidents() {
+    final uri = _remoteContentBaseUri;
+    if (uri == null) return;
+    setState(() {
+      // Same configured backend, no silent switch to bundled characters.
+      _remoteContentFuture = fetchLocalContent(uri);
+    });
+  }
+
+  Future<void> _showLocalVisitor(
+      RemoteContentCatalog catalog, RemoteResident resident) async {
+    // This visitor is not owned. Never touch saved seenDialogues or tickets.
+    final line = visitorGreeting(catalog, resident.id);
+    final baseUri = _remoteContentBaseUri;
+    if (baseUri == null) {
+      throw StateError('Missing configured local content URI');
+    }
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            SizedBox(
+              width: 52,
+              height: 52,
+              child: Image.network(
+                remoteSpriteUri(
+                  baseUri, resident, 'idle_front_01.png',
+                ).toString(),
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Tooltip(
+                  message: '画像の取得に失敗しました: $error',
+                  child: const Icon(Icons.broken_image, color: Colors.red),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(resident.label)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('配信テストの来訪者',
+                style: TextStyle(fontSize: 12, color: teal)),
+            const SizedBox(height: 10),
+            Text(line.text),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('また話そう'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _townWithLocalVisitors(Progress progress) {
+    final future = _remoteContentFuture;
+    if (future == null) return _townNavigator(progress, null);
+    return FutureBuilder<RemoteContentCatalog>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: SelectableText(
+                'ローカル配信データの取得に失敗したため、まちの表示を停止しました。\n'
+                '${_remoteContentBaseUri}\n${snapshot.error}\n'
+                '${snapshot.stackTrace}',
+                key: const ValueKey('town-remote-content-error'),
+              ),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return _townNavigator(progress, snapshot.requireData);
+      },
+    );
+  }
+
+  Widget _townNavigator(
+      Progress progress, RemoteContentCatalog? remoteCatalog) {
+    final visitors = remoteCatalog == null
+        ? const <RemoteResident>[]
+        : localVisitorsForArea(
+            remoteCatalog,
+            _townArea,
+            lifetimePoints: progress.points,
+            owned: progress.residents.owned,
+            debugTownSelectionActive: _debugTownResidents != null,
+          );
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        TownAreaNavigator(
+          sceneKey: _townSceneKey,
+          area: _townArea,
+          onAreaChanged: (area) => setState(() => _townArea = area),
+          level: progress.townLevel,
+          lifetimePoints: progress.points,
+          residents: progress.residents.owned,
+          debugTownResidents: _debugTownResidents,
+          remoteVisitors: visitors,
+          remoteContentBaseUri: _remoteContentBaseUri,
+          onRemoteVisitor: remoteCatalog == null
+              ? null
+              : (resident) => _showLocalVisitor(remoteCatalog, resident),
+          salonUnlockMode: kDebugMode
+              ? _salonUnlockMode : SalonUnlockDebugMode.normal,
+          onResident: _showDialogue,
+          onSalonResident: (resident) =>
+              _showDialogue(resident, inSalon: true),
+        ),
+        if (_remoteContentBaseUri != null)
+          Positioned(
+            right: 14,
+            bottom: 18,
+            child: FloatingActionButton.small(
+              key: const ValueKey('town-remote-reload'),
+              tooltip: '配信中の住民を再読み込み',
+              onPressed: _reloadLocalResidents,
+              child: const Icon(Icons.sync),
+            ),
+          ),
+      ],
+    );
+  }
+
   List<Widget> _town(Progress progress, double viewportHeight) => [
     SizedBox(
       key: const ValueKey('town-page-fullscreen'),
       height: viewportHeight,
-      child: TownAreaNavigator(
-        sceneKey: _townSceneKey,
-        area: _townArea,
-        onAreaChanged: (area) => setState(() => _townArea = area),
-        level: progress.townLevel,
-        lifetimePoints: progress.points,
-        residents: progress.residents.owned,
-        debugTownResidents: _debugTownResidents,
-        salonUnlockMode: kDebugMode
-            ? _salonUnlockMode : SalonUnlockDebugMode.normal,
-        onResident: _showDialogue,
-        onSalonResident: (resident) => _showDialogue(resident, inSalon: true),
-      ),
+      child: _townWithLocalVisitors(progress),
     ),
     Padding(
       padding: const EdgeInsets.fromLTRB(14, 16, 14, 24),
