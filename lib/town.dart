@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -144,7 +145,10 @@ class _TownSceneState extends State<TownScene> {
       debugOverride: widget.debugTownResidents,
     );
     final count = visibleResidents.length;
-    final size = (width * .14).clamp(40.0, 76.0);
+    final size = (width * (count <= townWalkSlots.length
+        ? .14
+        : math.min(.14, .64 / math.sqrt(count * 1.3).ceil())))
+        .clamp(22.0, 76.0);
     return Stack(
       children: [
         Positioned.fill(
@@ -160,6 +164,7 @@ class _TownSceneState extends State<TownScene> {
           _resident(
             visibleResidents[index],
             index,
+            count,
             width,
             height,
             size,
@@ -194,21 +199,24 @@ class _TownSceneState extends State<TownScene> {
   Widget _resident(
     TownResident resident,
     int index,
+    int totalSlots,
     double width,
     double height,
     double size,
     bool reduced,
   ) {
+    final origin = townWalkOrigin(index, totalSlots: totalSlots);
     final pose = reduced
         ? TownWalkPose(
-            x: townWalkSlots[index].$1,
-            y: townWalkSlots[index].$2,
+            x: origin.$1,
+            y: origin.$2,
             direction: null,
             frame: 0,
           )
         : townWalkPose(
             index,
             Duration(milliseconds: _elapsedMillis(resident)),
+            totalSlots: totalSlots,
           );
     final direction = pose.direction;
     final walking = direction != null &&

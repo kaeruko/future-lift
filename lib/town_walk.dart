@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 
 import 'resident_collection.dart';
@@ -20,8 +22,8 @@ class TownWalkPose {
   bool get walking => direction != null;
 }
 
-/// Each resident follows a small loop around its own spot in the plaza.
-/// Positions leave room for the sprite within the clipped town viewport.
+/// The first eight positions retain the original arrangement (not a headcount
+/// limit). Positions leave room for sprites in the clipped town viewport.
 const townWalkSlots = <(double, double)>[
   (.10, .51),
   (.63, .49),
@@ -33,6 +35,28 @@ const townWalkSlots = <(double, double)>[
   (.50, .76),
 ];
 
+/// For nine or more residents, create unique grid origins rather than reusing
+/// one of the first eight slots. All coordinates are image-relative.
+(double, double) townWalkOrigin(int slot, {required int totalSlots}) {
+  if (totalSlots <= 0) {
+    throw RangeError.value(totalSlots, 'totalSlots', 'Must be positive');
+  }
+  if (slot < 0 || slot >= totalSlots) {
+    throw RangeError.range(slot, 0, totalSlots - 1, 'slot');
+  }
+  if (totalSlots <= townWalkSlots.length) {
+    return townWalkSlots[slot];
+  }
+  final columns = math.sqrt(totalSlots * 1.3).ceil();
+  final rows = (totalSlots + columns - 1) ~/ columns;
+  final col = slot % columns;
+  final row = slot ~/ columns;
+  return (
+    .05 + (columns == 1 ? 0 : col * .69 / (columns - 1)),
+    .40 + (rows == 1 ? 0 : row * .30 / (rows - 1)),
+  );
+}
+
 const _walkStepMs = 150;
 const _horizontalMs = 3000;
 const _verticalMs = 1600;
@@ -40,13 +64,20 @@ const _restMs = 900;
 const _walkCycleMs = 2 * _horizontalMs + 2 * _verticalMs + 4 * _restMs;
 
 /// Deterministic, pause-inclusive 4-direction walk without saved game state.
-TownWalkPose townWalkPose(int slot, Duration elapsed) {
-  if (slot < 0 || slot >= townWalkSlots.length) {
-    throw RangeError.range(slot, 0, townWalkSlots.length - 1, 'slot');
-  }
-  final start = townWalkSlots[slot];
-  final width = slot.isEven ? .080 : .065;
-  final height = slot.isEven ? .035 : .045;
+TownWalkPose townWalkPose(
+  int slot,
+  Duration elapsed, {
+  int? totalSlots,
+}) {
+  final count = totalSlots ?? math.max(townWalkSlots.length, slot + 1);
+  final start = townWalkOrigin(slot, totalSlots: count);
+  final dense = count > townWalkSlots.length;
+  final width = dense
+      ? math.min(.05, .35 / math.sqrt(count))
+      : (slot.isEven ? .080 : .065);
+  final height = dense
+      ? math.min(.026, .20 / math.sqrt(count))
+      : (slot.isEven ? .035 : .045);
   // Stagger characters to avoid a synchronized marching formation.
   var time = (elapsed.inMilliseconds + slot * 1640) % _walkCycleMs;
   var x = start.$1;
