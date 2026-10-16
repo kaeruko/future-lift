@@ -20,14 +20,14 @@ List<RemoteResident> localVisitorsForArea(
     return current == area;
   }).toList();
 
-  // Every truly new resident appears; showcase one unowned built-in resident
-  // per area to test network sprites even before creating a new character.
+  // Every truly new resident appears. Showcase two recent unowned built-ins
+  // too, including a newly generated enum entry after a local Flutter rebuild.
   final newResidents = candidates.where(
     (resident) => !builtInIds.contains(resident.id),
   );
-  final showcase = candidates.where(
+  final showcase = candidates.reversed.where(
     (resident) => builtInIds.contains(resident.id),
-  ).take(1);
+  ).take(2);
   return List<RemoteResident>.unmodifiable([...newResidents, ...showcase]);
 }
 

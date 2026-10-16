@@ -227,3 +227,40 @@ flutter test test/local_content_preview_test.dart
 ```
 
 **次段階**：固定 `TownResident` enum を動的モデルに置換し、この配信データを通常のガチャ・町・会話画面へ取り込みます。これが完了するまでは通常アプリへ新キャラをコード更新なしで追加できるわけではありません。
+
+## 本編のまちへのローカル配信テスト（Androidエミュレーター）
+
+配信テスト用のURLを指定して、**通常のゲーム**を起動できます。CMSサーバーを立ち上げたまま、別ターミナルでFlutterを実行してください。
+
+ターミナル1:
+```powershell
+cd C:\Users\mail\work\kotohogu
+git pull --ff-only origin main
+python tools/dialogue_cms/server.py
+```
+
+ターミナル2:
+```powershell
+cd C:\Users\mail\work\kotohogu
+flutter run -t lib/main.dart --dart-define=KOTOHOGU_LOCAL_CONTENT_URL=http://10.0.2.2:8765
+```
+
+まちではCMSにある未所持キャラが「配信テストの来訪者」として表示されます。アプリのenumにない新住民は全員表示し、従来の既存住民は未所持かつ最近登録された最大2人をサンプルとして追加表示します。所持済み住民との重複はありません。
+
+CMSで新しい住民を保存したら、まち画面右下の再読み込みアイコンを押してください。新キャラの歩行画像をHTTPで表示します。画像不足や通信エラーでは別の画像へ自動切り替えしません。
+
+- 来訪者はCMSの `walkInTown=true` のキャラだけです。美容室など歩かない設定のキャラは屋外へ出ません。
+- 来訪者は住むエリアが開放されるまで中央ひろばに一時滞在し、開放後はCMSの指定エリアへ移動します。
+- タップすると条件なし・繰り返し可能なセリフで会話します。条件付きセリフ・既読記録はこの段階では対象外です。
+- 来訪者との会話や表示はローカルの所持データ・ガチャ・進捗セーブに書き込みません。
+- 配信URLを指定しない通常起動の挙動は変更しません。URLを指定した場合、通信・検証失敗時はまち表示を止めます。
+- Androidエミュレーターの `10.0.2.2` を使用します。物理端末・本番配信では使用しません。
+
+確認用:
+```powershell
+python -m unittest discover -s tools/dialogue_cms -p "test_*.py"
+flutter test test/local_content_preview_test.dart test/local_town_visitors_test.dart test/local_town_integration_test.dart
+flutter analyze
+```
+
+本番用AWS配信には、ガチャ・所持データを含めた動的住民モデルへの移行、HTTPSでの配信、スナップショットのバージョン管理・署名/ハッシュ検証などを別途実装します。
