@@ -60,8 +60,10 @@ class RemoteResident {
   const RemoteResident({
     required this.id, required this.label, required this.artFolder,
     required this.profile, required this.homeAreaId,
+    this.walkInTown = true,
   });
   final String id, label, artFolder, profile, homeAreaId;
+  final bool walkInTown;
 
   factory RemoteResident.fromJson(Object? raw) {
     final row = objectOf(raw, 'resident');
@@ -88,14 +90,20 @@ class RemoteResident {
       artFolder: folder,
       profile: row['profile'] as String,
       homeAreaId: row['homeAreaId'] as String,
+      walkInTown: row['walkInTown'] as bool,
     );
   }
 }
 
 class RemoteDialogue {
-  const RemoteDialogue(this.id, this.residentId, this.text, this.conditionCount);
+  const RemoteDialogue(
+    this.id, this.residentId, this.text, this.conditionCount,
+    this.priority, this.once,
+  );
   final String id, residentId, text;
   final int conditionCount;
+  final int priority;
+  final bool once;
 
   factory RemoteDialogue.fromJson(Object? raw) {
     final row = objectOf(raw, 'dialogue');
@@ -116,6 +124,8 @@ class RemoteDialogue {
       nonempty(row['residentId'], 'dialogue.residentId'),
       nonempty(row['text'], 'dialogue.text'),
       conditions.length,
+      row['priority'] as int,
+      row['once'] as bool,
     );
   }
 }
@@ -149,7 +159,9 @@ class RemoteContentCatalog {
       if (!dialogueIds.add(row.id) || !ids.contains(row.residentId)) {
         throw FormatException('Duplicate or unknown-speaker dialogue: ${row.id}');
       }
-      if (row.conditionCount == 0) defaultSpeakerIds.add(row.residentId);
+      if (row.conditionCount == 0 && !row.once) {
+        defaultSpeakerIds.add(row.residentId);
+      }
     }
     if (!defaultSpeakerIds.containsAll(ids)) {
       throw FormatException('Resident lacks an unconditional line: ${ids.difference(defaultSpeakerIds)}');
