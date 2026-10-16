@@ -369,12 +369,17 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
 
   /// One fixed safe-area HUD for every page in the main navigation.
   /// The full-screen wallpaper remains continuous behind the header.
-  Widget _pageWithSharedHeader(Progress progress, Widget page) => Stack(
+  Widget _pageWithSharedHeader(
+    Progress progress,
+    Widget page, {
+    String backgroundAsset = 'assets/kotohogu/town_background.png',
+  }) => Stack(
     fit: StackFit.expand,
     children: [
       Positioned.fill(
         child: Image.asset(
-          'assets/kotohogu/town_background.png',
+          backgroundAsset,
+          key: const ValueKey('shared-page-background'),
           fit: BoxFit.cover,
           excludeFromSemantics: true,
         ),
@@ -481,6 +486,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                         onPeriodChanged: (period) =>
                             setState(() => _missionPeriod = period),
                       ),
+                      backgroundAsset: MissionsScreen.backgroundAsset,
                     )
                   : _page == 2
                   ? PinnedGachaHud(

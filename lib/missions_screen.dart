@@ -15,6 +15,9 @@ class MissionsScreen extends StatelessWidget {
     required this.onPeriodChanged,
     this.drawBackground = true,
   });
+  /// Shared by the standalone preview and the main app's fixed-HUD shell.
+  static const backgroundAsset = 'assets/kotohogu/park_background_001.png';
+
   // The shared app header owns the wallpaper on full navigation pages.
   // Standalone previews continue to paint their usual background.
   final bool drawBackground;
@@ -30,7 +33,8 @@ class MissionsScreen extends StatelessWidget {
       if (drawBackground)
         Positioned.fill(
           child: Image.asset(
-            'assets/kotohogu/town_background.png',
+            backgroundAsset,
+            key: const ValueKey('mission-background'),
             fit: BoxFit.cover,
             excludeFromSemantics: true,
           ),

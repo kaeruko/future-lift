@@ -177,6 +177,64 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+
+  testWidgets('mission list uses the park artwork, other shared pages do not',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 850);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await launch(tester, MemoryStore());
+    final wallpaper = find.byKey(const ValueKey('shared-page-background'));
+
+    String displayedAsset() =>
+        (tester.widget<Image>(wallpaper).image as AssetImage).assetName;
+
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
+    await tester.pumpAndSettle();
+    expect(find.byType(MissionsScreen), findsOneWidget);
+    expect(displayedAsset(), MissionsScreen.backgroundAsset);
+    expect(tester.getRect(wallpaper),
+        contains(tester.getCenter(find.byType(GachaHud))));
+
+    for (final page in ['footer-history', 'footer-menu']) {
+      await tester.tap(find.byKey(ValueKey(page)));
+      await tester.pumpAndSettle();
+      expect(displayedAsset(), 'assets/kotohogu/town_background.png');
+    }
+    await tester.tap(find.byKey(const ValueKey('footer-missions')));
+    await tester.pumpAndSettle();
+    expect(displayedAsset(), MissionsScreen.backgroundAsset);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('standalone mission preview also uses the park artwork',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 850);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: MissionsScreen(
+          progress: Progress.empty(DateTime(2026, 10, 16)),
+          busy: false,
+          onComplete: (_) {},
+          period: MissionPeriod.daily,
+          onPeriodChanged: (_) {},
+        ),
+      ),
+    ));
+    final background = tester.widget<Image>(
+        find.byKey(const ValueKey('mission-background')));
+    expect((background.image as AssetImage).assetName,
+        MissionsScreen.backgroundAsset);
+    expect(background.fit, BoxFit.cover);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('all five main pages share one header size and position',
       (tester) async {
     tester.view.physicalSize = const Size(400, 850);
