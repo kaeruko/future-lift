@@ -12,6 +12,8 @@ void main() {
   test('stable area IDs and lifetime unlock thresholds', () {
     expect(TownArea.fromId('plaza'), TownArea.plaza);
     expect(TownArea.fromId('shopping'), TownArea.shopping);
+    expect(TownArea.park.backgroundAsset,
+        'assets/kotohogu/park_background_001.png');
     expect(TownArea.plaza.backgroundAsset,
         'assets/kotohogu/town_background_001.jpg');
     expect(TownArea.shopping.backgroundAsset,
@@ -98,7 +100,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('arrows navigate locked and artwork-pending areas', (tester) async {
+  testWidgets('arrows show park art then locked shopping area', (tester) async {
     tester.view.physicalSize = const Size(430, 930);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -121,10 +123,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('town-area-next')));
     await tester.pumpAndSettle();
     expect(area, TownArea.park);
-    expect(find.text('景色を準備中だよ'), findsOneWidget);
-    expect(find.byKey(const ValueKey('town-background')), findsNothing);
-    expect(find.byKey(const ValueKey('area-resident-05_squirrel')),
-        findsOneWidget);
+    expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
+    expect(find.text('景色を準備中だよ'), findsNothing);
+    expect(find.byKey(const ValueKey('resident-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('resident-1')), findsOneWidget);
     await tester.drag(
       find.byType(TownAreaNavigator), const Offset(-170, 0));
     await tester.pumpAndSettle();

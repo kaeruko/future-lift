@@ -6,7 +6,7 @@ enum TownArea {
   plaza('plaza', '中央ひろば', 'みんなが集まるまちの中心。', 0,
       'assets/kotohogu/town_background_001.jpg', 768, 1376),
   park('park', 'ふれあい公園', 'お散歩やおしゃべりを楽しむ場所。', 90,
-      null, null, null),
+      'assets/kotohogu/park_background_001.png', 937, 1679),
   shopping('shopping', 'ことほぎ商店街', 'お店と仕事の話が聞こえてくる通り。', 180,
       'assets/kotohogu/street_background_001.png', 937, 1679),
   village('village', 'のんびり里', '畑とおうちで、それぞれのペースで暮らす場所。', 300,
