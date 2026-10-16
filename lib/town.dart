@@ -12,6 +12,14 @@ const townNames = ['穏やかなまち', '花のあるまち', '笑顔が集ま�
 /// Keep this rect in source-image coordinates, not screen coordinates.
 const villageSalonDoor = Rect.fromLTWH(782, 728, 112, 132);
 
+/// Scale by a resident's fixed walking slot, so vertical motion does not
+/// cause the sprite to pop between sizes. Foot positions stay unchanged.
+double _townResidentScale(double homeY) {
+  if (homeY < .55) return 1.2; // Farther from the viewer.
+  if (homeY < .72) return 1.4; // Middle of the scene.
+  return 1.5; // Foreground.
+}
+
 const townDescriptions = [
   'いつものまちで、みんなが暮らしています。',
   '道ばたに、色とりどりの花が咲きました。',
@@ -224,18 +232,23 @@ class _TownSceneState extends State<TownScene> {
     final asset = walking
         ? resident.walkAsset(direction, pose.frame)
         : resident.idleAsset;
+    // Keep the original bottom-center of the walking sprite as its foot
+    // anchor while increasing visual size and its matching tap target.
+    final scaledSize = size * _townResidentScale(origin.$2);
+    final footX = width * pose.x + size / 2;
+    final footY = height * pose.y + size;
     final sprite = Image.asset(
       asset,
       key: ValueKey('resident-sprite-$index'),
-      width: size,
-      height: size,
+      width: scaledSize,
+      height: scaledSize,
       fit: BoxFit.contain,
       gaplessPlayback: true,
       excludeFromSemantics: true,
     );
     return Positioned(
-      left: width * pose.x,
-      top: height * pose.y,
+      left: footX - scaledSize / 2,
+      top: footY - scaledSize,
       child: Semantics(
         button: widget.onResident != null,
         label: '${resident.label}のおはなし',

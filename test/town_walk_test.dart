@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:future_lift/resident_collection.dart';
 import 'package:future_lift/town.dart';
+import 'package:future_lift/town_areas.dart';
 import 'package:future_lift/town_walk.dart';
 
 void main() {
@@ -165,6 +166,91 @@ void main() {
     expect((walkingSprite.image as AssetImage).assetName,
         contains('/walk_'));
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+
+  testWidgets('walkers grow with depth without moving their foot anchors',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const residents = [
+      TownResident.cat,
+      TownResident.c009_chef,
+      TownResident.c032_miner,
+      TownResident.c035_beaty,
+    ];
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: SizedBox(
+            width: 360,
+            child: MediaQuery(
+              data: const MediaQueryData(disableAnimations: true),
+              child: TownScene(
+                level: 0,
+                area: TownArea.shopping,
+                residents: residents,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ));
+    final townRect = tester.getRect(find.byType(TownScene));
+    final originalSize =
+        (townRect.width * .14).clamp(22.0, 76.0).toDouble();
+    const expectedScales = [1.2, 1.2, 1.4, 1.5];
+    for (var index = 0; index < residents.length; index++) {
+      final sprite = find.byKey(ValueKey('resident-sprite-$index'));
+      final image = tester.widget<Image>(sprite);
+      final rect = tester.getRect(sprite);
+      final origin = townWalkOrigin(index, totalSlots: residents.length);
+      expect(image.width, closeTo(originalSize * expectedScales[index], .01));
+      expect(image.height, closeTo(image.width!, .01));
+      // The old sprite's bottom-center is the fixed anchor, regardless
+      // of its new visual size.
+      expect(rect.center.dx,
+          closeTo(townRect.left + townRect.width * origin.$1 +
+              originalSize / 2, .01));
+      expect(rect.bottom,
+          closeTo(townRect.top + townRect.height * origin.$2 +
+              originalSize, .01));
+    }
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('all town areas apply the new walker scale', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final residents = TownResident.values.toList();
+    for (final area in TownArea.values) {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: TownScene(
+              level: 0,
+              area: area,
+              residents: residents,
+              fillViewport: true,
+            ),
+          ),
+        ),
+      ));
+      final active = areaResidents(residents, area);
+      expect(active, isNotEmpty);
+      final base =
+          (area.sourceWidth!.toDouble() * .14).clamp(22.0, 76.0).toDouble();
+      final sprite = tester.widget<Image>(
+          find.byKey(const ValueKey('resident-sprite-0')));
+      expect(sprite.width, closeTo(base * 1.2, .01),
+          reason: 'area: ${area.id}');
+      expect(tester.takeException(), isNull);
+    }
     await tester.pumpWidget(const SizedBox());
   });
 
