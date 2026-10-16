@@ -8,7 +8,7 @@ enum TownArea {
   park('park', 'ふれあい公園', 'お散歩やおしゃべりを楽しむ場所。', 90,
       null, null, null),
   shopping('shopping', 'ことほぎ商店街', 'お店と仕事の話が聞こえてくる通り。', 180,
-      'assets/kotohogu/ChatGPT 画像 2026年10月15日 21_10_28-1.png', 937, 1679),
+      'assets/kotohogu/street_background_001.png', 937, 1679),
   village('village', 'のんびり里', '畑とおうちで、それぞれのペースで暮らす場所。', 300,
       'assets/kotohogu/village_background_001.png', 941, 1672);
 

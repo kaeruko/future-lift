@@ -12,6 +12,10 @@ void main() {
   test('stable area IDs and lifetime unlock thresholds', () {
     expect(TownArea.fromId('plaza'), TownArea.plaza);
     expect(TownArea.fromId('shopping'), TownArea.shopping);
+    expect(TownArea.plaza.backgroundAsset,
+        'assets/kotohogu/town_background_001.jpg');
+    expect(TownArea.shopping.backgroundAsset,
+        'assets/kotohogu/street_background_001.png');
     expect(() => TownArea.fromId('invalid'), throwsFormatException);
     expect(TownArea.plaza.isUnlocked(0), true);
     expect(TownArea.park.isUnlocked(89), false);
