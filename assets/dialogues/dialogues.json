@@ -866,6 +866,15 @@
         "residentId": "027_daydreamer",
         "text": "ぼくはおやすみするんだもふ～。"
       }
+    },
+    {
+      "id": "029_office_worker_001",
+      "residentId": "029_office_worker",
+      "text": "こんにちは！よろしくね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }

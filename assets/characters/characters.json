@@ -154,6 +154,17 @@
       "inGacha": true,
       "walkInTown": true,
       "homeAreaId": "park"
+    },
+    {
+      "key": "c029_office_worker",
+      "id": "029_office_worker",
+      "label": "かえる",
+      "profile": "",
+      "artFolder": "029_office_worker",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true,
+      "homeAreaId": "plaza"
     }
   ]
 }
