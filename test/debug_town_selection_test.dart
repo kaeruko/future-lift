@@ -156,10 +156,14 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('footer-town')));
     await tester.pumpAndSettle();
-    expect(tester.widget<TownAreaNavigator>(find.byType(TownAreaNavigator))
-        .debugTownResidents, isNull);
-    expect(find.byKey(const ValueKey('resident-0')), findsNothing);
-    expect(find.text('まだ行けないエリアだよ'), findsOneWidget);
+    final restoredTown =
+        tester.widget<TownAreaNavigator>(find.byType(TownAreaNavigator));
+    expect(restoredTown.debugTownResidents, isNull);
+    expect(restoredTown.area, TownArea.plaza,
+        reason: 'Leaving debug mode returns from the locked village');
+    expect(find.byKey(const ValueKey('resident-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    expect(find.text('まだ行けないエリアだよ'), findsNothing);
     expect(store.raw, originalSave);
     expect(store.writes, originalWrites);
     expect(tester.takeException(), isNull);
@@ -251,6 +255,20 @@ void main() {
     await tester.tap(forceClosed);
     await tester.pumpAndSettle();
     expect(find.text('テスト中の状態：未開放'), findsOneWidget);
+
+    // Switching facility preview off returns from the locked village.
+    final resetMode = find.byKey(const ValueKey('debug-salon-mode-normal'));
+    await tester.scrollUntilVisible(resetMode, 170);
+    await tester.pumpAndSettle();
+    await tester.tap(resetMode);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('footer-town')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TownAreaNavigator>(find.byType(TownAreaNavigator))
+        .area, TownArea.plaza);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('footer-menu')));
+    await tester.pumpAndSettle();
 
     // A fresh app session uses normal mode without any stored override.
     await tester.pumpWidget(const SizedBox());

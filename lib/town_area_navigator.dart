@@ -42,10 +42,20 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
   int? _activePointer;
   Offset? _swipeStart;
 
+  /// Only unlocked neighborhoods are navigable in normal play. Debug town
+  /// previews and the salon facility test may temporarily explore all areas.
+  bool _canVisit(TownArea area) =>
+      area.isUnlocked(widget.lifetimePoints) ||
+      widget.debugTownResidents != null ||
+      (kDebugMode &&
+          widget.salonUnlockMode != SalonUnlockDebugMode.normal);
+
   void _move(int direction) {
     final next = widget.area.index + direction;
     if (next < 0 || next >= TownArea.values.length) return;
-    widget.onAreaChanged(TownArea.values[next]);
+    final destination = TownArea.values[next];
+    if (!_canVisit(destination)) return; // Also protects horizontal swipes.
+    widget.onAreaChanged(destination);
   }
 
   @override
@@ -53,11 +63,15 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
     final area = widget.area;
     final debugPreview = widget.debugTownResidents != null;
     final unlocked = area.isUnlocked(widget.lifetimePoints);
-    // Allow test access to the village door before earning 300 points.
+    // Facility debug modes also allow traversing intermediate neighborhoods.
     final salonOverride = kDebugMode &&
         widget.salonUnlockMode != SalonUnlockDebugMode.normal;
-    final accessible = unlocked || debugPreview ||
-        (area == TownArea.village && salonOverride);
+    final accessible = _canVisit(area);
+    final canGoPrevious =
+        area.index > 0 && _canVisit(TownArea.values[area.index - 1]);
+    final canGoNext = area.index < TownArea.values.length - 1 &&
+        _canVisit(TownArea.values[area.index + 1]);
+    final showNavigation = canGoPrevious || canGoNext;
     // The shopping-street lantern strings leave a central opening for a sign.
     // Keep the conventional heading when the area is still locked.
     final hangingShoppingSign =
@@ -136,7 +150,7 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
             _AreaPreparation(
               area: area,
               unlocked: unlocked,
-              debugPreview: debugPreview,
+              debugPreview: debugPreview || salonOverride,
               lifetimePoints: widget.lifetimePoints,
               residents: areaResidents(
                 widget.residents,
@@ -145,18 +159,22 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
               ),
               onResident: widget.onResident,
             ),
-          Positioned(
+          if (showNavigation)
+            Positioned(
             top: 92,
             left: 12,
             right: 12,
             child: Row(
               children: [
-                IconButton.filledTonal(
-                  key: const ValueKey('town-area-previous'),
-                  tooltip: '前のエリア',
-                  onPressed: area.index == 0 ? null : () => _move(-1),
-                  icon: const Icon(Icons.chevron_left),
-                ),
+                if (canGoPrevious)
+                  IconButton.filledTonal(
+                    key: const ValueKey('town-area-previous'),
+                    tooltip: '前のエリア',
+                    onPressed: () => _move(-1),
+                    icon: const Icon(Icons.chevron_left),
+                  )
+                else
+                  const SizedBox(width: 48),
                 Expanded(
                   child: hangingShoppingSign
                       ? Center(
@@ -200,13 +218,15 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
                     ),
                   ),
                 ),
-                IconButton.filledTonal(
-                  key: const ValueKey('town-area-next'),
-                  tooltip: '次のエリア',
-                  onPressed: area.index == TownArea.values.length - 1
-                      ? null : () => _move(1),
-                  icon: const Icon(Icons.chevron_right),
-                ),
+                if (canGoNext)
+                  IconButton.filledTonal(
+                    key: const ValueKey('town-area-next'),
+                    tooltip: '次のエリア',
+                    onPressed: () => _move(1),
+                    icon: const Icon(Icons.chevron_right),
+                  )
+                else
+                  const SizedBox(width: 48),
               ],
             ),
           ),

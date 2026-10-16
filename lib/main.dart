@@ -252,6 +252,22 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     }
   }
 
+  /// Leaving debug previews must not strand the player in a locked area
+  /// with all its navigation controls hidden.
+  void _returnToUnlockedTownArea() {
+    if (_debugTownResidents != null ||
+        _salonUnlockMode != SalonUnlockDebugMode.normal ||
+        controller.progress == null) {
+      return;
+    }
+    final points = controller.progress!.points;
+    if (!_townArea.isUnlocked(points)) {
+      _townArea = TownArea.values.lastWhere(
+        (area) => area.isUnlocked(points),
+      );
+    }
+  }
+
   void _setDebugTownEnabled(bool enabled) {
     if (!kDebugMode || controller.busy || controller.progress == null ||
         controller.failure != null) {
@@ -261,6 +277,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       _debugTownResidents = enabled
           ? visibleTownResidents(controller.progress!.residents.owned)
           : null;
+      _returnToUnlockedTownArea();
     });
   }
 
@@ -285,7 +302,10 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
         controller.progress == null) {
       return;
     }
-    setState(() => _salonUnlockMode = mode);
+    setState(() {
+      _salonUnlockMode = mode;
+      _returnToUnlockedTownArea();
+    });
   }
 
   Future<void> _showDialogue(TownResident resident, {bool inSalon = false}) async {

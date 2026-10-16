@@ -238,7 +238,7 @@ void main() {
     await tester.pumpWidget(scene(179, TownArea.shopping));
     expect(sign, findsNothing);
     expect(find.byKey(const ValueKey('town-area-name')), findsOneWidget);
-    expect(find.byKey(const ValueKey('town-area-next')), findsOneWidget);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
 
     // Other neighborhoods keep the normal top navigation heading.
     await tester.pumpWidget(scene(180, TownArea.park));
@@ -248,18 +248,20 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('arrows show park art then locked shopping area', (tester) async {
+  testWidgets('navigation hides locked destinations and blocks swipes',
+      (tester) async {
     tester.view.physicalSize = const Size(430, 930);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    TownArea area = TownArea.plaza;
+    var points = 0;
+    var area = TownArea.plaza;
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(body: StatefulBuilder(builder: (context, setState) {
         return TownAreaNavigator(
           area: area,
           onAreaChanged: (next) => setState(() => area = next),
           level: 0,
-          lifetimePoints: 90,
+          lifetimePoints: points,
           residents: const [
             TownResident.shiba, TownResident.rabbit,
             TownResident.squirrel, TownResident.c026_farmer,
@@ -267,22 +269,101 @@ void main() {
         );
       })),
     ));
-    expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
+    Future<void> refresh(int amount) async {
+      points = amount;
+      // Updating the displayed widget rebuilds with the new earned points.
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(body: StatefulBuilder(builder: (context, setState) {
+          return TownAreaNavigator(
+            area: area,
+            onAreaChanged: (next) => setState(() => area = next),
+            level: 0,
+            lifetimePoints: points,
+            residents: const [
+              TownResident.shiba, TownResident.rabbit,
+              TownResident.squirrel, TownResident.c026_farmer,
+            ],
+          );
+        })),
+      ));
+      await tester.pump();
+    }
+
+    // Zero points means only the plaza exists: no arrows or navigation band.
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    expect(find.byKey(const ValueKey('town-area-previous')), findsNothing);
+    expect(find.byKey(const ValueKey('town-area-name')), findsNothing);
+    await tester.drag(
+        find.byType(TownAreaNavigator), const Offset(-170, 0));
+    await tester.pump();
+    expect(area, TownArea.plaza);
+
+    await refresh(89);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    await refresh(90);
+    expect(find.byKey(const ValueKey('town-area-next')), findsOneWidget);
+    expect(find.byKey(const ValueKey('town-area-previous')), findsNothing);
     await tester.tap(find.byKey(const ValueKey('town-area-next')));
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(area, TownArea.park);
     expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
-    expect(find.text('景色を準備中だよ'), findsNothing);
     expect(find.byKey(const ValueKey('resident-0')), findsOneWidget);
     expect(find.byKey(const ValueKey('resident-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    expect(find.byKey(const ValueKey('town-area-previous')), findsOneWidget);
     await tester.drag(
-      find.byType(TownAreaNavigator), const Offset(-170, 0));
-    await tester.pumpAndSettle();
+        find.byType(TownAreaNavigator), const Offset(-170, 0));
+    await tester.pump();
+    expect(area, TownArea.park);
+    expect(find.text('まだ行けないエリアだよ'), findsNothing);
+
+    await refresh(179);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    await refresh(180);
+    expect(find.byKey(const ValueKey('town-area-next')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('town-area-next')));
+    await tester.pump();
     expect(area, TownArea.shopping);
-    expect(find.text('まだ行けないエリアだよ'), findsOneWidget);
-    expect(find.textContaining('あと90ことほぎ'), findsOneWidget);
-    expect(find.byKey(const ValueKey('area-resident-027_daydreamer')),
-        findsNothing);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    await refresh(299);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    await refresh(300);
+    expect(find.byKey(const ValueKey('town-area-next')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('town-area-next')));
+    await tester.pump();
+    expect(area, TownArea.village);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    expect(find.byKey(const ValueKey('town-area-previous')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('debug resident preview still navigates locked areas',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 930);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var area = TownArea.plaza;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: StatefulBuilder(builder: (context, setState) {
+        return TownAreaNavigator(
+          area: area,
+          onAreaChanged: (next) => setState(() => area = next),
+          level: 0,
+          lifetimePoints: 0,
+          residents: const [],
+          debugTownResidents: const [],
+        );
+      })),
+    ));
+    for (var i = 0; i < TownArea.values.length - 1; i++) {
+      expect(find.byKey(const ValueKey('town-area-next')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('town-area-next')));
+      await tester.pump();
+    }
+    expect(area, TownArea.village);
+    expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
+    expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
 }
