@@ -49,7 +49,12 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
     final debugPreview = widget.debugTownResidents != null;
     final unlocked = area.isUnlocked(widget.lifetimePoints);
     final accessible = unlocked || debugPreview;
-    return Listener(
+    // The shopping-street lantern strings leave a central opening for a sign.
+    // Keep the conventional heading when the area is still locked.
+    final hangingShoppingSign =
+        area == TownArea.shopping && accessible && area.backgroundAsset != null;
+    return LayoutBuilder(
+      builder: (context, constraints) => Listener(
       behavior: HitTestBehavior.translucent,
       // A passive pointer listener keeps taps and semantics with the resident
       // buttons and avoids an extra competing horizontal drag recognizer.
@@ -123,7 +128,18 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
                   icon: const Icon(Icons.chevron_left),
                 ),
                 Expanded(
-                  child: Container(
+                  child: hangingShoppingSign
+                      ? Center(
+                          child: Text(
+                            '${area.index + 1} / ${TownArea.values.length}',
+                            style: const TextStyle(
+                              color: Color(0xFF63351F),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        )
+                      : Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6, vertical: 5),
                     decoration: BoxDecoration(
@@ -164,6 +180,48 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
               ],
             ),
           ),
+          if (hangingShoppingSign)
+            Positioned(
+              // At the 937px shopping-art width, this sits between the two
+              // lantern strings, immediately above the distant shrine roof.
+              // Use scene width rather than screen height so the sign tracks
+              // the illustration as the phone width changes.
+              top: constraints.maxWidth * .50,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  key: const ValueKey('town-area-hanging-sign'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFCEBCD),
+                    border: Border.all(
+                      color: const Color(0xFF9B503C), width: 2),
+                    borderRadius: BorderRadius.circular(9),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x44804C32),
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    area.label,
+                    key: const ValueKey('town-area-name'),
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF63351F),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Positioned(
             left: 14,
             right: 14,
@@ -215,6 +273,7 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

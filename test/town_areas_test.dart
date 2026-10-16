@@ -105,6 +105,53 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+
+  testWidgets('shopping area label hangs in the lantern gap', (tester) async {
+    tester.view.physicalSize = const Size(320, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    Widget scene(int points, TownArea area) => MaterialApp(
+      home: Scaffold(
+        body: TownAreaNavigator(
+          area: area,
+          onAreaChanged: (_) {},
+          level: 0,
+          lifetimePoints: points,
+          residents: const [],
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(scene(180, TownArea.shopping));
+    await tester.pump();
+    final sign = find.byKey(const ValueKey('town-area-hanging-sign'));
+    final frame = tester.getRect(find.byType(TownAreaNavigator));
+    expect(sign, findsOneWidget);
+    expect(find.byKey(const ValueKey('town-area-name')), findsOneWidget);
+    expect(find.text('ことほぎ商店街'), findsWidgets);
+    expect(find.text('3 / 4'), findsOneWidget);
+    final signRect = tester.getRect(sign);
+    expect(signRect.top, closeTo(frame.top + frame.width * .50, 1));
+    expect(signRect.center.dx, closeTo(frame.center.dx, 1));
+    expect(signRect.top, greaterThan(
+        tester.getRect(find.byKey(const ValueKey('town-area-next'))).bottom));
+    expect(tester.takeException(), isNull);
+
+    // A locked shopping area has no lantern art to attach a sign to.
+    await tester.pumpWidget(scene(179, TownArea.shopping));
+    expect(sign, findsNothing);
+    expect(find.byKey(const ValueKey('town-area-name')), findsOneWidget);
+    expect(find.byKey(const ValueKey('town-area-next')), findsOneWidget);
+
+    // Other neighborhoods keep the normal top navigation heading.
+    await tester.pumpWidget(scene(180, TownArea.park));
+    expect(sign, findsNothing);
+    expect(find.byKey(const ValueKey('town-area-name')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('arrows show park art then locked shopping area', (tester) async {
     tester.view.physicalSize = const Size(430, 930);
     tester.view.devicePixelRatio = 1;
