@@ -143,6 +143,17 @@
       "inGacha": true,
       "walkInTown": false,
       "homeAreaId": "salon"
+    },
+    {
+      "key": "c037_tora",
+      "id": "037_tora",
+      "label": "とらお",
+      "profile": "",
+      "artFolder": "037_tora",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true,
+      "homeAreaId": "park"
     }
   ]
 }

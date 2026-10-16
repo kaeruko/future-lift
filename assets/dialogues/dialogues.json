@@ -740,6 +740,15 @@
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "037_tora_001",
+      "residentId": "037_tora",
+      "text": "こんにちは！よろしくね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }
