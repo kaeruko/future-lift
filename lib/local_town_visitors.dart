@@ -16,7 +16,9 @@ List<RemoteResident> localVisitorsForArea(
   final candidates = catalog.characters.where((resident) {
     // Salon residents belong inside, even when the CMS walking flag is true.
     if (!resident.walkInTown || resident.homeAreaId == 'salon' ||
-        ownedIds.contains(resident.id)) return false;
+        ownedIds.contains(resident.id)) {
+      return false;
+    }
     final home = TownArea.fromId(resident.homeAreaId);
     final current = home.isUnlocked(lifetimePoints) ? home : TownArea.plaza;
     return current == area;

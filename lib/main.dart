@@ -381,7 +381,9 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
   Future<void> _visitMarche() async {
     final progress = controller.progress;
     if (controller.busy || controller.failure != null ||
-        progress == null || !isMarcheOpen(progress)) return;
+        progress == null || !isMarcheOpen(progress)) {
+      return;
+    }
     final catalog = await _dialoguesFuture;
     if (!mounted || controller.busy || controller.failure != null ||
         controller.progress == null || !isMarcheOpen(controller.progress!)) {
