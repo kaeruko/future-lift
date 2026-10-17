@@ -79,6 +79,12 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
     final canGoNext = area.index < TownArea.values.length - 1 &&
         _canVisit(TownArea.values[area.index + 1]);
     final showNavigation = canGoPrevious || canGoNext;
+    final unlockedAreas = unlockedTownAreas(widget.lifetimePoints);
+    final unlockedIndex = unlockedAreas.indexOf(area);
+    // Locked areas reached by debug navigation are deliberately not counted.
+    final areaCounter = unlockedIndex < 0
+        ? '未開放'
+        : '${unlockedIndex + 1} / ${unlockedAreas.length}';
     // The shopping-street lantern strings leave a central opening for a sign.
     // Keep the conventional heading when the area is still locked.
     final hangingShoppingSign =
@@ -191,7 +197,7 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
                   child: hangingShoppingSign
                       ? Center(
                           child: Text(
-                            '${area.index + 1} / ${TownArea.values.length}',
+                            areaCounter,
                             style: const TextStyle(
                               color: Color(0xFF63351F),
                               fontSize: 12,
@@ -222,7 +228,7 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
                           ),
                         ),
                         Text(
-                          '${area.index + 1} / ${TownArea.values.length}',
+                          areaCounter,
                           style: const TextStyle(
                             color: Color(0xFF87664A), fontSize: 11),
                         ),
