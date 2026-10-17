@@ -232,7 +232,7 @@ class DialogueCondition {
     }
     if (kind == 'mission') {
       final missionId = fields['missionId'] as String;
-      if (progress.countFor(missionId) < fields['minCount'] as int) {
+      if (progress.countFor(missionId) < (fields['minCount'] as int)) {
         return false;
       }
       if (!fields.containsKey('withinDays')) return true;
