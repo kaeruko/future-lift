@@ -1780,6 +1780,15 @@
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "028_caregiver_001",
+      "residentId": "028_caregiver",
+      "text": "こんにちは！よろしくね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }
