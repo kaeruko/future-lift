@@ -35,6 +35,13 @@ enum TownArea {
   );
 }
 
+/// Areas counted in the town-page indicator, based solely on actual
+/// lifetime-point unlocks. Debug navigation must not increase the total.
+List<TownArea> unlockedTownAreas(int lifetimePoints) =>
+    List<TownArea>.unmodifiable(
+      TownArea.values.where((area) => area.isUnlocked(lifetimePoints)),
+    );
+
 /// Outdoor residents temporarily meet at the plaza until their assigned
 /// neighborhood opens. Indoor residents (including salon staff) never move
 /// outdoors. Unknown outdoor area IDs are errors, not implicit fallbacks.

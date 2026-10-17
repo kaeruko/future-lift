@@ -27,6 +27,20 @@ void main() {
     expect(TownArea.village.isUnlocked(300), true);
   });
 
+  test('area pagination counts only actually unlocked neighborhoods', () {
+    expect(unlockedTownAreas(0), [TownArea.plaza]);
+    expect(unlockedTownAreas(89), [TownArea.plaza]);
+    expect(unlockedTownAreas(90), [TownArea.plaza, TownArea.park]);
+    expect(unlockedTownAreas(179), [TownArea.plaza, TownArea.park]);
+    expect(unlockedTownAreas(180),
+        [TownArea.plaza, TownArea.park, TownArea.shopping]);
+    expect(unlockedTownAreas(299),
+        [TownArea.plaza, TownArea.park, TownArea.shopping]);
+    expect(unlockedTownAreas(300), TownArea.values);
+    expect(() => unlockedTownAreas(90).add(TownArea.village),
+        throwsUnsupportedError);
+  });
+
   test('source dimensions match bundled backgrounds exactly', () {
     for (final area in TownArea.values) {
       final asset = area.backgroundAsset;
@@ -328,7 +342,7 @@ void main() {
     expect(sign, findsOneWidget);
     expect(find.byKey(const ValueKey('town-area-name')), findsOneWidget);
     expect(find.text('ことほぎ商店街'), findsWidgets);
-    expect(find.text('3 / 4'), findsOneWidget);
+    expect(find.text('3 / 3'), findsOneWidget);
     final signRect = tester.getRect(sign);
     expect(signRect.top, closeTo(frame.top + frame.width * .50, 1));
     expect(signRect.center.dx, closeTo(frame.center.dx, 1));
@@ -341,11 +355,14 @@ void main() {
     expect(sign, findsNothing);
     expect(find.byKey(const ValueKey('town-area-name')), findsOneWidget);
     expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
+    expect(find.text('未開放'), findsOneWidget);
+    expect(find.text('3 / 3'), findsNothing);
 
     // Other neighborhoods keep the normal top navigation heading.
     await tester.pumpWidget(scene(180, TownArea.park));
     expect(sign, findsNothing);
     expect(find.byKey(const ValueKey('town-area-name')), findsOneWidget);
+    expect(find.text('2 / 3'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -403,11 +420,13 @@ void main() {
     await refresh(89);
     expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
     await refresh(90);
+    expect(find.text('1 / 2'), findsOneWidget);
     expect(find.byKey(const ValueKey('town-area-next')), findsOneWidget);
     expect(find.byKey(const ValueKey('town-area-previous')), findsNothing);
     await tester.tap(find.byKey(const ValueKey('town-area-next')));
     await tester.pump();
     expect(area, TownArea.park);
+    expect(find.text('2 / 2'), findsOneWidget);
     expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
     expect(find.byKey(const ValueKey('resident-0')), findsOneWidget);
     expect(find.byKey(const ValueKey('resident-1')), findsOneWidget);
@@ -422,18 +441,22 @@ void main() {
     await refresh(179);
     expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
     await refresh(180);
+    expect(find.text('2 / 3'), findsOneWidget);
     expect(find.byKey(const ValueKey('town-area-next')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('town-area-next')));
     await tester.pump();
     expect(area, TownArea.shopping);
+    expect(find.text('3 / 3'), findsOneWidget);
     expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
     await refresh(299);
     expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
     await refresh(300);
+    expect(find.text('3 / 4'), findsOneWidget);
     expect(find.byKey(const ValueKey('town-area-next')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('town-area-next')));
     await tester.pump();
     expect(area, TownArea.village);
+    expect(find.text('4 / 4'), findsOneWidget);
     expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
     expect(find.byKey(const ValueKey('town-area-previous')), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -465,6 +488,9 @@ void main() {
     }
     expect(area, TownArea.village);
     expect(find.byKey(const ValueKey('town-background')), findsOneWidget);
+    expect(find.text('未開放'), findsOneWidget,
+        reason: 'Debug-only access does not affect area counts');
+    expect(find.text('4 / 4'), findsNothing);
     expect(find.byKey(const ValueKey('town-area-next')), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
