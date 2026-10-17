@@ -39,6 +39,40 @@ void main() {
     expect(isMarcheOpen(open.onDay(DateTime(2026, 10, 18))), isTrue);
   });
 
+  test('shopkeeper moves to plaza without ever being duplicated', () {
+    const owner = TownResident.c041_pig_middle;
+    const residents = [TownResident.shiba, owner, TownResident.rabbit];
+    expect(areaResidents(residents, TownArea.village,
+        lifetimePoints: 300), [owner]);
+    expect(areaResidents(residents, TownArea.plaza,
+        lifetimePoints: 300), [TownResident.shiba]);
+
+    expect(areaResidents(residents, TownArea.plaza,
+        lifetimePoints: 300, marcheOpen: true),
+        [TownResident.shiba, owner]);
+    expect(areaResidents(residents, TownArea.village,
+        lifetimePoints: 300, marcheOpen: true), isEmpty);
+    final all = [
+      for (final area in TownArea.values)
+        ...areaResidents(residents, area,
+            lifetimePoints: 300, marcheOpen: true),
+    ];
+    expect(all.length, residents.length);
+    expect(all.toSet().length, residents.length);
+
+    // Debug-only cast residents stay in their assigned neighborhood.
+    expect(areaResidents(residents, TownArea.plaza,
+        lifetimePoints: 300, marcheOpen: true,
+        debugOverride: [owner]), isEmpty);
+    expect(areaResidents(residents, TownArea.village,
+        lifetimePoints: 300, marcheOpen: true,
+        debugOverride: [owner]), [owner]);
+
+    // Pre-unlock behavior is unchanged: the village resident meets at plaza.
+    expect(areaResidents(residents, TownArea.plaza,
+        lifetimePoints: 0), contains(owner));
+  });
+
   test('the checked-in story progresses into the opening in five chats', () {
     final catalog = DialogueCatalog.fromJson(
         File('assets/dialogues/dialogues.json').readAsStringSync());
@@ -104,6 +138,73 @@ void main() {
     await tester.tap(find.byKey(key));
     await tester.pump();
     expect(visits, 1);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Tonko tends her stall and responds with the market greeting',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 930);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var marketGreetings = 0;
+    var ordinaryConversations = 0;
+    Widget town(TownArea area, bool open, {
+      List<TownResident>? preview,
+    }) => MaterialApp(
+      home: Scaffold(
+        body: TownScene(
+          level: 0,
+          area: area,
+          lifetimePoints: 300,
+          residents: const [TownResident.c041_pig_middle],
+          debugTownResidents: preview,
+          fillViewport: true,
+          marcheOpen: open,
+          onVisitMarche: () { marketGreetings++; },
+          onResident: (resident) async { ordinaryConversations++; },
+        ),
+      ),
+    );
+    const staff = ValueKey('marche-shopkeeper');
+    const stall = ValueKey('plaza-marche-entrance');
+
+    await tester.pumpWidget(town(TownArea.plaza, false));
+    expect(find.byKey(staff), findsNothing);
+    await tester.pumpWidget(town(TownArea.village, false));
+    expect(find.byKey(staff), findsNothing);
+    expect(find.byKey(const ValueKey('resident-0')), findsOneWidget);
+    await tester.pumpWidget(town(TownArea.village, true));
+    expect(find.byKey(staff), findsNothing);
+    expect(find.byKey(const ValueKey('resident-0')), findsNothing);
+
+    await tester.pumpWidget(town(TownArea.plaza, true));
+    expect(find.byKey(staff), findsOneWidget);
+    expect(find.byKey(const ValueKey('marche-shopkeeper-sprite')),
+        findsOneWidget);
+    expect(find.byKey(stall), findsOneWidget);
+    expect(find.byKey(const ValueKey('resident-0')), findsNothing);
+
+    final actorRect = tester.getRect(find.byKey(staff));
+    final stallRect = tester.getRect(find.byKey(stall));
+    expect(actorRect.center.dx, lessThan(stallRect.center.dx),
+        reason: 'The shopkeeper stands by the left side of the stall');
+    expect(actorRect.bottom, greaterThan(stallRect.top));
+    expect(actorRect.top, lessThan(stallRect.bottom));
+    expect(plazaMarcheStaffRoute.stay, isTrue);
+
+    await tester.tap(find.byKey(staff));
+    await tester.pump();
+    expect(marketGreetings, 1);
+    expect(ordinaryConversations, 0);
+
+    await tester.tap(find.byKey(stall));
+    await tester.pump();
+    expect(marketGreetings, 2);
+
+    await tester.pumpWidget(town(TownArea.plaza, true,
+        preview: const [TownResident.c041_pig_middle]));
+    expect(find.byKey(staff), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
