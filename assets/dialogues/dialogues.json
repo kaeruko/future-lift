@@ -1784,11 +1784,303 @@
     {
       "id": "028_caregiver_001",
       "residentId": "028_caregiver",
-      "text": "こんにちは！よろしくね。",
+      "text": "こんにちは、ぱんこ先生だよ。ごはんのこと、気軽に相談してね。",
       "priority": 0,
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "028_caregiver_002",
+      "residentId": "028_caregiver",
+      "text": "やあ、こんにちは。今日、おいしかったものはあった？",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_003",
+      "residentId": "028_caregiver",
+      "text": "いらっしゃい。難しい栄養のお話じゃなくてもいいんだよ。今日のごはんの話を聞かせて。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_004",
+      "residentId": "028_caregiver",
+      "text": "このピンクのエプロン、お気に入りなの。ポケットにメモをいっぱい入れてるんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_005",
+      "residentId": "028_caregiver",
+      "text": "食べることって、毎日のことだからね。がんばりすぎずに考えたいな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_006",
+      "residentId": "028_caregiver",
+      "text": "忙しい日は、おにぎりにおかずをひとつ足すところからでもいいんだよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_007",
+      "residentId": "028_caregiver",
+      "text": "野菜が高いときは、冷凍野菜やカット野菜も頼りになるよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_008",
+      "residentId": "028_caregiver",
+      "text": "同じ料理が続く日があってもいいんだよ。長い目で、いろんなものを食べられたらいいね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_009",
+      "residentId": "028_caregiver",
+      "text": "『栄養バランスを整えなきゃ』って焦ること、あるよね。まずは食べられたことも大切にして。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_010",
+      "residentId": "028_caregiver",
+      "text": "おいしいって感じる時間も大事にしたいな。食事は栄養の計算だけじゃないもの。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_011",
+      "residentId": "028_caregiver",
+      "text": "サバにはEPAやDHAっていう脂が含まれるんだ。でも、肝臓の脂を洗い流すわけじゃないよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_012",
+      "residentId": "028_caregiver",
+      "text": "リンゴ酢を飲むだけで脂肪が落ちる、っていうのは言いすぎかな。特別なやせ薬ではないんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_013",
+      "residentId": "028_caregiver",
+      "text": "納豆はたんぱく質もとれる便利な食品だよ。でも、女性ホルモンの代わりになるわけではないの。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_014",
+      "residentId": "028_caregiver",
+      "text": "キムチは食事の楽しみになるけど、食べたら代謝が爆発する『スイッチ』ではないんだよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_015",
+      "residentId": "028_caregiver",
+      "text": "もずくやブロッコリーもおいしいよね。だけど、ひとつの食品に体の『デトックス』を任せなくていいんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_016",
+      "residentId": "028_caregiver",
+      "text": "『これさえ食べれば健康！』って見かけたら、少し立ち止まってみてね。食べ物に魔法はないから。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_017",
+      "residentId": "028_caregiver",
+      "text": "脂肪肝が気になるなら、食事全体や生活習慣を見直すことが大切。検査の結果はお医者さんにも相談してね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_018",
+      "residentId": "028_caregiver",
+      "text": "食欲がない日もあるよね。そんな日は、無理に立派な献立を目指さなくていいんだよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_019",
+      "residentId": "028_caregiver",
+      "text": "わたしも甘いものが好きなの。好きなものを全部がまんする食事にはしたくないな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "028_caregiver_020",
+      "residentId": "028_caregiver",
+      "text": "シェフさん、そのスープいい香り！お野菜もきのこも入って、食べるのが楽しみだね。",
+      "priority": 40,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "townTogether",
+          "otherResidentId": "009_chef"
+        }
+      ],
+      "reply": {
+        "residentId": "009_chef",
+        "text": "ぱんこ先生にも食べてほしいにゃ！おいしく食べてもらえるのが一番うれしいにゃ♪"
+      }
+    },
+    {
+      "id": "028_caregiver_021",
+      "residentId": "028_caregiver",
+      "text": "今日は食事をひとつ整えたんだね。できたこと、ちゃんと自分でもほめてあげてね。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "food",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "028_caregiver_022",
+      "residentId": "028_caregiver",
+      "text": "今日は外に出たんだね。お散歩のあとに飲むお水って、おいしいよね。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "028_caregiver_023",
+      "residentId": "028_caregiver",
+      "text": "今日は誰かとお話ししたんだね。ごはんの時間みたいに、ほっとする会話だったらいいな。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "conversation",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "028_caregiver_024",
+      "residentId": "028_caregiver",
+      "text": "今日は好きなことを楽しめたんだね。心が満たされる時間も大切だよ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "hobby",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "028_caregiver_025",
+      "residentId": "028_caregiver",
+      "text": "今日は体を動かしたんだね。動いたあとは、休息や食事も大切にね。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "movement",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "028_caregiver_026",
+      "residentId": "028_caregiver",
+      "text": "今日は座りっぱなしを途中でやめられたんだね。ひと息つけたの、よかったね。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "sittingBreak",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "028_caregiver_027",
+      "residentId": "028_caregiver",
+      "text": "今日は筋力を使ったんだね。体を動かした自分に、おつかれさまって言ってあげてね。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "strength",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
     }
   ]
 }
