@@ -2130,7 +2130,7 @@
     {
       "id": "041_pig_middle_006",
       "residentId": "041_pig_middle",
-      "text": "仕事や家のことを優先していたら、自分の好きなことがわからなくなっちゃってね。",
+      "text": "働くので精一杯で、自分の好きなことがわからなくなっちゃってね。",
       "priority": 0,
       "once": false,
       "logic": "all",
@@ -2233,7 +2233,12 @@
       "priority": 0,
       "once": false,
       "logic": "all",
-      "conditions": []
+      "conditions": [
+        {
+          "type": "seenDialogue",
+          "dialogueId": "041_pig_middle_011"
+        }
+      ]
     },
     {
       "id": "041_pig_middle_018",
@@ -2272,7 +2277,7 @@
       "conditions": [
         {
           "type": "seenDialogue",
-          "dialogueId": "041_pig_middle_011"
+          "dialogueId": "041_pig_middle_012"
         }
       ]
     },
