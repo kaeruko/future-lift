@@ -101,7 +101,9 @@ enum TownResident {
   // ignore: constant_identifier_names
   c029_office_worker("029_office_worker", "かえる", "029_office_worker", true, true, "", "plaza"),
   // ignore: constant_identifier_names
-  c038_lion_lady("038_lion_lady", "リオコ", "038_lion_lady", true, true, "", "salon")
+  c038_lion_lady("038_lion_lady", "リオコ", "038_lion_lady", true, true, "", "salon"),
+  // ignore: constant_identifier_names
+  c034_artist("034_artist", "くまりん", "034_artist", true, true, "", "village")
   // END CMS RESIDENTS
   ;
 

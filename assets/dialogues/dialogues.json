@@ -1222,6 +1222,15 @@
           "withinDays": 1
         }
       ]
+    },
+    {
+      "id": "034_artist_001",
+      "residentId": "034_artist",
+      "text": "こんにちは！よろしくね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }

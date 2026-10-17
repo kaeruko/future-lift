@@ -176,6 +176,17 @@
       "inGacha": true,
       "walkInTown": true,
       "homeAreaId": "salon"
+    },
+    {
+      "key": "c034_artist",
+      "id": "034_artist",
+      "label": "くまりん",
+      "profile": "",
+      "artFolder": "034_artist",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true,
+      "homeAreaId": "village"
     }
   ]
 }
