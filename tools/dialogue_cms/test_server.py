@@ -298,6 +298,14 @@ class CmsTests(unittest.TestCase):
 
     def test_valid_bundled_content(self):
         validate(sample())
+        frog = [entry for entry in sample()["dialogues"]
+                if entry["residentId"] == "029_office_worker"]
+        self.assertEqual(len(frog), 10)
+        self.assertEqual([row["id"] for row in frog],
+                         [f"029_office_worker_{number:03d}" for number in range(1, 11)])
+        for entry in frog[6:]:
+            self.assertTrue(entry["once"])
+            self.assertEqual(entry["conditions"][0]["withinDays"], 3)
 
     def test_rejects_invalid_dates_and_missions(self):
         for bad in (
@@ -306,6 +314,10 @@ class CmsTests(unittest.TestCase):
             {"type": "date", "mode": "annual", "date": "13-01"},
             {"type": "date", "mode": "weekday", "days": [0]},
             {"type": "mission", "missionId": "unknown", "minCount": 2},
+            {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": 0},
+            {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": 31},
+            {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": True},
+            {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": "3"},
             {"type": "kotohogi", "min": -1},
         ):
             with self.subTest(bad=bad):

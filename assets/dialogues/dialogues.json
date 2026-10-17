@@ -884,6 +884,106 @@
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "029_office_worker_003",
+      "residentId": "029_office_worker",
+      "text": "このあいだ、ずっともやもやしてたんだ……。「あ、ぼく、悔しかったんだ」って言葉にしてみたら、ちょっと落ち着いたんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "029_office_worker_004",
+      "residentId": "029_office_worker",
+      "text": "こんにちは！ ぼく、今日はちょっとだけ早く仕事を片づけたいんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "029_office_worker_005",
+      "residentId": "029_office_worker",
+      "text": "やあ！ ぼく、ちょうどひと休みしてたところなんだ。きみも無理しないでね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "029_office_worker_006",
+      "residentId": "029_office_worker",
+      "text": "あっ、会えた！ なんだかうれしいな。今日もよろしくね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "029_office_worker_007",
+      "residentId": "029_office_worker",
+      "text": "座りっぱなしをやめて、ひと休みしたんだね！ いいなぁ。ぼくも仕事中、ついずっと座っちゃうんだ。",
+      "priority": 20,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "sittingBreak",
+          "minCount": 1,
+          "withinDays": 3
+        }
+      ]
+    },
+    {
+      "id": "029_office_worker_008",
+      "residentId": "029_office_worker",
+      "text": "誰かとお話しできたんだね！ ぼくも、たったひと言でも話せると、ほっとすることがあるよ。",
+      "priority": 20,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "conversation",
+          "minCount": 1,
+          "withinDays": 3
+        }
+      ]
+    },
+    {
+      "id": "029_office_worker_009",
+      "residentId": "029_office_worker",
+      "text": "お外に出たんだね！ おつかれさま。ぼくも帰り道、ちょっと遠回りしてみようかな。",
+      "priority": 20,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1,
+          "withinDays": 3
+        }
+      ]
+    },
+    {
+      "id": "029_office_worker_010",
+      "residentId": "029_office_worker",
+      "text": "好きなことを楽しめたんだね！ そういう時間って大切だよね。ぼくも何か始めたいなぁ。",
+      "priority": 20,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "hobby",
+          "minCount": 1,
+          "withinDays": 3
+        }
+      ]
     }
   ]
 }

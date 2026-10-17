@@ -159,9 +159,11 @@ def validate(doc, residents=None):
                 if other not in residents or other == entry["residentId"]:
                     raise ValueError(f"Invalid town companion: {loc}")
             elif kind == "mission":
-                require_keys(condition, {"type", "missionId", "minCount"}, loc)
+                require_keys(condition, {"type", "missionId", "minCount"}, loc, optional={"withinDays"})
                 if condition["missionId"] not in MISSIONS or not whole_number(condition["minCount"], 1, 1000000):
                     raise ValueError(f"Invalid mission count: {loc}")
+                if "withinDays" in condition and not whole_number(condition["withinDays"], 1, 30):
+                    raise ValueError(f"Invalid recent-mission days: {loc}")
             elif kind == "kotohogi":
                 require_keys(condition, {"type", "min"}, loc)
                 if not whole_number(condition["min"], 0, 10000000):

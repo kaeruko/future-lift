@@ -85,6 +85,11 @@ nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
   <label>累計ミッション総数</label><input id="previewTotal" type="number" value="0" min="0">
   <label>ことほぎ</label><input id="previewPoints" type="number" value="0" min="0">
   <details><summary>種類別の累計回数を設定</summary><div id="previewMissions"></div></details>
+  <details><summary>直近のミッション達成（仮設定）</summary>
+    <p class="hint">仮の達成日と種類を設定します。累計回数も上で指定してください。実際の履歴は変更しません。</p>
+    <label>仮の達成日（日本時間）</label><input id="previewRecentDay" type="date" value="2026-10-13">
+    <div id="previewRecentMissions"></div>
+  </details>
   <details><summary>見たことがあるセリフ（仮設定）</summary>
     <p class="hint">全キャラ共通の既読記録です。チェックしたIDを閲覧済みとして条件を確認します。</p>
     <div id="previewSeen" style="max-height:260px;overflow-y:auto"></div>
@@ -122,6 +127,7 @@ const byId=id=>document.getElementById(id);
 let data=null,selected=null,dirty=false,registry=null,characterSelected=null,savedCount=0;
 let previewTownIds=new Set();
 let previewSeenIds=new Set();
+let previewRecentMissions=new Set();
 function node(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el}
 function append(parent,tag,text){const el=node(tag,text);parent.append(el);return el}
 function opts(element,values,value){for(const [key,label] of Object.entries(values)){const o=node("option",label);o.value=key;element.append(o)}element.value=value}
@@ -274,6 +280,13 @@ function renderCondition(area,entry,condition,index){
   }else if(condition.type==="mission"){
     labelControl(box,"種類","select",condition.missionId,change("missionId"),{options:missions});
     labelControl(box,"累計何回以上","input",condition.minCount,change("minCount",Number),{type:"number",min:1});
+    const days=labelControl(box,"直近何日以内にも達成（空欄＝制限なし）","input",
+      condition.withinDays??"",v=>{
+        if(v==="")delete condition.withinDays;
+        else condition.withinDays=Number(v);
+        runPreview();
+      },{type:"number",min:1});
+    days.max="30";
   }else if(condition.type==="kotohogi"){
     labelControl(box,"ことほぎ何以上","input",condition.min,change("min",Number),{type:"number",min:0});
   }else{
@@ -298,7 +311,16 @@ function renderCondition(area,entry,condition,index){
 function match(condition,context){
   if(condition.type==="seenDialogue")return context.seenIds.has(condition.dialogueId);
   if(condition.type==="townTogether")return context.townIds.has(context.speakerId)&&context.townIds.has(condition.otherResidentId);
-  if(condition.type==="mission")return (condition.missionId==="all"?context.total:(context.missions[condition.missionId]||0))>=condition.minCount;
+  if(condition.type==="mission"){
+    const count=condition.missionId==="all"?context.total:(context.missions[condition.missionId]||0);
+    if(count<condition.minCount)return false;
+    if(condition.withinDays===undefined)return true;
+    const today=Date.parse(context.day+"T00:00:00Z");
+    const completedDay=Date.parse(context.recentDay+"T00:00:00Z");
+    const age=(today-completedDay)/86400000;
+    return Number.isInteger(age)&&age>=0&&age<condition.withinDays&&
+      (condition.missionId==="all"?context.recentMissions.size>0:context.recentMissions.has(condition.missionId));
+  }
   if(condition.type==="kotohogi")return context.points>=condition.min;
   const day=context.day,md=day.slice(5);
   if(condition.mode==="exact")return day===condition.date;
@@ -315,8 +337,9 @@ function runPreview(){
     for(const k of Object.keys(missions))if(k!=="all")missionsValues[k]=Number(byId("m_"+k).value);
     const context={day:byId("previewDay").value,total:Number(byId("previewTotal").value),
       points:Number(byId("previewPoints").value),missions:missionsValues,
-      townIds:previewTownIds,seenIds:previewSeenIds,speakerId:byId("previewResident").value};
-    if(!context.day)throw Error("日付を入力してください");
+      townIds:previewTownIds,seenIds:previewSeenIds,speakerId:byId("previewResident").value,
+      recentDay:byId("previewRecentDay").value,recentMissions:previewRecentMissions};
+    if(!context.day||!context.recentDay)throw Error("日付と直近の達成日を入力してください");
     const candidates=data.dialogues.filter(entry=>entry.residentId===byId("previewResident").value&&
       (!entry.once||!previewSeenIds.has(entry.id))&&
       (entry.conditions.length===0||(entry.logic==="all"?entry.conditions.every(c=>match(c,context)):entry.conditions.some(c=>match(c,context)))));
@@ -589,12 +612,20 @@ byId("save").onclick=saveAll;
 byId("reload").onclick=()=>{if(!dirty||confirm("未保存の変更を破棄しますか？"))load()};
 byId("filter").onchange=refresh;
 byId("runPreview").onclick=runPreview;
-for(const e of [byId("previewDay"),byId("previewResident"),byId("previewTotal"),byId("previewPoints")])e.addEventListener("change",runPreview);
+for(const e of [byId("previewDay"),byId("previewRecentDay"),byId("previewResident"),byId("previewTotal"),byId("previewPoints")])e.addEventListener("change",runPreview);
 // Character options are loaded from the resident catalog at startup.
 for(const [key,title] of Object.entries(missions)){
   if(key==="all")continue;
   const input=labelControl(byId("previewMissions"),title,"input",0,runPreview,{type:"number",min:0});
   input.id="m_"+key;input.addEventListener("input",runPreview);
+  const label=append(byId("previewRecentMissions"),"label");label.className="controls";
+  const checkbox=append(label,"input");checkbox.type="checkbox";
+  append(label,"span",title);
+  checkbox.onchange=()=>{
+    if(checkbox.checked)previewRecentMissions.add(key);
+    else previewRecentMissions.delete(key);
+    runPreview();
+  };
 }
 window.addEventListener("beforeunload",event=>{if(dirty){event.preventDefault();event.returnValue=""}});
 load();
