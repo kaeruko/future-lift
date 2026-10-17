@@ -165,6 +165,17 @@
       "inGacha": true,
       "walkInTown": true,
       "homeAreaId": "plaza"
+    },
+    {
+      "key": "c038_lion_lady",
+      "id": "038_lion_lady",
+      "label": "リオコ",
+      "profile": "",
+      "artFolder": "038_lion_lady",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true,
+      "homeAreaId": "salon"
     }
   ]
 }
