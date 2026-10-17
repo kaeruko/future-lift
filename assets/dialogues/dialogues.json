@@ -875,6 +875,15 @@
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "029_office_worker_002",
+      "residentId": "029_office_worker",
+      "text": "もやもやして、ものにあたってみたけど……余計にもやもやしちゃった。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }
