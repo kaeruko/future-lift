@@ -988,11 +988,240 @@
     {
       "id": "038_lion_lady_001",
       "residentId": "038_lion_lady",
-      "text": "こんにちは！よろしくね。",
+      "text": "あら、ごきげんよう。リオコよ。今日はどんな一日になるかしら。",
       "priority": 0,
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "038_lion_lady_002",
+      "residentId": "038_lion_lady",
+      "text": "こんにちは。劇団の打ち合わせ帰りなの。少しおしゃべりしましょうか。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_003",
+      "residentId": "038_lion_lady",
+      "text": "会えてうれしいわ。忙しい日こそ、顔を合わせて笑う時間がほしいのよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_004",
+      "residentId": "038_lion_lady",
+      "text": "さあ、背筋を伸ばして……なんてね。楽にしてちょうだい。ここは舞台じゃないもの。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_005",
+      "residentId": "038_lion_lady",
+      "text": "昔は舞台に立つ側だったの。今は演出や段取りにも夢中よ。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_006",
+      "residentId": "038_lion_lady",
+      "text": "台本には書けない、思いが伝わる瞬間があるの。それが舞台の面白さなの。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_007",
+      "residentId": "038_lion_lady",
+      "text": "大きな舞台だって、一人ではつくれないわ。照明も衣装も、みんなが主役よ。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_008",
+      "residentId": "038_lion_lady",
+      "text": "初舞台の日、泣きながら舞台袖に立っていたの。今思うと、あれが私のはじまりだったわ。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_009",
+      "residentId": "038_lion_lady",
+      "text": "つやこ先生に初めて紅をさしてもらった日を、今でも覚えているの。あのひと言に救われたのよ。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_010",
+      "residentId": "038_lion_lady",
+      "text": "年を重ねるたび、新しい役に出会えるの。人生って、ずいぶん長い公演ね。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_011",
+      "residentId": "038_lion_lady",
+      "text": "仕事の予定表はびっしり。でもね、お茶を飲む時間はちゃんと書き込んであるのよ。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_012",
+      "residentId": "038_lion_lady",
+      "text": "本番前に緊張しないかって？するわよ。何年舞台に立ってもね。それも大事な気持ちだもの。",
+      "priority": 10,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "038_lion_lady_013",
+      "residentId": "038_lion_lady",
+      "text": "先生。あの日と同じ紅、お願いできるかしら？",
+      "priority": 40,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "townTogether",
+          "otherResidentId": "035_beaty"
+        }
+      ],
+      "reply": {
+        "residentId": "035_beaty",
+        "text": "まあ、リオコちゃん。あの泣き虫さんが、すっかり立派になって♡"
+      }
+    },
+    {
+      "id": "038_lion_lady_014",
+      "residentId": "038_lion_lady",
+      "text": "今日は外へ出たのね。楽屋から一歩出るだけで、景色が変わることもあるのよ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "038_lion_lady_015",
+      "residentId": "038_lion_lady",
+      "text": "誰かとお話ししたのね。たったひと言でも、心に残る名台詞になることがあるわ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "conversation",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "038_lion_lady_016",
+      "residentId": "038_lion_lady",
+      "text": "好きなことを楽しんだのね。心が動いたら、そこがあなたの舞台よ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "hobby",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "038_lion_lady_017",
+      "residentId": "038_lion_lady",
+      "text": "体を動かしたのね。舞台のお稽古と同じ、無理せず続けるのが素敵よ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "movement",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "038_lion_lady_018",
+      "residentId": "038_lion_lady",
+      "text": "ひと息つけたのね。休憩も立派な段取りよ。次の幕のために大切にして。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "sittingBreak",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "038_lion_lady_019",
+      "residentId": "038_lion_lady",
+      "text": "食事をひとつ整えたのね。忙しい日も、自分を大切にできたのね。素敵よ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "food",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "038_lion_lady_020",
+      "residentId": "038_lion_lady",
+      "text": "筋力を使ったのね。舞台も体力仕事だから、その一歩の大切さがわかるわ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "strength",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
     }
   ]
 }
