@@ -2094,11 +2094,247 @@
     {
       "id": "042_senior_dog_001",
       "residentId": "042_senior_dog",
-      "text": "こんにちは！よろしくね。",
+      "text": "おや、こんにちは。わしはごんすけ。今日はのんびりしていくかのう。",
       "priority": 0,
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "042_senior_dog_002",
+      "residentId": "042_senior_dog",
+      "text": "こんにちは。ここは風が気持ちいいのう。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_003",
+      "residentId": "042_senior_dog",
+      "text": "おお、また会えたねぇ。元気にしとったかい？",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_004",
+      "residentId": "042_senior_dog",
+      "text": "急ぐことはないさ。ちょっと立ち話でもしていくかい？",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_005",
+      "residentId": "042_senior_dog",
+      "text": "昔、ぎっくり腰になったことがあってのう。怖くて、しばらく寝てばかりおったんじゃ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_006",
+      "residentId": "042_senior_dog",
+      "text": "ぎっくり腰のときは、痛みが落ち着いたら、無理のない範囲で少しずつ動くのも大切なんだそうじゃ。わしも知らんかったよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_007",
+      "residentId": "042_senior_dog",
+      "text": "腰が痛いときは、強く揉めばいいとは限らんのう。痛みがつらいなら、無理をせんことじゃ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_008",
+      "residentId": "042_senior_dog",
+      "text": "杖があると、公園の花をゆっくり眺められるんじゃ。わしにはこの歩幅が合っとる。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_009",
+      "residentId": "042_senior_dog",
+      "text": "若いころは速く歩くのが自慢じゃったが、今は一歩一歩の景色が好きじゃ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_010",
+      "residentId": "042_senior_dog",
+      "text": "座っているのも楽じゃが、長く続くと体がこわばるのう。ときどき姿勢を変えておるよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_011",
+      "residentId": "042_senior_dog",
+      "text": "今朝はベンチでひなたぼっこをしておった。小さな楽しみも、いいもんじゃな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_012",
+      "residentId": "042_senior_dog",
+      "text": "調子のいい日も、いまひとつの日もあるさ。今日のぶんだけ、ぼちぼちじゃ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_013",
+      "residentId": "042_senior_dog",
+      "text": "腰の痛みがいつもと違うときは、ひとりで我慢せず、お医者さんに相談することにしておるよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "042_senior_dog_014",
+      "residentId": "042_senior_dog",
+      "text": "お外に出たんじゃな。季節の空気はどうじゃった？",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "042_senior_dog_015",
+      "residentId": "042_senior_dog",
+      "text": "体を動かせたんじゃな。自分のペースで、よくやったのう。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "movement",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "042_senior_dog_016",
+      "residentId": "042_senior_dog",
+      "text": "座りっぱなしをやめて、ひと息ついたんじゃな。わしも見習おう。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "sittingBreak",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "042_senior_dog_017",
+      "residentId": "042_senior_dog",
+      "text": "誰かとおしゃべりできたんじゃな。人の声は、あったかいもんじゃ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "conversation",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "042_senior_dog_018",
+      "residentId": "042_senior_dog",
+      "text": "好きなことを楽しめたんじゃな。そういう時間は宝物じゃよ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "hobby",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "042_senior_dog_019",
+      "residentId": "042_senior_dog",
+      "text": "食事をひとつ整えたんじゃな。小さな工夫の積み重ねじゃのう。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "food",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "042_senior_dog_020",
+      "residentId": "042_senior_dog",
+      "text": "筋力を使う運動をしたんじゃな。無理せず自分の調子に合わせてな。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "strength",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "042_senior_dog_021",
+      "residentId": "042_senior_dog",
+      "text": "新しいことを学んだんじゃな。わしもまだまだ知らんことばかりじゃ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "weeklyLearn",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
     }
   ]
 }
