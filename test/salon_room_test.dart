@@ -51,10 +51,11 @@ void main() {
     expect(isSalonUnlocked(ownerOnly), isTrue);
     expect(salonResidents(foxOnly), foxOnly);
     expect(salonResidents(const [], previewUnowned: true),
-        [TownResident.c035_beaty, TownResident.c031_kimono_fox]);
+        [TownResident.c035_beaty, TownResident.c031_kimono_fox,
+         TownResident.c038_lion_lady]);
   });
 
-  testWidgets('forced preview renders both unowned salon characters',
+  testWidgets('forced preview renders all unowned salon characters',
       (tester) async {
     tester.view.physicalSize = const Size(430, 930);
     tester.view.devicePixelRatio = 1;
@@ -65,6 +66,8 @@ void main() {
     expect(find.byKey(const ValueKey('salon-resident-035_beaty')),
         findsOneWidget);
     expect(find.byKey(const ValueKey('salon-fox-resident')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('salon-resident-038_lion_lady')),
         findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());

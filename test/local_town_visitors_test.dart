@@ -53,6 +53,29 @@ void main() {
       debugTownSelectionActive: true), isEmpty);
   });
 
+  test('salon residents with walking enabled never visit outdoor areas', () {
+    final content = catalog([
+      character('038_lion_lady', 'salon', walk: true),
+      character('039_new', 'salon', walk: false),
+      character('040_new', 'plaza'),
+    ], [
+      line('038_lion_lady'), line('039_new'), line('040_new'),
+    ]);
+    for (final points in [0, 90, 300]) {
+      for (final area in TownArea.values) {
+        final visitors = localVisitorsForArea(content, area,
+            lifetimePoints: points, owned: const []);
+        expect(visitors.map((resident) => resident.id),
+            isNot(contains('038_lion_lady')));
+        expect(visitors.map((resident) => resident.id),
+            isNot(contains('039_new')));
+      }
+    }
+    expect(localVisitorsForArea(content, TownArea.plaza,
+        lifetimePoints: 0, owned: const []).map((row) => row.id),
+        ['040_new']);
+  });
+
   test('every new remote-only resident appears without a fixed visitor cap', () {
     final chars = [
       for (var i = 40; i < 51; i++) character('${i}_new', 'plaza'),

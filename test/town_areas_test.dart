@@ -44,8 +44,8 @@ void main() {
   });
 
   test('residents are sorted into homes without a global eight-person cap', () {
-    expect(TownResident.c026_farmer.homeAreaId, 'village');
-    expect(TownResident.c027_daydreamer.homeAreaId, 'village');
+    expect(TownResident.c026_farmer.homeAreaId, 'park');
+    expect(TownResident.c027_daydreamer.homeAreaId, 'park');
     expect(TownResident.c009_chef.homeAreaId, 'shopping');
     final all = TownResident.values.toList();
     final together = [
@@ -53,26 +53,45 @@ void main() {
         ...areaResidents(all, area, lifetimePoints: 300),
     ];
     // Salon-only NPCs are registered residents but do not walk outside.
-    final walkers = all.where((resident) => resident.walkInTown).toSet();
+    final walkers = all.where((resident) =>
+        resident.walkInTown && resident.homeAreaId != 'salon').toSet();
     expect(together.length, walkers.length);
     expect(together.toSet(), walkers);
     expect(areaResidents(all, TownArea.plaza, lifetimePoints: 300),
-        [TownResident.shiba, TownResident.penguin, TownResident.c036_mosa]);
+        [TownResident.shiba, TownResident.penguin,
+         TownResident.c036_mosa, TownResident.c029_office_worker]);
     expect(areaResidents(all, TownArea.park, lifetimePoints: 300),
-        [TownResident.rabbit, TownResident.squirrel]);
+        [TownResident.rabbit, TownResident.squirrel,
+         TownResident.c026_farmer, TownResident.c027_daydreamer,
+         TownResident.c037_tora]);
     expect(areaResidents(all, TownArea.shopping, lifetimePoints: 300),
         [TownResident.cat, TownResident.c009_chef, TownResident.c032_miner]);
     expect(areaResidents(all, TownArea.village, lifetimePoints: 300),
-        [TownResident.bear, TownResident.c026_farmer,
-         TownResident.c027_daydreamer]);
+        [TownResident.bear, TownResident.c034_artist]);
     expect(areaResidents(all, TownArea.village,
-        lifetimePoints: 300, debugOverride: [TownResident.shiba, TownResident.c027_daydreamer]),
-        [TownResident.c027_daydreamer]);
+        lifetimePoints: 300, debugOverride: [TownResident.shiba, TownResident.c034_artist]),
+        [TownResident.c034_artist]);
     expect(() => areaResidents(all, TownArea.plaza,
         lifetimePoints: 300, debugOverride: [TownResident.shiba, TownResident.shiba]),
         throwsArgumentError);
   });
 
+
+  test('salon walking flag does not put an indoor resident outdoors', () {
+    const rio = TownResident.c038_lion_lady;
+    expect(rio.homeAreaId, 'salon');
+    expect(rio.walkInTown, isTrue);
+    for (final points in [0, 90, 300]) {
+      expect(residentCurrentArea(rio, points), isNull);
+      for (final area in TownArea.values) {
+        expect(areaResidents([rio], area, lifetimePoints: points), isEmpty);
+        expect(areaResidents(const [], area, lifetimePoints: points,
+            debugOverride: [rio]), isEmpty);
+      }
+    }
+    expect(visibleTownResidents([rio]), isEmpty);
+    expect(salonResidents([rio]), contains(rio));
+  });
 
   test('residents stay at plaza until their homes open', () {
     const owned = [

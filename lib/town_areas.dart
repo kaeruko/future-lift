@@ -39,7 +39,9 @@ enum TownArea {
 /// neighborhood opens. Indoor residents (including salon staff) never move
 /// outdoors. Unknown outdoor area IDs are errors, not implicit fallbacks.
 TownArea? residentCurrentArea(TownResident resident, int lifetimePoints) {
-  if (!resident.walkInTown) return null;
+  // The salon is an indoor facility, not a fifth outdoor TownArea.
+  // The CMS may leave walkInTown enabled when assigning a resident there.
+  if (!resident.walkInTown || resident.homeAreaId == 'salon') return null;
   final home = TownArea.fromId(resident.homeAreaId);
   return home.isUnlocked(lifetimePoints) ? home : TownArea.plaza;
 }
@@ -53,9 +55,7 @@ List<TownResident> areaResidents(
   required int lifetimePoints,
   List<TownResident>? debugOverride,
 }) {
-  final candidates = debugOverride == null
-      ? owned.where((resident) => resident.walkInTown)
-      : visibleTownResidents(owned, debugOverride: debugOverride);
+  final candidates = visibleTownResidents(owned, debugOverride: debugOverride);
   return List<TownResident>.unmodifiable(
     candidates.where((resident) => debugOverride != null
         ? resident.walkInTown && resident.homeAreaId == area.id
