@@ -46,14 +46,12 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
-# Generate platform launcher icons from the checked-in 1024x1024 image.
-# Run `dart run flutter_launcher_icons` after `flutter pub get`.
+# The checked-in repo has Android sources but generates iOS sources in CI.
+# Keep local/default icon generation Android-only; iOS uses a separate config.
 flutter_launcher_icons:
   android: true
-  ios: true
+  ios: false
   image_path: assets/icon/icon.png
-  remove_alpha_ios: true
-  background_color_ios: "#FFFFFF"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
