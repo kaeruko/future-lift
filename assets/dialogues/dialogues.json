@@ -2085,11 +2085,358 @@
     {
       "id": "041_pig_middle_001",
       "residentId": "041_pig_middle",
-      "text": "こんにちは！よろしくね。",
+      "text": "こんにちは、とんこです。40代になって、これからの暮らしを少しずつ考え直してるところなの。",
       "priority": 0,
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "041_pig_middle_002",
+      "residentId": "041_pig_middle",
+      "text": "あら、こんにちは。今日はちょっと、おしゃべりしたい気分なの。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_003",
+      "residentId": "041_pig_middle",
+      "text": "いらっしゃい。最近ね、何か新しいことを始めてみようかなって思ってるの。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_004",
+      "residentId": "041_pig_middle",
+      "text": "こんにちはぁ。大きく変わるのはむずかしくても、今日ひとつできたらいいなぁ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_005",
+      "residentId": "041_pig_middle",
+      "text": "40代になってから、『私のこれからって、どうなるんだろう』って考えるようになったの。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_006",
+      "residentId": "041_pig_middle",
+      "text": "仕事や家のことを優先していたら、自分の好きなことがわからなくなっちゃってね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_007",
+      "residentId": "041_pig_middle",
+      "text": "『もう遅い』って思ってたけど、誰かにそう言われたわけじゃなかったのよね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_008",
+      "residentId": "041_pig_middle",
+      "text": "若いころ思っていた40代とは、ずいぶん違うの。でも、ここから先はまだ決まってないよねぇ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_009",
+      "residentId": "041_pig_middle",
+      "text": "新しいことって、始める前がいちばん怖かったりするの。うまくいかなかったらどうしようって。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_010",
+      "residentId": "041_pig_middle",
+      "text": "『ちゃんとやらなきゃ』って考えると、何も始められなくなるのよね。まずは少しだけでいいかな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_011",
+      "residentId": "041_pig_middle",
+      "text": "最近、小さな鉢植えでハーブを育て始めたの。毎朝、葉っぱを見るのがちょっと楽しみなの。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_012",
+      "residentId": "041_pig_middle",
+      "text": "苗をひとつ枯らしちゃってね。落ち込んだけど……次は水のあげ方を変えてみようかな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_013",
+      "residentId": "041_pig_middle",
+      "text": "昔の失敗を思い出して、夜に『あのとき、ああしていれば』って考えちゃうことがあるの。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_014",
+      "residentId": "041_pig_middle",
+      "text": "『過去の失敗も授業料』って言葉を聞いたけど、つらかったことまで役立てなくてもいいよね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_015",
+      "residentId": "041_pig_middle",
+      "text": "昔みたいに頑張れない日もあるの。でも、今の私に合うやり方を探せたらいいな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_016",
+      "residentId": "041_pig_middle",
+      "text": "何もしない日があると、全部元に戻った気がするの。そんなことないって、頭ではわかってるんだけど。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_017",
+      "residentId": "041_pig_middle",
+      "text": "この前、植木鉢の話をしてたら、お隣さんが声をかけてくれたの。なんだかうれしかったな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_018",
+      "residentId": "041_pig_middle",
+      "text": "なりたい自分がまだはっきりしなくても、気になることを試してみるのはいいよねぇ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_019",
+      "residentId": "041_pig_middle",
+      "text": "日記に『今日できなかったこと』じゃなくて、『今日気になったこと』をひとつ書いてみてるの。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_020",
+      "residentId": "041_pig_middle",
+      "text": "やり直しっていうより、ここから少しずつ作っていく感じかな。そんなふうに思えたらいいな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "041_pig_middle_021",
+      "residentId": "041_pig_middle",
+      "text": "初めて育てたハーブで、お茶をいれてみたの。ちょっと薄かったけど、いい香りだったわ。",
+      "priority": 30,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "seenDialogue",
+          "dialogueId": "041_pig_middle_011"
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_022",
+      "residentId": "041_pig_middle",
+      "text": "小さな鉢をもうひとつ増やすことにしたの。大きな目標じゃないけど、今の私にはうれしい一歩なの。",
+      "priority": 30,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "seenDialogue",
+          "dialogueId": "041_pig_middle_021"
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_023",
+      "residentId": "041_pig_middle",
+      "text": "くまりんちゃん、私ね、新しいことを始めるとき、上手にできるか気になっちゃうの。",
+      "priority": 40,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "townTogether",
+          "otherResidentId": "034_artist"
+        }
+      ],
+      "reply": {
+        "residentId": "034_artist",
+        "text": "わたしもだよ。でもね、描いてみないとわからないこともあるんだよね。"
+      }
+    },
+    {
+      "id": "041_pig_middle_024",
+      "residentId": "041_pig_middle",
+      "text": "変わりたいって思ってるのに、今日はもう疲れちゃった……。",
+      "priority": 40,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "townTogether",
+          "otherResidentId": "027_daydreamer"
+        }
+      ],
+      "reply": {
+        "residentId": "027_daydreamer",
+        "text": "じゃあ、きょうはおやすみするもふ〜。"
+      }
+    },
+    {
+      "id": "041_pig_middle_025",
+      "residentId": "041_pig_middle",
+      "text": "今日は外に出たのね。私も『ちょっとだけ』って出かける日があるの。いい一歩だねぇ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_026",
+      "residentId": "041_pig_middle",
+      "text": "今日は誰かとお話しできたのね。私も声をかけるの、少し勇気がいるんだ。よかったねぇ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "conversation",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_027",
+      "residentId": "041_pig_middle",
+      "text": "好きなことを楽しめたんだね。上手にできたかより、楽しかった気持ちを大事にしたいな。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "hobby",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_028",
+      "residentId": "041_pig_middle",
+      "text": "今日は体を動かしたのね。私も無理のないところから、少しずつ続けてみたいな。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "movement",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_029",
+      "residentId": "041_pig_middle",
+      "text": "座りっぱなしをやめて、ひと息ついたんだね。休むのも、自分を大事にすることだよねぇ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "sittingBreak",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_030",
+      "residentId": "041_pig_middle",
+      "text": "今日は食事をひとつ整えたのね。完璧じゃなくても、できたことを大切にしたいね。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "food",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_031",
+      "residentId": "041_pig_middle",
+      "text": "今日は筋力を使ったのね。これからの体のために、小さな積み重ねってうれしいよねぇ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "strength",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
     },
     {
       "id": "042_senior_dog_001",
