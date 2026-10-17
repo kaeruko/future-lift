@@ -198,6 +198,17 @@
       "inGacha": true,
       "walkInTown": true,
       "homeAreaId": "plaza"
+    },
+    {
+      "key": "c028_caregiver",
+      "id": "028_caregiver",
+      "label": "ぱんこ先生",
+      "profile": "",
+      "artFolder": "028_caregiver",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true,
+      "homeAreaId": "shopping"
     }
   ]
 }
