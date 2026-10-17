@@ -161,9 +161,7 @@ class DialogueCondition {
       if (id is! String || (id != 'all' &&
           !Mission.values.any((m) => m.name == id)) ||
           threshold is! int || threshold < 1 || threshold > 1000000 ||
-          (data.containsKey('withinDays') &&
-           (data['withinDays'] is! int || data['withinDays'] < 1 ||
-            data['withinDays'] > 30))) {
+          (data.containsKey('withinDays') && data['withinDays'] != 1)) {
         throw const FormatException('Invalid mission condition');
       }
     } else if (data['type'] == 'seenDialogue') {
@@ -236,23 +234,17 @@ class DialogueCondition {
         return false;
       }
       if (!fields.containsKey('withinDays')) return true;
-      // Cumulative counts alone never imply that a mission was completed recently.
-      final days = fields['withinDays'] as int;
+      // A celebration is valid only on the Japanese calendar day it happened.
+      // Cumulative counters alone cannot prove today's completion.
       final jst = now.toUtc().add(const Duration(hours: 9));
-      final end = DateTime.utc(jst.year, jst.month, jst.day);
-      final start = end.subtract(Duration(days: days - 1));
-      String dayKey(DateTime date) =>
-          '${date.year.toString().padLeft(4, '0')}-'
-          '${date.month.toString().padLeft(2, '0')}-'
-          '${date.day.toString().padLeft(2, '0')}';
-      final firstDay = dayKey(start);
-      final lastDay = dayKey(end);
-      return progress.history.entries.any((entry) =>
-          entry.key.compareTo(firstDay) >= 0 &&
-          entry.key.compareTo(lastDay) <= 0 &&
-          (missionId == 'all'
-              ? entry.value.isNotEmpty
-              : entry.value.any((mission) => mission.name == missionId)));
+      final day = '${jst.year.toString().padLeft(4, '0')}-'
+          '${jst.month.toString().padLeft(2, '0')}-'
+          '${jst.day.toString().padLeft(2, '0')}';
+      final completedToday = progress.history[day];
+      if (completedToday == null) return false;
+      return missionId == 'all'
+          ? completedToday.isNotEmpty
+          : completedToday.any((mission) => mission.name == missionId);
     }
     if (kind == 'kotohogi') return progress.points >= fields['min'];
     // Convert absolute instant to Japan Standard Time (+09:00).

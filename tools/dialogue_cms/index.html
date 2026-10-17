@@ -85,8 +85,8 @@ nav button[aria-selected="false"]{background:#f7e9d1;color:#693d2c}
   <label>累計ミッション総数</label><input id="previewTotal" type="number" value="0" min="0">
   <label>ことほぎ</label><input id="previewPoints" type="number" value="0" min="0">
   <details><summary>種類別の累計回数を設定</summary><div id="previewMissions"></div></details>
-  <details><summary>直近のミッション達成（仮設定）</summary>
-    <p class="hint">仮の達成日と種類を設定します。累計回数も上で指定してください。実際の履歴は変更しません。</p>
+  <details><summary>ミッション達成当日の確認（仮設定）</summary>
+    <p class="hint">達成セリフは当日だけ表示されます。仮の達成日と種類、累計回数を設定して確認できます。実際の履歴は変更しません。</p>
     <label>仮の達成日（日本時間）</label><input id="previewRecentDay" type="date" value="2026-10-13">
     <div id="previewRecentMissions"></div>
   </details>
@@ -280,13 +280,15 @@ function renderCondition(area,entry,condition,index){
   }else if(condition.type==="mission"){
     labelControl(box,"種類","select",condition.missionId,change("missionId"),{options:missions});
     labelControl(box,"累計何回以上","input",condition.minCount,change("minCount",Number),{type:"number",min:1});
-    const days=labelControl(box,"直近何日以内にも達成（空欄＝制限なし）","input",
-      condition.withinDays??"",v=>{
-        if(v==="")delete condition.withinDays;
-        else condition.withinDays=Number(v);
-        runPreview();
-      },{type:"number",min:1});
-    days.max="30";
+    const label=append(box,"label");label.className="controls";
+    const todayOnly=append(label,"input");todayOnly.type="checkbox";
+    todayOnly.checked=condition.withinDays===1;
+    append(label,"span","達成当日のみ表示（1日固定）");
+    todayOnly.onchange=()=>{
+      if(todayOnly.checked)condition.withinDays=1;
+      else delete condition.withinDays;
+      dirty=true;setStatus("未保存の変更があります");runPreview();
+    };
   }else if(condition.type==="kotohogi"){
     labelControl(box,"ことほぎ何以上","input",condition.min,change("min",Number),{type:"number",min:0});
   }else{
@@ -315,10 +317,8 @@ function match(condition,context){
     const count=condition.missionId==="all"?context.total:(context.missions[condition.missionId]||0);
     if(count<condition.minCount)return false;
     if(condition.withinDays===undefined)return true;
-    const today=Date.parse(context.day+"T00:00:00Z");
-    const completedDay=Date.parse(context.recentDay+"T00:00:00Z");
-    const age=(today-completedDay)/86400000;
-    return Number.isInteger(age)&&age>=0&&age<condition.withinDays&&
+    if(condition.withinDays!==1)throw Error("ミッションの当日条件は1日固定です");
+    return context.recentDay===context.day&&
       (condition.missionId==="all"?context.recentMissions.size>0:context.recentMissions.has(condition.missionId));
   }
   if(condition.type==="kotohogi")return context.points>=condition.min;
