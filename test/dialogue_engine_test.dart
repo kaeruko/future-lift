@@ -42,6 +42,9 @@ Progress completed(List<Mission> missions) {
 }
 
 void main() {
+  // rootBundle in an ordinary async test requires an initialized binding.
+  // A widget test would run in fake async and leave this load pending.
+  TestWidgetsFlutterBinding.ensureInitialized();
   test('bundled JSON loads and every character has an ordinary line', () async {
     final live = await DialogueCatalog.load();
     expect(live.entries.length, greaterThanOrEqualTo(24));
