@@ -933,7 +933,7 @@
           "type": "mission",
           "missionId": "sittingBreak",
           "minCount": 1,
-          "withinDays": 3
+          "withinDays": 1
         }
       ]
     },
@@ -949,7 +949,7 @@
           "type": "mission",
           "missionId": "conversation",
           "minCount": 1,
-          "withinDays": 3
+          "withinDays": 1
         }
       ]
     },
@@ -965,7 +965,7 @@
           "type": "mission",
           "missionId": "outside",
           "minCount": 1,
-          "withinDays": 3
+          "withinDays": 1
         }
       ]
     },
@@ -981,7 +981,7 @@
           "type": "mission",
           "missionId": "hobby",
           "minCount": 1,
-          "withinDays": 3
+          "withinDays": 1
         }
       ]
     },

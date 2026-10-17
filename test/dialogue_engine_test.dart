@@ -102,29 +102,30 @@ void main() {
     expect(restored.countFor('outside'),1);
   });
 
-  test('recent mission celebration expires and does not rely on counters alone', () {
+  test('mission celebration is valid on the completion day only in JST', () {
     final c = catalog([
-      row('recent_sitting', '01_shiba', '最近ひと休みしたね',
+      row('today_sitting', '01_shiba', '今日ひと休みしたね',
         priority: 20, once: true,
         conditions: [
           {'type': 'mission', 'missionId': 'sittingBreak',
-            'minCount': 1, 'withinDays': 3},
+            'minCount': 1, 'withinDays': 1},
         ]),
     ]);
     DialogueEntry pick(Progress p, DateTime now) =>
         c.select(resident: TownResident.shiba, progress: p, now: now);
-    final oct13 = DateTime.utc(2026, 10, 13, 0);
-    final oct15 = DateTime.utc(2026, 10, 15, 0);
-    final oct16 = DateTime.utc(2026, 10, 16, 0);
+    final oct13Morning = DateTime.utc(2026, 10, 13, 0);
+    final oct13Late = DateTime.utc(2026, 10, 13, 14, 59);
+    final oct14Midnight = DateTime.utc(2026, 10, 13, 15);
     var p = completed([]);
-    expect(pick(p, oct13).text, '通常の雑談');
+    expect(pick(p, oct13Morning).text, '通常の雑談');
     p = p.complete(Mission.sittingBreak);
-    expect(pick(p, oct13).id, 'recent_sitting');
-    expect(pick(Progress.decode(p.encode(), expectedVersion: 5), oct15).id,
-        'recent_sitting');
-    expect(pick(p, oct16).text, '通常の雑談');
-    expect(pick(p.clearHistory(), oct13).text, '通常の雑談');
-    expect(pick(p.markDialogueSeen('recent_sitting'), oct13).text, '通常の雑談');
+    expect(pick(p, oct13Morning).id, 'today_sitting');
+    expect(pick(Progress.decode(p.encode(), expectedVersion: 5),
+        oct13Late).id, 'today_sitting');
+    expect(pick(p, oct14Midnight).text, '通常の雑談');
+    expect(pick(p.clearHistory(), oct13Morning).text, '通常の雑談');
+    expect(pick(p.markDialogueSeen('today_sitting'), oct13Morning).text,
+        '通常の雑談');
   });
 
   test('two residents visible in town unlock a paired conversation', () {
@@ -308,7 +309,8 @@ void main() {
       {'type':'date','mode':'weekday','days':[0]},
       {'type':'mission','missionId':'unknown','minCount':3},
       {'type':'mission','missionId':'outside','minCount':1,'withinDays':0},
-      {'type':'mission','missionId':'outside','minCount':1,'withinDays':31},
+      {'type':'mission','missionId':'outside','minCount':1,'withinDays':2},
+      {'type':'mission','missionId':'outside','minCount':1,'withinDays':3},
       {'type':'mission','missionId':'outside','minCount':1,'withinDays':true},
       {'type':'mission','missionId':'outside','minCount':1,'withinDays':'3'},
       {'type':'kotohogi','min':-1},

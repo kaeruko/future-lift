@@ -305,7 +305,7 @@ class CmsTests(unittest.TestCase):
                          [f"029_office_worker_{number:03d}" for number in range(1, 11)])
         for entry in frog[6:]:
             self.assertTrue(entry["once"])
-            self.assertEqual(entry["conditions"][0]["withinDays"], 3)
+            self.assertEqual(entry["conditions"][0]["withinDays"], 1)
 
     def test_rejects_invalid_dates_and_missions(self):
         for bad in (
@@ -315,7 +315,8 @@ class CmsTests(unittest.TestCase):
             {"type": "date", "mode": "weekday", "days": [0]},
             {"type": "mission", "missionId": "unknown", "minCount": 2},
             {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": 0},
-            {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": 31},
+            {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": 2},
+            {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": 3},
             {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": True},
             {"type": "mission", "missionId": "outside", "minCount": 1, "withinDays": "3"},
             {"type": "kotohogi", "min": -1},

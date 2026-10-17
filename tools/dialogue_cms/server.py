@@ -162,8 +162,8 @@ def validate(doc, residents=None):
                 require_keys(condition, {"type", "missionId", "minCount"}, loc, optional={"withinDays"})
                 if condition["missionId"] not in MISSIONS or not whole_number(condition["minCount"], 1, 1000000):
                     raise ValueError(f"Invalid mission count: {loc}")
-                if "withinDays" in condition and not whole_number(condition["withinDays"], 1, 30):
-                    raise ValueError(f"Invalid recent-mission days: {loc}")
+                if "withinDays" in condition and not whole_number(condition["withinDays"], 1, 1):
+                    raise ValueError(f"Recent mission must be same-day only: {loc}")
             elif kind == "kotohogi":
                 require_keys(condition, {"type", "min"}, loc)
                 if not whole_number(condition["min"], 0, 10000000):
