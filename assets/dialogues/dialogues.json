@@ -984,6 +984,15 @@
           "withinDays": 3
         }
       ]
+    },
+    {
+      "id": "038_lion_lady_001",
+      "residentId": "038_lion_lady",
+      "text": "こんにちは！よろしくね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }

@@ -99,7 +99,9 @@ enum TownResident {
   // ignore: constant_identifier_names
   c037_tora("037_tora", "とらお", "037_tora", true, true, "", "park"),
   // ignore: constant_identifier_names
-  c029_office_worker("029_office_worker", "かえる", "029_office_worker", true, true, "", "plaza")
+  c029_office_worker("029_office_worker", "かえる", "029_office_worker", true, true, "", "plaza"),
+  // ignore: constant_identifier_names
+  c038_lion_lady("038_lion_lady", "リオコ", "038_lion_lady", true, true, "", "salon")
   // END CMS RESIDENTS
   ;
 
