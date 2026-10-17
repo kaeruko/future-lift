@@ -1455,11 +1455,322 @@
     {
       "id": "015_office_worker_001",
       "residentId": "015_office_worker",
-      "text": "こんにちは！よろしくね。",
+      "text": "おう、よく来たな！俺はぶちょうだ。困ったことがあれば言ってくれ！",
       "priority": 0,
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "015_office_worker_002",
+      "residentId": "015_office_worker",
+      "text": "よう！今日もやることが山ほどある。……まずはひとつずつ片づけるか！",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_003",
+      "residentId": "015_office_worker",
+      "text": "調子はどうだ？……いや、元気じゃない日もあるよな。すぐ答えなくてもいいぞ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_004",
+      "residentId": "015_office_worker",
+      "text": "会議なら俺が仕切る！……だが、世間話はどうにも苦手でな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_005",
+      "residentId": "015_office_worker",
+      "text": "困ったら動け！が口癖なんだ。……動けないときに言われたら、困るよな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_006",
+      "residentId": "015_office_worker",
+      "text": "部下に『そんなことで悩むな』と言ったら、黙り込んじまった。励ますつもりだったんだが……。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_007",
+      "residentId": "015_office_worker",
+      "text": "俺は仕事ができるって言われる。だが、人の話を最後まで聞くのは、まだ下手らしい。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_008",
+      "residentId": "015_office_worker",
+      "text": "昔から『弱音を吐くな、前に進め』と言われてきた。弱音の聞き方は習ってこなかったな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_009",
+      "residentId": "015_office_worker",
+      "text": "誰かが泣いてると、何をすればいいかわからん。……黙って隣にいてもいいのか？",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_010",
+      "residentId": "015_office_worker",
+      "text": "俺にも失敗はある。胸を張って報告するのは、今でもちょっと怖いんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_011",
+      "residentId": "015_office_worker",
+      "text": "力仕事なら任せろ！……え？荷物じゃなくて相談？よ、よし。まず聞こう。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_012",
+      "residentId": "015_office_worker",
+      "text": "部下が定時で帰っていった。『もう帰るのか』じゃなくて『おつかれ』って言えたぞ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_013",
+      "residentId": "015_office_worker",
+      "text": "人に頼るのが苦手なんだ。全部自分でやるのが強さだと思ってた。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_014",
+      "residentId": "015_office_worker",
+      "text": "公園で『いやもふ～～～』って言う子に会ったんだ。……あんなに堂々と断るやつは初めてだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_015",
+      "residentId": "015_office_worker",
+      "text": "休むのはサボりじゃない。頭ではわかってるんだが……俺もまだ練習中だな。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_016",
+      "residentId": "015_office_worker",
+      "text": "なぜ部長をやってるかって？みんなが困ったとき、逃げずにいたかったからだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "015_office_worker_017",
+      "residentId": "015_office_worker",
+      "text": "おい、いつまで休んでるんだ？ 動かないと何も変わらないぞ",
+      "priority": 40,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "townTogether",
+          "otherResidentId": "027_daydreamer"
+        }
+      ],
+      "reply": {
+        "residentId": "027_daydreamer",
+        "text": "いやもふ～～～"
+      }
+    },
+    {
+      "id": "015_office_worker_018",
+      "residentId": "015_office_worker",
+      "text": "かえる、俺はつい先に答えを言っちまう。今日はまず聞く。何か話してみるか？",
+      "priority": 40,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "townTogether",
+          "otherResidentId": "029_office_worker"
+        }
+      ],
+      "reply": {
+        "residentId": "029_office_worker",
+        "text": "はい。……そう言ってもらえると、少しほっとします。"
+      }
+    },
+    {
+      "id": "015_office_worker_019",
+      "residentId": "015_office_worker",
+      "text": "この前の部下に、話を聞かせてくれって言ったんだ。途中で口をはさまないのは、案外むずかしいな。",
+      "priority": 30,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "seenDialogue",
+          "dialogueId": "015_office_worker_006"
+        }
+      ]
+    },
+    {
+      "id": "015_office_worker_020",
+      "residentId": "015_office_worker",
+      "text": "『聞いてくれてありがとう』って言われた。……あれは、俺が言うべき言葉だったな。",
+      "priority": 30,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "seenDialogue",
+          "dialogueId": "015_office_worker_019"
+        }
+      ]
+    },
+    {
+      "id": "015_office_worker_021",
+      "residentId": "015_office_worker",
+      "text": "外に出たんだな！よし、今日の一歩だ。……俺も少し散歩するか。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "015_office_worker_022",
+      "residentId": "015_office_worker",
+      "text": "誰かと話したんだな。話せたこと自体が大事だ。……俺も聞き役から練習だな。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "conversation",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "015_office_worker_023",
+      "residentId": "015_office_worker",
+      "text": "体を動かしたのか！いいぞ。疲れたら休むことも忘れるなよ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "movement",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "015_office_worker_024",
+      "residentId": "015_office_worker",
+      "text": "座りっぱなしをやめて、ひと息ついたんだな。いい判断だ！俺も見習おう。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "sittingBreak",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "015_office_worker_025",
+      "residentId": "015_office_worker",
+      "text": "食事をひとつ整えたのか。自分の体を後回しにしないのは、大事なことだ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "food",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "015_office_worker_026",
+      "residentId": "015_office_worker",
+      "text": "好きなことを楽しんだんだな。大切な予定だ！俺も予定表に入れてみるか。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "hobby",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "015_office_worker_027",
+      "residentId": "015_office_worker",
+      "text": "筋力を使ったんだな。よくやった！無理せず、今日は今日の分でいい。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "strength",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
     }
   ]
 }
