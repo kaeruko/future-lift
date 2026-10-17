@@ -187,6 +187,17 @@
       "inGacha": true,
       "walkInTown": true,
       "homeAreaId": "village"
+    },
+    {
+      "key": "c015_office_worker",
+      "id": "015_office_worker",
+      "label": "ぶちょう",
+      "profile": "",
+      "artFolder": "015_office_worker",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true,
+      "homeAreaId": "plaza"
     }
   ]
 }

@@ -1451,6 +1451,15 @@
           "withinDays": 1
         }
       ]
+    },
+    {
+      "id": "015_office_worker_001",
+      "residentId": "015_office_worker",
+      "text": "こんにちは！よろしくね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }
