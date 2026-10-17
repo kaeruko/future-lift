@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'celebration.dart';
 import 'dialogue_engine.dart';
 import 'marche.dart';
+import 'town_rules.dart';
 import 'local_content_preview.dart';
 import 'google_drive_content_source.dart';
 import 'local_town_visitors.dart';
@@ -333,24 +334,18 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
     final catalog = await _dialoguesFuture;
     if (!mounted || controller.failure != null) return;
     final index = _dialogueIndex[resident] ?? 0;
-    final visibleIds = (inSalon
-        ? salonResidents(
-            controller.progress!.residents.owned,
-            previewUnowned: kDebugMode &&
-                _salonUnlockMode == SalonUnlockDebugMode.forceOpen,
-          )
-        : _page == 2
-            ? areaResidents(
-                controller.progress!.residents.owned,
-                _townArea,
-                lifetimePoints: controller.progress!.points,
-                debugOverride: _debugTownResidents,
-                marcheOpen: isMarcheOpen(controller.progress!),
-              )
-            : visibleTownResidents(
-                controller.progress!.residents.owned,
-                debugOverride: _debugTownResidents,
-              )).map((r) => r.id).toSet();
+    final rules = TownRules(
+      controller.progress!, debugTownResidents: _debugTownResidents);
+    final visibleIds = rules.conversationPeers(
+      inSalon
+          ? ConversationSite.salon
+          : _page == 2
+              ? ConversationSite.town
+              : ConversationSite.roster,
+      area: !inSalon && _page == 2 ? _townArea : null,
+      previewSalonUnowned: inSalon && kDebugMode &&
+          _salonUnlockMode == SalonUnlockDebugMode.forceOpen,
+    );
     final line = catalog.select(
       resident: resident,
       progress: controller.progress!,
@@ -389,13 +384,15 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
         controller.progress == null || !isMarcheOpen(controller.progress!)) {
       return;
     }
-    final line = catalog.entries.singleWhere(
-      (entry) => entry.id == tonkoMarcheGreetingDialogueId,
+    final line = catalog.selectById(
+      id: tonkoMarcheGreetingDialogueId,
+      resident: tonkoMarcheOwner,
+      progress: controller.progress!,
+      now: controller.clock(),
+      townResidentIds: {tonkoMarcheOwner.id},
     );
-    if (line.residentId != tonkoMarcheOwner.id ||
-        line.once || !line.matches(
-          controller.progress!, controller.clock(), {tonkoMarcheOwner.id})) {
-      throw StateError('Invalid Tonko marche greeting dialogue');
+    if (line.once) {
+      throw StateError('Tonko marche greeting must be repeatable');
     }
     await showDialog<void>(
       context: context,
@@ -791,6 +788,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
 
   Widget _townNavigator(
       Progress progress, HostedTownContent? hosted) {
+    final rules = TownRules(
+      progress, debugTownResidents: _debugTownResidents);
     final visitors = hosted == null
         ? const <RemoteResident>[]
         : localVisitorsForArea(
@@ -821,7 +820,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           onResident: _showDialogue,
           onSalonResident: (resident) =>
               _showDialogue(resident, inSalon: true),
-          marcheOpen: isMarcheOpen(progress),
+          marcheOpen: rules.marcheOpen,
           onVisitMarche: _visitMarche,
         ),
         if (widget.remoteContentLoader != null)

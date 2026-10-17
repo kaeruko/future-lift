@@ -52,6 +52,31 @@ void main() {
     }
   });
 
+  test('explicit facility dialogue respects owner, conditions and once', () {
+    final c = catalog([
+      row('counter', '041_pig_middle', 'いらっしゃいませ',
+          conditions: [
+            {'type': 'seenDialogue', 'dialogueId': 'story'},
+          ]),
+      row('story', '041_pig_middle', 'お店を始めよう', once: true),
+      row('limited', '041_pig_middle', '一度だけ', once: true),
+    ]);
+    final now = DateTime.utc(2026, 10, 17);
+    final initial = completed([]);
+    DialogueEntry pick(String id, Progress p,
+        {TownResident resident = TownResident.c041_pig_middle}) =>
+      c.selectById(id: id, resident: resident, progress: p, now: now);
+    expect(() => pick('counter', initial), throwsStateError);
+    final afterStory = initial.markDialogueSeen('story');
+    expect(pick('counter', afterStory).text, 'いらっしゃいませ');
+    expect(() => pick('counter', afterStory,
+        resident: TownResident.shiba), throwsStateError);
+    expect(() => pick('missing', afterStory), throwsStateError);
+    expect(pick('limited', initial).id, 'limited');
+    expect(() => pick('limited', initial.markDialogueSeen('limited')),
+        throwsStateError);
+  });
+
   test('annual range, new year wrap, weekday, and exact date use JST', () {
     final conditions = [
       {'type':'date', 'mode':'annual_range','start':'12-20','end':'01-05'},

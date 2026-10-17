@@ -61,6 +61,29 @@ class DialogueCatalog {
     final top = available.where((e) => e.priority == available.first.priority).toList();
     return top[rotation % top.length];
   }
+
+  /// Explicit conversation target (e.g. a facility counter), independent of
+  /// the priority-based strolling dialogue selector.
+  /// A missing, mismatched, or ineligible entry is an error, not a fallback.
+  DialogueEntry selectById({
+    required String id,
+    required TownResident resident,
+    required Progress progress,
+    required DateTime now,
+    Set<String> townResidentIds = const {},
+  }) {
+    final found = entries.where((entry) => entry.id == id).toList();
+    if (found.length != 1) {
+      throw StateError('Expected one dialogue for $id, found ${found.length}');
+    }
+    final line = found.single;
+    if (line.residentId != resident.id ||
+        (line.once && progress.seenDialogues.contains(line.id)) ||
+        !line.matches(progress, now, townResidentIds)) {
+      throw StateError('Dialogue $id is not available for ${resident.id}');
+    }
+    return line;
+  }
 }
 
 class DialogueEntry {

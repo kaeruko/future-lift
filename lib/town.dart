@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'resident_collection.dart';
+import 'marche.dart';
 import 'local_content_preview.dart';
 import 'town_walk.dart';
 import 'town_areas.dart';
@@ -217,7 +218,7 @@ class _TownSceneState extends State<TownScene> {
     // Paint Tonko in front of the stall, not behind its transparent sprite.
     final shopkeeperIndex = widget.area == TownArea.plaza &&
             widget.marcheOpen && widget.debugTownResidents == null
-        ? visibleResidents.indexOf(TownResident.c041_pig_middle)
+        ? visibleResidents.indexOf(tonkoMarcheOwner)
         : -1;
     final count = visibleResidents.length + widget.remoteVisitors.length;
     final size = (width * (count <= townWalkSlots.length
@@ -331,7 +332,7 @@ class _TownSceneState extends State<TownScene> {
   ) {
     final isShopkeeper = widget.area == TownArea.plaza &&
         widget.marcheOpen && widget.debugTownResidents == null &&
-        resident == TownResident.c041_pig_middle;
+        resident == tonkoMarcheOwner;
     final route = isShopkeeper
         ? plazaMarcheStaffRoute
         : widget.area == TownArea.park

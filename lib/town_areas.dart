@@ -1,3 +1,4 @@
+import 'marche.dart';
 import 'resident_collection.dart';
 
 /// Each neighborhood owns its residents and its independently sourced artwork.
@@ -45,10 +46,15 @@ List<TownArea> unlockedTownAreas(int lifetimePoints) =>
 /// Outdoor residents temporarily meet at the plaza until their assigned
 /// neighborhood opens. Indoor residents (including salon staff) never move
 /// outdoors. Unknown outdoor area IDs are errors, not implicit fallbacks.
-TownArea? residentCurrentArea(TownResident resident, int lifetimePoints) {
-  // The salon is an indoor facility, not a fifth outdoor TownArea.
-  // The CMS may leave walkInTown enabled when assigning a resident there.
+TownArea? residentCurrentArea(
+  TownResident resident,
+  int lifetimePoints, {
+  bool marcheOpen = false,
+}) {
+  // Indoor residents never participate in outdoor placement.
   if (!resident.walkInTown || resident.homeAreaId == 'salon') return null;
+  // A story-triggered work location overrides Tonko's ordinary CMS home.
+  if (marcheOpen && resident == tonkoMarcheOwner) return TownArea.plaza;
   final home = TownArea.fromId(resident.homeAreaId);
   return home.isUnlocked(lifetimePoints) ? home : TownArea.plaza;
 }
@@ -70,11 +76,8 @@ List<TownResident> areaResidents(
       if (debugOverride != null) {
         return resident.walkInTown && resident.homeAreaId == area.id;
       }
-      // The acquired Tonko moves to her counter after opening.
-      if (marcheOpen && resident == TownResident.c041_pig_middle) {
-        return area == TownArea.plaza;
-      }
-      return residentCurrentArea(resident, lifetimePoints) == area;
+      return residentCurrentArea(
+        resident, lifetimePoints, marcheOpen: marcheOpen) == area;
     }),
   );
 }
