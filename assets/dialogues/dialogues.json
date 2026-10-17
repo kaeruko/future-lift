@@ -2185,10 +2185,15 @@
       "id": "041_pig_middle_012",
       "residentId": "041_pig_middle",
       "text": "苗をひとつ枯らしちゃってね。落ち込んだけど……次は水のあげ方を変えてみようかな。",
-      "priority": 0,
-      "once": false,
+      "priority": 35,
+      "once": true,
       "logic": "all",
-      "conditions": []
+      "conditions": [
+        {
+          "type": "seenDialogue",
+          "dialogueId": "041_pig_middle_011"
+        }
+      ]
     },
     {
       "id": "041_pig_middle_013",

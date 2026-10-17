@@ -73,15 +73,18 @@ void main() {
     expect(together.toSet(), walkers);
     expect(areaResidents(all, TownArea.plaza, lifetimePoints: 300),
         [TownResident.shiba, TownResident.penguin,
-         TownResident.c036_mosa, TownResident.c029_office_worker]);
+         TownResident.c036_mosa, TownResident.c029_office_worker,
+         TownResident.c015_office_worker]);
     expect(areaResidents(all, TownArea.park, lifetimePoints: 300),
         [TownResident.rabbit, TownResident.squirrel,
          TownResident.c026_farmer, TownResident.c027_daydreamer,
-         TownResident.c037_tora]);
+         TownResident.c037_tora, TownResident.c042_senior_dog]);
     expect(areaResidents(all, TownArea.shopping, lifetimePoints: 300),
-        [TownResident.cat, TownResident.c009_chef, TownResident.c032_miner]);
+        [TownResident.cat, TownResident.c009_chef, TownResident.c032_miner,
+         TownResident.c028_caregiver]);
     expect(areaResidents(all, TownArea.village, lifetimePoints: 300),
-        [TownResident.bear, TownResident.c034_artist]);
+        [TownResident.bear, TownResident.c034_artist,
+         TownResident.c041_pig_middle]);
     expect(areaResidents(all, TownArea.village,
         lifetimePoints: 300, debugOverride: [TownResident.shiba, TownResident.c034_artist]),
         [TownResident.c034_artist]);

@@ -11,7 +11,7 @@ import 'package:future_lift/town_areas.dart';
 
 Progress tonkoProgress({bool owned = true}) => Progress(
   day: '2026-10-17',
-  lastCompletedDay: null,
+  lastCompletedDay: '2026-10-16',
   points: 300,
   residents: ResidentCollection(
     baselinePoints: 0,
@@ -73,13 +73,14 @@ void main() {
         lifetimePoints: 0), contains(owner));
   });
 
-  test('the checked-in story progresses into the opening in five chats', () {
+  test('the checked-in story progresses into the opening in six chats', () {
     final catalog = DialogueCatalog.fromJson(
         File('assets/dialogues/dialogues.json').readAsStringSync());
     var progress = tonkoProgress();
     final milestones = [
-      '041_pig_middle_011', '041_pig_middle_021',
-      '041_pig_middle_022', '041_pig_middle_032',
+      '041_pig_middle_011', '041_pig_middle_012',
+      '041_pig_middle_021', '041_pig_middle_022',
+      '041_pig_middle_032',
       tonkoMarcheOpeningDialogueId,
     ];
     for (final id in milestones) {

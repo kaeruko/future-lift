@@ -42,7 +42,7 @@ Progress completed(List<Mission> missions) {
 }
 
 void main() {
-  testWidgets('bundled JSON loads and every character has an ordinary line', (tester) async {
+  test('bundled JSON loads and every character has an ordinary line', () async {
     final live = await DialogueCatalog.load();
     expect(live.entries.length, greaterThanOrEqualTo(24));
     final p = Progress.empty(DateTime(2026, 10, 13));

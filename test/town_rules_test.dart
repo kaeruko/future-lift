@@ -7,7 +7,7 @@ import 'package:future_lift/marche.dart';
 
 Progress fixture({bool tonkoOwned = true, int points = 300}) => Progress(
   day: '2026-10-17',
-  lastCompletedDay: null,
+  lastCompletedDay: points == 0 ? null : '2026-10-16',
   points: points,
   residents: ResidentCollection(
     baselinePoints: 0,
