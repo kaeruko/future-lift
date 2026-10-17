@@ -22,6 +22,76 @@ class TownWalkPose {
   bool get walking => direction != null;
 }
 
+/// A local strolling route, specified in background-relative coordinates.
+/// The character's bottom-center foot anchor is offset by half its base sprite
+/// size in TownScene; keep the route just outside the painted furniture.
+/// "stay" renders an idle sprite, even when animations are enabled.
+@immutable
+class TownWalkRoute {
+  const TownWalkRoute(this.x, this.y, {
+    this.width = .02,
+    this.height = .01,
+    this.stay = false,
+  });
+
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+  final bool stay;
+}
+
+/// Favorite spots on the *playground version* of the park illustration.
+/// Stable resident IDs, not displayed slot numbers, choose the favorite spot.
+/// These are on the dirt paths next to equipment, not on top of the benches.
+/// The routes can be refined without changing resident data or saved progress.
+const parkResidentRoutes = <String, TownWalkRoute>{
+  '02_rabbit': TownWalkRoute(.39, .46, width: .020, height: .010), // slide
+  '05_squirrel': TownWalkRoute(.30, .54, width: .025), // flowerbed/sign
+  '026_farmer': TownWalkRoute(.45, .55, width: .020), // fountain
+  '027_daydreamer': TownWalkRoute(.60, .63, stay: true), // right bench
+  '037_tora': TownWalkRoute(.63, .45, width: .025), // swings
+};
+
+/// Spare places along the open central path for other park residents.
+/// They are deliberately away from the equipment, shrine steps, river,
+/// bins and foreground benches.
+const _parkSpareRoutes = <TownWalkRoute>[
+  TownWalkRoute(.43, .49),
+  TownWalkRoute(.54, .53),
+  TownWalkRoute(.36, .62),
+  TownWalkRoute(.48, .69),
+  TownWalkRoute(.55, .64),
+  TownWalkRoute(.39, .57),
+  TownWalkRoute(.56, .47),
+  TownWalkRoute(.34, .69),
+];
+
+/// Returns a resident-specific favorite or a defined open-path position.
+/// No implicit substitution takes place for invalid slot/count arguments.
+TownWalkRoute parkWalkRoute(
+  String residentId,
+  int slot, {
+  required int totalSlots,
+}) {
+  // Retain the same strict validation as the standard strolling route.
+  townWalkOrigin(slot, totalSlots: totalSlots);
+  final favorite = parkResidentRoutes[residentId];
+  if (favorite != null) return favorite;
+  if (totalSlots <= _parkSpareRoutes.length) {
+    return _parkSpareRoutes[slot];
+  }
+  // Handle crowded/debug scenes without reusing one of eight coordinates.
+  final columns = math.sqrt(totalSlots * 1.3).ceil();
+  final rows = (totalSlots + columns - 1) ~/ columns;
+  return TownWalkRoute(
+    .32 + (columns == 1 ? 0 : (slot % columns) * .29 / (columns - 1)),
+    .48 + (rows == 1 ? 0 : (slot ~/ columns) * .20 / (rows - 1)),
+    width: .006,
+    height: .004,
+  );
+}
+
 /// The first eight positions retain the original arrangement (not a headcount
 /// limit). Positions leave room for sprites in the clipped town viewport.
 const townWalkSlots = <(double, double)>[
@@ -68,16 +138,29 @@ TownWalkPose townWalkPose(
   int slot,
   Duration elapsed, {
   int? totalSlots,
+  TownWalkRoute? route,
 }) {
   final count = totalSlots ?? math.max(townWalkSlots.length, slot + 1);
-  final start = townWalkOrigin(slot, totalSlots: count);
+  final defaultStart = townWalkOrigin(slot, totalSlots: count);
+  if (route != null && (!route.x.isFinite || !route.y.isFinite ||
+      !route.width.isFinite || !route.height.isFinite ||
+      route.x < 0 || route.y < 0 ||
+      route.width < 0 || route.height < 0 ||
+      route.x + route.width > .86 || route.y + route.height > .82)) {
+    throw RangeError('Town walking route must stay in the walkable scene');
+  }
+  final start = route == null ? defaultStart : (route.x, route.y);
+  if (route?.stay == true) {
+    return TownWalkPose(x: start.$1, y: start.$2,
+        direction: null, frame: 0);
+  }
   final dense = count > townWalkSlots.length;
-  final width = dense
+  final width = route?.width ?? (dense
       ? math.min(.05, .35 / math.sqrt(count))
-      : (slot.isEven ? .080 : .065);
-  final height = dense
+      : (slot.isEven ? .080 : .065));
+  final height = route?.height ?? (dense
       ? math.min(.026, .20 / math.sqrt(count))
-      : (slot.isEven ? .035 : .045);
+      : (slot.isEven ? .035 : .045));
   // Stagger characters to avoid a synchronized marching formation.
   var time = (elapsed.inMilliseconds + slot * 1640) % _walkCycleMs;
   var x = start.$1;

@@ -63,6 +63,65 @@ void main() {
     expect(() => townWalkOrigin(0, totalSlots: 0), throwsRangeError);
   });
 
+  test('park favorites stay at landmarks regardless of collection order', () {
+    const residents = [
+      TownResident.c027_daydreamer,
+      TownResident.c037_tora,
+      TownResident.c026_farmer,
+      TownResident.rabbit,
+      TownResident.squirrel,
+    ];
+    final expected = <String, (double, double)>{
+      '027_daydreamer': (.60, .63),
+      '037_tora': (.63, .45),
+      '026_farmer': (.45, .55),
+      '02_rabbit': (.39, .46),
+      '05_squirrel': (.30, .54),
+    };
+    for (var index = 0; index < residents.length; index++) {
+      final id = residents[index].id;
+      final route = parkWalkRoute(id, index, totalSlots: residents.length);
+      expect((route.x, route.y), expected[id], reason: id);
+      for (var millis = 0; millis < 26000; millis += 150) {
+        final pose = townWalkPose(index, Duration(milliseconds: millis),
+            totalSlots: residents.length, route: route);
+        expect(pose.x, inInclusiveRange(route.x, route.x + route.width));
+        expect(pose.y, inInclusiveRange(route.y, route.y + route.height));
+        if (id == '027_daydreamer') {
+          expect(pose.walking, false, reason: 'bench is for resting');
+        }
+      }
+    }
+    // Rearranging the owned cast never changes the favorite spot.
+    expect(parkWalkRoute('027_daydreamer', 4, totalSlots: 5).x, .60);
+    expect(parkWalkRoute('037_tora', 0, totalSlots: 5).x, .63);
+    expect(townWalkPose(0, Duration.zero).x,
+        townWalkOrigin(0, totalSlots: 8).$1);
+  });
+
+  test('park extra visitors get bounded paths and invalid routes fail fast', () {
+    for (final count in [2, 8, 9, 25]) {
+      final spots = <(double, double)>{};
+      for (var slot = 0; slot < count; slot++) {
+        final route = parkWalkRoute('visitor_$slot', slot,
+            totalSlots: count);
+        expect(spots.add((route.x, route.y)), isTrue);
+        final pose = townWalkPose(slot,
+            const Duration(milliseconds: 9500),
+            totalSlots: count, route: route);
+        expect(pose.x, inInclusiveRange(0, .86));
+        expect(pose.y, inInclusiveRange(0, .82));
+      }
+    }
+    expect(() => parkWalkRoute('stranger', -1, totalSlots: 2),
+        throwsRangeError);
+    expect(() => parkWalkRoute('stranger', 2, totalSlots: 2),
+        throwsRangeError);
+    expect(() => townWalkPose(0, Duration.zero,
+        route: const TownWalkRoute(.84, .82, width: .05)),
+        throwsRangeError);
+  });
+
   test('sprite directions use the real files, shiba mirrors left explicitly', () {
     for (final resident in TownResident.values) {
       for (final direction in WalkDirection.values) {
@@ -279,6 +338,48 @@ void main() {
       expect(rect.bottom,
           closeTo(townRect.top + townRect.height * origin.$2 +
               originalSize, .01));
+    }
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('park idle sprites use their own favorite positions', (tester) async {
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const residents = [
+      TownResident.c027_daydreamer,
+      TownResident.c037_tora,
+    ];
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: SizedBox(
+            width: 360,
+            child: MediaQuery(
+              data: const MediaQueryData(disableAnimations: true),
+              child: TownScene(
+                level: 0,
+                area: TownArea.park,
+                lifetimePoints: 90,
+                residents: residents,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ));
+    final rect = tester.getRect(find.byType(TownScene));
+    final size = (rect.width * .14).clamp(22.0, 76.0).toDouble();
+    for (var index = 0; index < residents.length; index++) {
+      final route = parkWalkRoute(residents[index].id, index,
+          totalSlots: residents.length);
+      final sprite = tester.getRect(find.byKey(
+          ValueKey('resident-sprite-$index')));
+      expect(sprite.center.dx, closeTo(
+          rect.left + rect.width * route.x + size / 2, .01));
+      expect(sprite.bottom, closeTo(
+          rect.top + rect.height * route.y + size, .01));
     }
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());

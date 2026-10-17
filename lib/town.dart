@@ -277,7 +277,12 @@ class _TownSceneState extends State<TownScene> {
     double size,
     bool reduced,
   ) {
-    final origin = townWalkOrigin(index, totalSlots: totalSlots);
+    final parkRoute = widget.area == TownArea.park
+        ? parkWalkRoute(resident.id, index, totalSlots: totalSlots)
+        : null;
+    final origin = parkRoute == null
+        ? townWalkOrigin(index, totalSlots: totalSlots)
+        : (parkRoute.x, parkRoute.y);
     final pose = reduced
         ? TownWalkPose(
             x: origin.$1,
@@ -289,6 +294,7 @@ class _TownSceneState extends State<TownScene> {
             index,
             Duration(milliseconds: _elapsedMillis(resident)),
             totalSlots: totalSlots,
+            route: parkRoute,
           );
     final direction = pose.direction;
     final walking = direction != null &&
@@ -343,13 +349,19 @@ class _TownSceneState extends State<TownScene> {
     if (baseUri == null) {
       throw StateError('Missing remote sprite base URI for ${resident.id}');
     }
-    final origin = townWalkOrigin(index, totalSlots: totalSlots);
+    final parkRoute = widget.area == TownArea.park
+        ? parkWalkRoute(resident.id, index, totalSlots: totalSlots)
+        : null;
+    final origin = parkRoute == null
+        ? townWalkOrigin(index, totalSlots: totalSlots)
+        : (parkRoute.x, parkRoute.y);
     final pose = reduced
         ? TownWalkPose(x: origin.$1, y: origin.$2, direction: null, frame: 0)
         : townWalkPose(
             index,
             Duration(milliseconds: _visitorElapsed(resident)),
             totalSlots: totalSlots,
+            route: parkRoute,
           );
     final walking = pose.direction != null &&
         !_remotePauseStarted.containsKey(resident.id) && !reduced;
