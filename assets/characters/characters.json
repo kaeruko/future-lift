@@ -209,6 +209,17 @@
       "inGacha": true,
       "walkInTown": true,
       "homeAreaId": "shopping"
+    },
+    {
+      "key": "c041_pig_middle",
+      "id": "041_pig_middle",
+      "label": "とんこ",
+      "profile": "",
+      "artFolder": "041_pig_middle",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true,
+      "homeAreaId": "village"
     }
   ]
 }

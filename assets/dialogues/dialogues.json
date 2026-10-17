@@ -2081,6 +2081,15 @@
           "withinDays": 1
         }
       ]
+    },
+    {
+      "id": "041_pig_middle_001",
+      "residentId": "041_pig_middle",
+      "text": "こんにちは！よろしくね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }
