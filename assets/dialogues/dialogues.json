@@ -1226,11 +1226,231 @@
     {
       "id": "034_artist_001",
       "residentId": "034_artist",
-      "text": "こんにちは！よろしくね。",
+      "text": "こんにちは。ぼく、くまりん。絵を描くのが好きなんだ。よかったら見ていってね。",
       "priority": 0,
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "034_artist_002",
+      "residentId": "034_artist",
+      "text": "やあ。ちょうど筆を洗ってたところだよ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_003",
+      "residentId": "034_artist",
+      "text": "おはよう。今日はどんな色の気分かな？",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_004",
+      "residentId": "034_artist",
+      "text": "あっ、こんにちは。気づいたら絵の具がほっぺについちゃった。えへへ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_005",
+      "residentId": "034_artist",
+      "text": "自分の描きたい絵と、みんなが喜んでくれる絵って、ちょっと違うんだよねぇ……。どっちを大事にしたらいいのかなぁ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_006",
+      "residentId": "034_artist",
+      "text": "このあいだ、好きな絵ばっかり描いてちゃお仕事にならないよって言われたんだ。そうなのかなぁ……。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_007",
+      "residentId": "034_artist",
+      "text": "ぼくの絵を好きって言ってくれる人がいたらうれしい。でも、ぼくも自分の絵を好きでいたいんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_008",
+      "residentId": "034_artist",
+      "text": "頼まれた絵を描いてみたらね、自分じゃ選ばない色を使えて、ちょっと楽しかったんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_009",
+      "residentId": "034_artist",
+      "text": "描いては消して、また描いて……。紙はもう三枚目。でも、少しずつ近づいてる気がするんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_010",
+      "residentId": "034_artist",
+      "text": "上手な絵を見ると、すごいなって思うのと、ちょっぴり悔しいのがいっしょにくるんだ。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_011",
+      "residentId": "034_artist",
+      "text": "ぼくの絵が誰かの部屋に飾られるなんて、考えるだけでどきどきしちゃう。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_012",
+      "residentId": "034_artist",
+      "text": "描けない日は、散歩して色を探すの。葉っぱの色って、ひとつじゃないんだね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_013",
+      "residentId": "034_artist",
+      "text": "絵の具を片づけなきゃ……でも、この続きをもうちょっとだけ……。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
+    },
+    {
+      "id": "034_artist_014",
+      "residentId": "034_artist",
+      "text": "好きなことを楽しんだんだね！ ぼくも絵を描いてると、時間を忘れちゃうんだ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "hobby",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "034_artist_015",
+      "residentId": "034_artist",
+      "text": "外に出られたんだね！ 空の色を見たかな？ 今日の空も、今日だけの色なんだろうな。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "outside",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "034_artist_016",
+      "residentId": "034_artist",
+      "text": "誰かとお話しできたんだね。ぼくも感想をもらうと、ちょっと勇気が出るんだ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "conversation",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "034_artist_017",
+      "residentId": "034_artist",
+      "text": "座りっぱなしをやめたんだね！ ぼくも絵を描いてると固まっちゃうから、いっしょにのびしよう。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "sittingBreak",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "034_artist_018",
+      "residentId": "034_artist",
+      "text": "食事をひとつ整えたんだね！ ぼく、絵に夢中だと食べるのを忘れちゃうことがあるんだ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "food",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "034_artist_019",
+      "residentId": "034_artist",
+      "text": "体を動かしたんだね！ ぼくもちょっと歩いて、肩をほぐさなきゃ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "movement",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "034_artist_020",
+      "residentId": "034_artist",
+      "text": "新しいことを学んだんだね！ ぼくも新しい描き方を知ると、わくわくするんだ。",
+      "priority": 25,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "mission",
+          "missionId": "weeklyLearn",
+          "minCount": 1,
+          "withinDays": 1
+        }
+      ]
     }
   ]
 }
