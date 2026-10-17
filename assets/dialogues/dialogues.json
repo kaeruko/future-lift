@@ -1244,7 +1244,7 @@
     {
       "id": "034_artist_003",
       "residentId": "034_artist",
-      "text": "おはよう。今日はどんな色の気分かな？",
+      "text": "やあ。今日はどんな色の気分かな？",
       "priority": 0,
       "once": false,
       "logic": "all",
