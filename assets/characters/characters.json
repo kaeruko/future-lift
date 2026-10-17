@@ -220,6 +220,17 @@
       "inGacha": true,
       "walkInTown": true,
       "homeAreaId": "village"
+    },
+    {
+      "key": "c042_senior_dog",
+      "id": "042_senior_dog",
+      "label": "ごんすけ",
+      "profile": "",
+      "artFolder": "042_senior_dog",
+      "nextDialogueNumber": 2,
+      "inGacha": true,
+      "walkInTown": true,
+      "homeAreaId": "park"
     }
   ]
 }

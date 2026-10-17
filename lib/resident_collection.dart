@@ -109,7 +109,9 @@ enum TownResident {
   // ignore: constant_identifier_names
   c028_caregiver("028_caregiver", "ぱんこ先生", "028_caregiver", true, true, "", "shopping"),
   // ignore: constant_identifier_names
-  c041_pig_middle("041_pig_middle", "とんこ", "041_pig_middle", true, true, "", "village")
+  c041_pig_middle("041_pig_middle", "とんこ", "041_pig_middle", true, true, "", "village"),
+  // ignore: constant_identifier_names
+  c042_senior_dog("042_senior_dog", "ごんすけ", "042_senior_dog", true, true, "", "park")
   // END CMS RESIDENTS
   ;
 

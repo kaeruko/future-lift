@@ -2090,6 +2090,15 @@
       "once": false,
       "logic": "all",
       "conditions": []
+    },
+    {
+      "id": "042_senior_dog_001",
+      "residentId": "042_senior_dog",
+      "text": "こんにちは！よろしくね。",
+      "priority": 0,
+      "once": false,
+      "logic": "all",
+      "conditions": []
     }
   ]
 }
