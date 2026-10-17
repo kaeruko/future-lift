@@ -300,12 +300,14 @@ class CmsTests(unittest.TestCase):
         validate(sample())
         frog = [entry for entry in sample()["dialogues"]
                 if entry["residentId"] == "029_office_worker"]
-        self.assertEqual(len(frog), 10)
+        self.assertEqual(len(frog), 11)
         self.assertEqual([row["id"] for row in frog],
-                         [f"029_office_worker_{number:03d}" for number in range(1, 11)])
-        for entry in frog[6:]:
+                         [f"029_office_worker_{number:03d}" for number in range(1, 12)])
+        for entry in frog[6:10]:
             self.assertTrue(entry["once"])
             self.assertEqual(entry["conditions"][0]["withinDays"], 1)
+        self.assertFalse(frog[10]["once"])
+        self.assertEqual(frog[10]["conditions"], [])
 
     def test_rejects_invalid_dates_and_missions(self):
         for bad in (

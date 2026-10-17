@@ -2176,8 +2176,8 @@
       "id": "041_pig_middle_011",
       "residentId": "041_pig_middle",
       "text": "最近、小さな鉢植えでハーブを育て始めたの。毎朝、葉っぱを見るのがちょっと楽しみなの。",
-      "priority": 0,
-      "once": false,
+      "priority": 35,
+      "once": true,
       "logic": "all",
       "conditions": []
     },
@@ -2435,6 +2435,48 @@
           "missionId": "strength",
           "minCount": 1,
           "withinDays": 1
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_032",
+      "residentId": "041_pig_middle",
+      "text": "あのねぇ……いつか小さなお茶のお店をやってみたいの。でも、お客さんが来てくれるかなぁ。",
+      "priority": 36,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "seenDialogue",
+          "dialogueId": "041_pig_middle_022"
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_033",
+      "residentId": "041_pig_middle",
+      "text": "決めたの！中央ひろばで、ちいさな薬草茶のお店を開いてみるわ。最初は一杯ずつ、心をこめてねぇ。",
+      "priority": 36,
+      "once": true,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "seenDialogue",
+          "dialogueId": "041_pig_middle_032"
+        }
+      ]
+    },
+    {
+      "id": "041_pig_middle_034",
+      "residentId": "041_pig_middle",
+      "text": "いらっしゃいませぇ！あっ、本当にお客さんが来てくれた！今日の薬草茶は、やさしい香りにできたのよ。",
+      "priority": -1000,
+      "once": false,
+      "logic": "all",
+      "conditions": [
+        {
+          "type": "seenDialogue",
+          "dialogueId": "041_pig_middle_033"
         }
       ]
     },

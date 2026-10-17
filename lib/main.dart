@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'celebration.dart';
 import 'dialogue_engine.dart';
+import 'marche.dart';
 import 'local_content_preview.dart';
 import 'google_drive_content_source.dart';
 import 'local_town_visitors.dart';
@@ -369,6 +370,34 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
       context: context,
       builder: (context) => ResidentConversationDialog(
         speaker: resident,
+        dialogue: line,
+      ),
+    );
+  }
+
+  /// The tea stall uses one CMS entry, not the ordinary outdoor dialogue
+  /// rotation. Check saved state again after loading content.
+  Future<void> _visitMarche() async {
+    final progress = controller.progress;
+    if (controller.busy || controller.failure != null ||
+        progress == null || !isMarcheOpen(progress)) return;
+    final catalog = await _dialoguesFuture;
+    if (!mounted || controller.busy || controller.failure != null ||
+        controller.progress == null || !isMarcheOpen(controller.progress!)) {
+      return;
+    }
+    final line = catalog.entries.singleWhere(
+      (entry) => entry.id == tonkoMarcheGreetingDialogueId,
+    );
+    if (line.residentId != tonkoMarcheOwner.id ||
+        line.once || !line.matches(
+          controller.progress!, controller.clock(), {tonkoMarcheOwner.id})) {
+      throw StateError('Invalid Tonko marche greeting dialogue');
+    }
+    await showDialog<void>(
+      context: context,
+      builder: (context) => ResidentConversationDialog(
+        speaker: tonkoMarcheOwner,
         dialogue: line,
       ),
     );
@@ -789,6 +818,8 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
           onResident: _showDialogue,
           onSalonResident: (resident) =>
               _showDialogue(resident, inSalon: true),
+          marcheOpen: isMarcheOpen(progress),
+          onVisitMarche: _visitMarche,
         ),
         if (widget.remoteContentLoader != null)
           Positioned(

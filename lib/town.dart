@@ -13,6 +13,9 @@ const townNames = ['穏やかなまち', '花のあるまち', '笑顔が集ま�
 /// Keep this rect in source-image coordinates, not screen coordinates.
 const villageSalonDoor = Rect.fromLTWH(782, 728, 112, 132);
 
+/// Tonko's 540x474 image in source coordinates of the 768x1376 plaza.
+const plazaMarcheRect = Rect.fromLTWH(509, 663, 214, 188);
+
 /// Scale by a resident's fixed walking slot, so vertical motion does not
 /// cause the sprite to pop between sizes. Foot positions stay unchanged.
 double _townResidentScale(double homeY) {
@@ -42,6 +45,8 @@ class TownScene extends StatefulWidget {
     this.remoteContentBaseUri,
     this.onRemoteVisitor,
     this.onEnterSalon,
+    this.marcheOpen = false,
+    this.onVisitMarche,
     this.fillViewport = false,
   });
 
@@ -57,6 +62,8 @@ class TownScene extends StatefulWidget {
   final Uri? remoteContentBaseUri;
   final Future<void> Function(RemoteResident)? onRemoteVisitor;
   final VoidCallback? onEnterSalon;
+  final bool marcheOpen;
+  final VoidCallback? onVisitMarche;
 
   /// Fit the *selected area's* own source dimensions to the phone.
   /// Walkers and background share a transform, without image distortion.
@@ -241,6 +248,32 @@ class _TownSceneState extends State<TownScene> {
             height,
             size,
             reduced,
+          ),
+        if (widget.area == TownArea.plaza && widget.marcheOpen)
+          Positioned(
+            left: width * plazaMarcheRect.left / 768,
+            top: height * plazaMarcheRect.top / 1376,
+            width: width * plazaMarcheRect.width / 768,
+            height: height * plazaMarcheRect.height / 1376,
+            child: Semantics(
+              button: widget.onVisitMarche != null,
+              label: 'とんこの薬草茶房',
+              child: Tooltip(
+                message: 'とんこの薬草茶房',
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
+                    key: const ValueKey('plaza-marche-entrance'),
+                    onTap: widget.onVisitMarche,
+                    child: Image.asset(
+                      'assets/kotohogu/marche.png',
+                      fit: BoxFit.contain,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         if (widget.area == TownArea.village && widget.onEnterSalon != null)
           Positioned(

@@ -24,6 +24,8 @@ class TownAreaNavigator extends StatefulWidget {
     this.salonUnlockMode = SalonUnlockDebugMode.normal,
     this.onResident,
     this.onSalonResident,
+    this.marcheOpen = false,
+    this.onVisitMarche,
   });
 
   final TownArea area;
@@ -40,6 +42,8 @@ class TownAreaNavigator extends StatefulWidget {
   final SalonUnlockDebugMode salonUnlockMode;
   final Future<void> Function(TownResident)? onResident;
   final Future<void> Function(TownResident)? onSalonResident;
+  final bool marcheOpen;
+  final VoidCallback? onVisitMarche;
 
   @override
   State<TownAreaNavigator> createState() => _TownAreaNavigatorState();
@@ -132,6 +136,8 @@ class _TownAreaNavigatorState extends State<TownAreaNavigator> {
               remoteContentBaseUri: widget.remoteContentBaseUri,
               onRemoteVisitor: widget.onRemoteVisitor,
               onResident: widget.onResident,
+              marcheOpen: widget.marcheOpen,
+              onVisitMarche: widget.onVisitMarche,
               onEnterSalon: () {
                 if (!isSalonAccessible(
                   widget.residents,
