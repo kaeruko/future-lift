@@ -345,6 +345,7 @@ class _FutureLiftHomeState extends State<FutureLiftHome>
                 _townArea,
                 lifetimePoints: controller.progress!.points,
                 debugOverride: _debugTownResidents,
+                marcheOpen: isMarcheOpen(controller.progress!),
               )
             : visibleTownResidents(
                 controller.progress!.residents.owned,

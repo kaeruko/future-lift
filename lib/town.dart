@@ -16,6 +16,9 @@ const villageSalonDoor = Rect.fromLTWH(782, 728, 112, 132);
 /// Tonko's 540x474 image in source coordinates of the 768x1376 plaza.
 const plazaMarcheRect = Rect.fromLTWH(509, 663, 214, 188);
 
+/// Fixed position immediately in front of the tea counter.
+const plazaMarcheStaffRoute = TownWalkRoute(.61, .59, stay: true);
+
 /// Scale by a resident's fixed walking slot, so vertical motion does not
 /// cause the sprite to pop between sizes. Foot positions stay unchanged.
 double _townResidentScale(double homeY) {
@@ -198,6 +201,7 @@ class _TownSceneState extends State<TownScene> {
       widget.area,
       lifetimePoints: widget.lifetimePoints,
       debugOverride: widget.debugTownResidents,
+      marcheOpen: widget.marcheOpen,
     );
     if (widget.remoteVisitors.isNotEmpty && widget.remoteContentBaseUri == null) {
       throw StateError('Remote visitors require a local content base URI');
@@ -210,6 +214,11 @@ class _TownSceneState extends State<TownScene> {
         (visitor) => visibleResidents.any((owned) => owned.id == visitor.id))) {
       throw StateError('A remote visitor duplicates an existing walker');
     }
+    // Paint Tonko in front of the stall, not behind its transparent sprite.
+    final shopkeeperIndex = widget.area == TownArea.plaza &&
+            widget.marcheOpen && widget.debugTownResidents == null
+        ? visibleResidents.indexOf(TownResident.c041_pig_middle)
+        : -1;
     final count = visibleResidents.length + widget.remoteVisitors.length;
     final size = (width * (count <= townWalkSlots.length
         ? .14
@@ -230,7 +239,7 @@ class _TownSceneState extends State<TownScene> {
         // using its own length. Otherwise two owned + one remote attempts to
         // read visibleResidents[2] and throws RangeError.
         for (var index = 0; index < visibleResidents.length; index++)
-          _resident(
+          if (index != shopkeeperIndex) _resident(
             visibleResidents[index],
             index,
             count,
@@ -275,6 +284,16 @@ class _TownSceneState extends State<TownScene> {
               ),
             ),
           ),
+        if (shopkeeperIndex >= 0)
+          _resident(
+            visibleResidents[shopkeeperIndex],
+            shopkeeperIndex,
+            count,
+            width,
+            height,
+            size,
+            reduced,
+          ),
         if (widget.area == TownArea.village && widget.onEnterSalon != null)
           Positioned(
             left: width * villageSalonDoor.left / 941,
@@ -310,12 +329,17 @@ class _TownSceneState extends State<TownScene> {
     double size,
     bool reduced,
   ) {
-    final parkRoute = widget.area == TownArea.park
-        ? parkWalkRoute(resident.id, index, totalSlots: totalSlots)
-        : null;
-    final origin = parkRoute == null
+    final isShopkeeper = widget.area == TownArea.plaza &&
+        widget.marcheOpen && widget.debugTownResidents == null &&
+        resident == TownResident.c041_pig_middle;
+    final route = isShopkeeper
+        ? plazaMarcheStaffRoute
+        : widget.area == TownArea.park
+            ? parkWalkRoute(resident.id, index, totalSlots: totalSlots)
+            : null;
+    final origin = route == null
         ? townWalkOrigin(index, totalSlots: totalSlots)
-        : (parkRoute.x, parkRoute.y);
+        : (route.x, route.y);
     final pose = reduced
         ? TownWalkPose(
             x: origin.$1,
@@ -327,14 +351,19 @@ class _TownSceneState extends State<TownScene> {
             index,
             Duration(milliseconds: _elapsedMillis(resident)),
             totalSlots: totalSlots,
-            route: parkRoute,
+            route: route,
           );
     final direction = pose.direction;
     final walking = direction != null &&
         !_pauseStarted.containsKey(resident) && !reduced;
-    final asset = walking
-        ? resident.walkAsset(direction, pose.frame)
-        : resident.idleAsset;
+    // Occasionally step in place; the foot anchor never moves.
+    final stepping = isShopkeeper && !reduced &&
+        !_pauseStarted.containsKey(resident) && _ticks % 56 < 12;
+    final asset = stepping
+        ? resident.walkAsset(WalkDirection.front, (_ticks ~/ 3) % 4)
+        : walking
+            ? resident.walkAsset(direction, pose.frame)
+            : resident.idleAsset;
     // Keep the original bottom-center of the walking sprite as its foot
     // anchor while increasing visual size and its matching tap target.
     final scaledSize = size * _townResidentScale(origin.$2);
@@ -342,7 +371,9 @@ class _TownSceneState extends State<TownScene> {
     final footY = height * pose.y + size;
     final sprite = Image.asset(
       asset,
-      key: ValueKey('resident-sprite-$index'),
+      key: isShopkeeper
+          ? const ValueKey('marche-shopkeeper-sprite')
+          : ValueKey('resident-sprite-$index'),
       width: scaledSize,
       height: scaledSize,
       fit: BoxFit.contain,
@@ -353,14 +384,22 @@ class _TownSceneState extends State<TownScene> {
       left: footX - scaledSize / 2,
       top: footY - scaledSize,
       child: Semantics(
-        button: widget.onResident != null,
-        label: '${resident.label}のおはなし',
+        button: isShopkeeper
+            ? widget.onVisitMarche != null
+            : widget.onResident != null,
+        label: isShopkeeper
+            ? 'とんこの薬草茶房でおはなし'
+            : '${resident.label}のおはなし',
         child: Tooltip(
-          message: resident.label,
+          message: isShopkeeper ? 'とんこ（店番中）' : resident.label,
           child: InkWell(
-            key: ValueKey('resident-$index'),
+            key: isShopkeeper
+                ? const ValueKey('marche-shopkeeper')
+                : ValueKey('resident-$index'),
             borderRadius: BorderRadius.circular(20),
-            onTap: widget.onResident == null ? null : () => _talk(resident),
+            onTap: isShopkeeper
+                ? widget.onVisitMarche
+                : widget.onResident == null ? null : () => _talk(resident),
             child: walking && resident.mirrorWalk(direction)
                 ? Transform.flip(flipX: true, child: sprite)
                 : sprite,

@@ -61,11 +61,20 @@ List<TownResident> areaResidents(
   TownArea area, {
   required int lifetimePoints,
   List<TownResident>? debugOverride,
+  bool marcheOpen = false,
 }) {
   final candidates = visibleTownResidents(owned, debugOverride: debugOverride);
   return List<TownResident>.unmodifiable(
-    candidates.where((resident) => debugOverride != null
-        ? resident.walkInTown && resident.homeAreaId == area.id
-        : residentCurrentArea(resident, lifetimePoints) == area),
+    candidates.where((resident) {
+      // Temporary preview selections keep the CMS-assigned home.
+      if (debugOverride != null) {
+        return resident.walkInTown && resident.homeAreaId == area.id;
+      }
+      // The acquired Tonko moves to her counter after opening.
+      if (marcheOpen && resident == TownResident.c041_pig_middle) {
+        return area == TownArea.plaza;
+      }
+      return residentCurrentArea(resident, lifetimePoints) == area;
+    }),
   );
 }
